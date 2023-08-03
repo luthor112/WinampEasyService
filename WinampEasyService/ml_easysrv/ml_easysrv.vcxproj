@@ -21,6 +21,13 @@
   <ItemGroup>
     <ClCompile Include="ml_easysrv.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="easysrv.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="ml_easysrv.rc" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

@@ -21,6 +21,9 @@
   <ItemGroup>
     <ClCompile Include="srv_exampledll.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\ml_easysrv\easysrv.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
