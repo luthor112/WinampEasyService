@@ -1,5 +1,4 @@
-#define EASYSRV_IMPORTING
-#include "easysrv.h"
+#include "easyservice.h"
 
 #include <windows.h>
 #include "Winamp/wa_ipc.h"
@@ -13,6 +12,10 @@
 #include "resource.h"
 
 #include "gen_tray/WINAMPCMD.H"
+
+#include <map>
+
+#define DISABLE_REFERENCE_FEATURE
 
 //////////////////////////
 // FORWARD DECLARATIONS //
@@ -28,6 +31,14 @@ void loadServices(void);
 
 // ListView
 LRESULT CALLBACK viewDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+/////////////////////
+// LOADED SERVICES //
+/////////////////////
+
+std::map<UINT_PTR, EasyService*> serviceMap;
+std::map<HWND, UINT_PTR> serviceHwndMap;
+std::map<UINT_PTR, std::vector<ItemInfo>> serviceListItemMap;
 
 ////////////
 // PLUGIN //
@@ -49,7 +60,8 @@ winampMediaLibraryPlugin plugin = {
 };
 
 // Called by WinAmp after loading
-int init() {
+int init()
+{
     loadServices();
 
     return 0;
@@ -61,10 +73,11 @@ void quit() {}
 // Called by WinAmp to talk to our plugin
 INT_PTR MessageProc(int message_type, INT_PTR param1, INT_PTR param2, INT_PTR param3)
 {
-    // TODO
-    if (message_type == ML_MSG_TREE_ONCREATEVIEW && param1 == 3)
+    if (message_type == ML_MSG_TREE_ONCREATEVIEW && param1 > 1)
     {
-        return (INT_PTR)CreateDialog(plugin.hDllInstance, MAKEINTRESOURCE(IDD_VIEW_EASYSRV), (HWND)(LONG_PTR)param2, (DLGPROC)viewDialogProc);
+		HWND dialogWnd = CreateDialog(plugin.hDllInstance, MAKEINTRESOURCE(IDD_VIEW_EASYSRV), (HWND)(LONG_PTR)param2, (DLGPROC)viewDialogProc);
+		serviceHwndMap[dialogWnd] = param1;
+		return (INT_PTR)dialogWnd;
     }
 
     return 0;
@@ -76,38 +89,72 @@ extern "C" __declspec(dllexport) winampMediaLibraryPlugin * winampGetMediaLibrar
     return &plugin;
 }
 
+extern "C" __declspec(dllexport) const wchar_t* GetPluginFileName(const wchar_t* referenceName) {
+	int serviceID;
+	wchar_t onlyRefName[1024];
+
+	swscanf_s(referenceName, L"%d_%s.ref", &serviceID, onlyRefName);
+
+	return serviceMap[serviceID]->GetFileName(onlyRefName);
+}
+
 //////////////
 // SERVICES //
 //////////////
 
-void addTreeItem(UINT_PTR parentId, UINT_PTR id, char* title, BOOL hasChildren, int imageIndex) {
+void addTreeItem(UINT_PTR parentId, UINT_PTR id, const char* title, BOOL hasChildren, int imageIndex)
+{
     MLTREEITEM treeItem = {
         sizeof(MLTREEITEM),
-        id,                 // id
-        parentId,           // parentId, 0 for root
-        title,              // title
-        strlen(title),  // titleLen
-        hasChildren,        // hasChildren
-        imageIndex          // imageIndex
+        id,							// id
+        parentId,					// parentId, 0 for root
+        const_cast<char*>(title),	// title
+        strlen(title),			// titleLen
+        hasChildren,				// hasChildren
+        imageIndex					// imageIndex
     };
     SendMessage(plugin.hwndLibraryParent, WM_ML_IPC, (WPARAM)&treeItem, ML_IPC_TREEITEM_ADD);
 }
 
-void loadServices() {
+void loadServices()
+{
+	int playerType = PLAYERTYPE_WINAMP;
+	char* pluginDir = (char*)SendMessage(plugin.hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
+	if (strstr(pluginDir, "WACUP"))
+		playerType = PLAYERTYPE_WACUP;
+
+	addTreeItem(0, 1, "Services", TRUE, MLTREEIMAGE_BRANCH);
+	UINT_PTR index = 2;
+
+	// Testing
+	/*serviceMap[index] = new DLLService(L"e:\\Zsolt\\Projects\\WinAmp\\WinampEasyService\\WinampEasyService\\Debug\\srv_exampledll.dll", playerType);
+	addTreeItem(1, index, serviceMap[index]->GetNodeName(), FALSE, MLTREEIMAGE_BRANCH);
+	index++;*/
+
     // walk srv_*.dll
-    // TODO
+	wchar_t searchCriteria[1024];
+	wsprintf(searchCriteria, L"%S\\srv_*.dll", pluginDir);
+
+	WIN32_FIND_DATA FindFileData;
+	HANDLE searchHandle = FindFirstFile(searchCriteria, &FindFileData);
+	if (searchHandle != INVALID_HANDLE_VALUE)
+	{
+		do
+		{
+			wchar_t absoluteName[1024];
+			wsprintf(absoluteName, L"%S\\%s", pluginDir, FindFileData.cFileName);
+			serviceMap[index] = new DLLService(absoluteName, playerType);
+			addTreeItem(1, index, serviceMap[index]->GetNodeName(), FALSE, MLTREEIMAGE_BRANCH);
+			index++;
+		} while (FindNextFile(searchHandle, &FindFileData));
+		FindClose(searchHandle);
+	}
 
     // walk srv_*.exe
     // TODO
 
-    // walk msrv_*.exe
+    // walk msrv_*.dll
     // TODO
-
-    // Node examples / testing
-    addTreeItem(0, 1, const_cast<char*>("Services"), TRUE, MLTREEIMAGE_BRANCH);
-    addTreeItem(1, 2, const_cast<char*>("Level 1 Node 1"), FALSE, MLTREEIMAGE_BRANCH);
-    addTreeItem(1, 3, const_cast<char*>("Level 1 Node 2"), TRUE, MLTREEIMAGE_BRANCH);
-    addTreeItem(1, 4, const_cast<char*>("Level 1 Node 3"), FALSE, MLTREEIMAGE_BRANCH);
 }
 
 //////////////
@@ -128,25 +175,25 @@ static ChildWndResizeItem srvwnd_rlist[] = {
 	{IDC_INVOKE,0x0101},
 };
 
-void addLineToList(HWND hwnd, int index, const wchar_t* filename, const wchar_t* artist, const wchar_t* title)
+void addLineToList(HWND hwnd, int index, const wchar_t* author, const wchar_t* title, const wchar_t* information)
 {
 	HWND hwndList = GetDlgItem(hwnd, IDC_LIST);
 
 	LVITEM lvi = { 0, };
 	lvi.mask = LVIF_TEXT;
 	lvi.iItem = index;
-	lvi.pszText = (LPTSTR)filename;
-	lvi.cchTextMax = lstrlenW(filename);
+	lvi.pszText = (LPTSTR)author;
+	lvi.cchTextMax = lstrlenW(author);
 	SendMessage(hwndList, LVM_INSERTITEMW, 0, (LPARAM)&lvi);
 
 	lvi.iSubItem = 1;
-	lvi.pszText = (LPTSTR)artist;
-	lvi.cchTextMax = lstrlenW(artist);
+	lvi.pszText = (LPTSTR)title;
+	lvi.cchTextMax = lstrlenW(title);
 	SendMessageW(hwndList, LVM_SETITEMW, 0, (LPARAM)&lvi);
 
 	lvi.iSubItem = 2;
-	lvi.pszText = (LPTSTR)title;
-	lvi.cchTextMax = lstrlenW(title);
+	lvi.pszText = (LPTSTR)information;
+	lvi.cchTextMax = lstrlenW(information);
 	SendMessageW(hwndList, LVM_SETITEMW, 0, (LPARAM)&lvi);
 }
 
@@ -214,40 +261,69 @@ static BOOL view_OnSize(HWND hwnd, UINT state, int cx, int cy)
 	return FALSE;
 }
 
-// TODO
 static BOOL view_OnDestroy(HWND hwnd)
 {
-	//m_hwnd = 0;
 	return FALSE;
 }
 
-// TODO
 static BOOL view_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 {
 	switch (id) {
 	case IDC_INVOKE:
 	{
-		MessageBox(0, L"IDC_INVOKE event triggered", L"", MB_OK);
+		std::vector<ItemInfo> itemsToAdd = serviceMap[serviceHwndMap[hwnd]]->InvokeService();
+		serviceListItemMap[serviceHwndMap[hwnd]] = itemsToAdd;
+
+		HWND hwndList = GetDlgItem(hwnd, IDC_LIST);
+		ListView_DeleteAllItems(hwndList);
+		int index = 0;
+		
+		for (ItemInfo info : itemsToAdd)
+		{
+			addLineToList(hwnd, index, info.author, info.title, info.info);
+			index++;
+		}
 	}
 	break;
 	}
 	return 0;
 }
 
-// TODO
 static BOOL list_OnNotify(HWND hwnd, int wParam, NMHDR* lParam)
 {
 	if (lParam->code == LVN_ITEMACTIVATE)
 	{
 #if (_WIN32_IE >= 0x0400)
 		LPNMITEMACTIVATE lpnmia = (LPNMITEMACTIVATE)lParam;
-		wchar_t msgText[1024];
-		wsprintf(msgText, L"LVN_ITEMACTIVATE triggered for ID %d", lpnmia->iItem);
-		MessageBox(0, msgText, L"", MB_OK);
+		
+		wchar_t playlistTitle[1024];
+		wsprintf(playlistTitle, L"%s - %s", serviceListItemMap[serviceHwndMap[hwnd]][lpnmia->iItem].author, serviceListItemMap[serviceHwndMap[hwnd]][lpnmia->iItem].title);
+
+		wchar_t playlistFN[1024];
+#ifndef DISABLE_REFERENCE_FEATURE
+		if (!wcsncmp(serviceListItemMap[serviceHwndMap[hwnd]][lpnmia->iItem].filename, L"ref:", 4)) {
+			wsprintf(playlistFN, L"%d_%s.ref", serviceHwndMap[hwnd], serviceListItemMap[serviceHwndMap[hwnd]][lpnmia->iItem].filename);
+		} else {
+#endif // !DISABLE_REFERENCE_FEATURE
+			wcscpy_s(playlistFN, 1024, serviceListItemMap[serviceHwndMap[hwnd]][lpnmia->iItem].filename);
+#ifndef DISABLE_REFERENCE_FEATURE
+		}
+#endif // !DISABLE_REFERENCE_FEATURE
+
+		enqueueFileWithMetaStructW newFile = {
+			playlistFN,
+			playlistTitle,
+			-1
+		};
 
 		if (lpnmia->uKeyFlags == LVKF_ALT)
 		{
-			MessageBox(0, L"Alt was down", L"", MB_OK);
+			SendMessage(plugin.hwndWinampParent, WM_WA_IPC, (WPARAM)&newFile, IPC_ENQUEUEFILEW);
+		} else {
+			SendMessage(plugin.hwndWinampParent, WM_WA_IPC, 0, IPC_DELETE);
+			SendMessage(plugin.hwndWinampParent, WM_WA_IPC, (WPARAM)&newFile, IPC_ENQUEUEFILEW);
+			SendMessage(plugin.hwndWinampParent, WM_WA_IPC, 1, IPC_SETPLAYLISTPOS);
+			SendMessage(plugin.hwndWinampParent, WM_COMMAND, MAKEWPARAM(WINAMP_BUTTON2, 0), 0);
 		}
 #else
 		MessageBox(0, L"This should not happen...", L"", MB_OK);

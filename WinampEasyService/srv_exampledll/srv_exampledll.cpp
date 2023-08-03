@@ -1,20 +1,33 @@
 #include "..\ml_easysrv\easysrv.h"
 #include <string.h>
 
+int currentItem = 0;
+
 const char* GetNodeName() {
-    return "Example Node 1";
+    return "Example CPP Service Plugin";
 }
 
-void InvokeService(AddItemFunction addItem, int PlayerType) {
-    addItem("Example Author", "Example Title", "This is a direct filename", "e:\\example.mp3");
-    addItem("Example Author", "Example Title 2", "This will use a reference", "ref:examplefile");
+ItemInfo InvokeService(int PlayerType) {
+    currentItem++;
+    ItemInfo currentItem = { L"Example Author", L"Example Title", L"This is a direct filename", L"e:\\example.mp3" };
+    return currentItem;
 }
 
-const char* GetFileName(const char* fileID)
-{
-    if (!strcmp(fileID, "ref:examplefile")) {
-        return "e:\\example.mp3";
+ItemInfo InvokeNext(int PleyerType) {
+    if (currentItem == 1) {
+        currentItem++;
+        ItemInfo currentItem = { L"Example Author", L"Example Title 2", L"This will use a reference", L"ref:examplefile" };
+        return currentItem;
     } else {
-        return "This really shouldn't happen...";
+        return ItemInfo();
+    }
+}
+
+const wchar_t* GetFileName(const wchar_t* fileID)
+{
+    if (!wcscmp(fileID, L"ref:examplefile")) {
+        return L"e:\\example.mp3";
+    } else {
+        return L"This really shouldn't happen...";
     }
 }

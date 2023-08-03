@@ -1,4 +1,4 @@
-//#define UNICODE_INPUT_PLUGIN
+#define UNICODE_INPUT_PLUGIN
 
 #include <windows.h>
 #include "Winamp/in2.h"
@@ -36,26 +36,27 @@ void Quit()
 
 }
 
-void GetFileInfo(const char* file, char* title, int* length_in_ms)
+// BUG: file is always NULL
+void GetFileInfo(const wchar_t* file, wchar_t* title, int* length_in_ms)
 {
 	auto easysrvdll = GetModuleHandle(L"ml_easysrv.dll");
-	auto getPluginFileName = reinterpret_cast<const char* (*) (const char*)>(GetProcAddress(easysrvdll, "GetPluginFileName"));
-	const char* realFileName = getPluginFileName(file);
-	SendMessage(plugin.hMainWindow, WM_WA_IPC, (WPARAM)realFileName, IPC_CHANGECURRENTFILE);
+	auto getPluginFileName = reinterpret_cast<const wchar_t* (*) (const wchar_t*)>(GetProcAddress(easysrvdll, "GetPluginFileName"));
+	const wchar_t* realFileName = getPluginFileName(file);
+	SendMessage(plugin.hMainWindow, WM_WA_IPC, (WPARAM)realFileName, IPC_CHANGECURRENTFILEW);
 	SendMessage(plugin.hMainWindow, WM_WA_IPC, 0, IPC_UPDTITLE);
 }
 
-int InfoBox(const char* file, HWND hwndParent)
+int InfoBox(const wchar_t* file, HWND hwndParent)
 {
 	return INFOBOX_UNCHANGED;
 }
 
-int IsOurFile(const char* file)
+int IsOurFile(const wchar_t* file)
 {
 	return 0;
 }
 
-int Play(const char* file)
+int Play(const wchar_t* file)
 {
 	return 0;
 }

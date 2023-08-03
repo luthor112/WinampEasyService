@@ -19,9 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DLLService.cpp" />
     <ClCompile Include="ml_easysrv.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="easyservice.h" />
     <ClInclude Include="easysrv.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>

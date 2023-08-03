@@ -9,15 +9,22 @@
 #define PLAYERTYPE_WINAMP 0
 #define PLAYERTYPE_WACUP 1
 
-typedef void (*AddItemFunction)(const char* author, const char* title, const char* info, const char* filename);
+struct ItemInfo
+{
+    const wchar_t* author;
+    const wchar_t* title;
+    const wchar_t* info;
+    const wchar_t* filename;
+};
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
     EASY_API const char* GetNodeName();
-    EASY_API void InvokeService(AddItemFunction addItem, int PlayerType);
-    EASY_API const char* GetFileName(const char* fileID);
+    EASY_API ItemInfo InvokeService(int PlayerType);
+    EASY_API ItemInfo InvokeNext(int PleyerType);
+    EASY_API const wchar_t* GetFileName(const wchar_t* fileID);
 
 #ifdef __cplusplus
 }

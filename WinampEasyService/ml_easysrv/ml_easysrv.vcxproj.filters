@@ -18,12 +18,18 @@
     <ClCompile Include="ml_easysrv.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DLLService.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="easysrv.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="easyservice.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
