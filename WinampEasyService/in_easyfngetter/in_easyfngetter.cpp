@@ -39,9 +39,13 @@ void Quit()
 // BUG: file is always NULL
 void GetFileInfo(const wchar_t* file, wchar_t* title, int* length_in_ms)
 {
+	int plPos = SendMessage(plugin.hMainWindow, WM_WA_IPC, 0, IPC_GETLISTPOS);
+	wchar_t* refFileName = (wchar_t*)SendMessage(plugin.hMainWindow, WM_WA_IPC, plPos, IPC_GETPLAYLISTFILEW);
+
 	auto easysrvdll = GetModuleHandle(L"ml_easysrv.dll");
 	auto getPluginFileName = reinterpret_cast<const wchar_t* (*) (const wchar_t*)>(GetProcAddress(easysrvdll, "GetPluginFileName"));
-	const wchar_t* realFileName = getPluginFileName(file);
+	const wchar_t* realFileName = getPluginFileName(refFileName);
+	
 	SendMessage(plugin.hMainWindow, WM_WA_IPC, (WPARAM)realFileName, IPC_CHANGECURRENTFILEW);
 	SendMessage(plugin.hMainWindow, WM_WA_IPC, 0, IPC_UPDTITLE);
 }

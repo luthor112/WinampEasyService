@@ -15,7 +15,7 @@
 
 #include <map>
 
-#define DISABLE_REFERENCE_FEATURE
+//#define DISABLE_REFERENCE_FEATURE
 
 //////////////////////////
 // FORWARD DECLARATIONS //
@@ -91,9 +91,12 @@ extern "C" __declspec(dllexport) winampMediaLibraryPlugin * winampGetMediaLibrar
 
 extern "C" __declspec(dllexport) const wchar_t* GetPluginFileName(const wchar_t* referenceName) {
 	int serviceID;
+	int serviceIDLen;
 	wchar_t onlyRefName[1024];
 
-	swscanf_s(referenceName, L"%d_%s.ref", &serviceID, onlyRefName);
+	swscanf_s(referenceName, L"%d%n", &serviceID, &serviceIDLen);
+	wcscpy_s(onlyRefName, 1024, referenceName + serviceIDLen + 1);
+	onlyRefName[wcslen(onlyRefName) - 4] = '\0';
 
 	return serviceMap[serviceID]->GetFileName(onlyRefName);
 }
