@@ -18,11 +18,11 @@
                 Console.WriteLine("Example Author");
                 Console.WriteLine("Example Title 2");
                 Console.WriteLine("Hello from CS EXE - This will use a reference");
-                Console.WriteLine("ref:examplefile");
+                Console.WriteLine("ref_examplefile");
             }
             else if (args[0] == "GetFileName")
             {
-                if (args[1] == "ref:examplefile")
+                if (args[1] == "ref_examplefile")
                     Console.WriteLine("e:\\example.mp3");
                 else
                     Console.WriteLine("This really shouldn't happen...");

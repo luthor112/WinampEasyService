@@ -326,7 +326,7 @@ static BOOL list_OnNotify(HWND hwnd, int wParam, NMHDR* lParam)
 
 		wchar_t playlistFN[1024];
 #ifndef DISABLE_REFERENCE_FEATURE
-		if (!wcsncmp(serviceListItemMap[serviceHwndMap[hwnd]][lpnmia->iItem].filename, L"ref:", 4)) {
+		if (!wcsncmp(serviceListItemMap[serviceHwndMap[hwnd]][lpnmia->iItem].filename, L"ref_", 4)) {
 			wsprintf(playlistFN, L"%d_%s.ref", serviceHwndMap[hwnd], serviceListItemMap[serviceHwndMap[hwnd]][lpnmia->iItem].filename);
 		} else {
 #endif // !DISABLE_REFERENCE_FEATURE

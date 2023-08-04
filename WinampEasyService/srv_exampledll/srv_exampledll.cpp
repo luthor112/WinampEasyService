@@ -16,7 +16,7 @@ ItemInfo InvokeService(int PlayerType) {
 ItemInfo InvokeNext(int PleyerType) {
     if (currentItem == 1) {
         currentItem++;
-        ItemInfo currentItem = { L"Example Author", L"Example Title 2", L"This will use a reference", L"ref:examplefile" };
+        ItemInfo currentItem = { L"Example Author", L"Example Title 2", L"This will use a reference", L"ref_examplefile" };
         return currentItem;
     } else {
         return ItemInfo();
@@ -25,7 +25,7 @@ ItemInfo InvokeNext(int PleyerType) {
 
 const wchar_t* GetFileName(const wchar_t* fileID)
 {
-    if (!wcscmp(fileID, L"ref:examplefile")) {
+    if (!wcscmp(fileID, L"ref_examplefile")) {
         return L"e:\\example.mp3";
     } else {
         return L"This really shouldn't happen...";

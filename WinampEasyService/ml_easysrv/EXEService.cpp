@@ -141,6 +141,9 @@ std::vector<ItemInfo> EXEService::InvokeService()
         std::getline(inSS, infoLine);
         std::getline(inSS, fileNameLine);
 
+        if (fileNameLine[fileNameLine.length() - 1] == '\r' || fileNameLine[fileNameLine.length() - 1] == '\n')
+            fileNameLine[fileNameLine.length() - 1] = '\0';
+
         ItemInfo currentItem = {
             _wcsdup(authorLine.c_str()),
             _wcsdup(titleLine.c_str()),
