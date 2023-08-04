@@ -1,10 +1,39 @@
-﻿namespace isrv_managed
+﻿using System.Reflection;
+
+namespace isrv_managed
 {
     internal class Program
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+            var DLL = Assembly.LoadFile(args[0]);
+            var theType = DLL.GetType("msrv.EasyService");
+            var c = Activator.CreateInstance(theType);
+
+            if (args[1] == "GetNodeName")
+            {
+                var method = theType.GetMethod("GetNodeName");
+                string nodeName = (string)method.Invoke(c, null);
+                Console.WriteLine(nodeName);
+            }
+            else if (args[1] == "InvokeService")
+            {
+                var method = theType.GetMethod("InvokeService");
+                List<List<string>> fList = (List<List<string>>)method.Invoke(c, new object[] { args[2] == "PLAYERTYPE_WACUP" ? 1 : 0 });
+                foreach (List<string> item in fList)
+                {
+                    foreach (string attr in item)
+                    {
+                        Console.WriteLine(attr);
+                    }
+                }
+            }
+            else if (args[1] == "GetFileName")
+            {
+                var method = theType.GetMethod("GetFileName");
+                string fName = (string)method.Invoke(c, new object[] { args[2] });
+                Console.WriteLine(fName);
+            }
         }
     }
 }

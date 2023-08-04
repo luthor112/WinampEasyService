@@ -173,7 +173,7 @@ void loadServices()
 		do
 		{
 			wchar_t absoluteName[1024];
-			wsprintf(absoluteName, L"\"%S\\isrv_managed.exe\" \"%S\\%s\"", pluginDir, FindFileData.cFileName);
+			wsprintf(absoluteName, L"\"%S\\isrv_managed.exe\" \"%S\\%s\"", pluginDir, pluginDir, FindFileData.cFileName);
 			serviceMap[index] = new EXEService(absoluteName, playerType);
 			addTreeItem(1, index, serviceMap[index]->GetNodeName(), FALSE, MLTREEIMAGE_BRANCH);
 			index++;
