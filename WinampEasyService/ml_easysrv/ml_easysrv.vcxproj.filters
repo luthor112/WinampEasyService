@@ -21,6 +21,9 @@
     <ClCompile Include="DLLService.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="EXEService.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="easysrv.h">

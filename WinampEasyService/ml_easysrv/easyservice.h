@@ -45,13 +45,16 @@ private:
     GetFileNameFunc _getFileName;
 };
 
-// TODO
-/*class EXEService : public EasyService
+class EXEService : public EasyService
 {
 public:
-    EXEService(const wchar_t* exeName);
+    EXEService(const wchar_t* exeName, int _playerType);
 
     virtual const char* GetNodeName();
     virtual std::vector<ItemInfo> InvokeService();
     virtual const wchar_t* GetFileName(const wchar_t* fileID);
-};*/
+
+private:
+    int playerType;
+    wchar_t* _exeName;
+};

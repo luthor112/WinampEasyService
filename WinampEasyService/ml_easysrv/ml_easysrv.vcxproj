@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DLLService.cpp" />
+    <ClCompile Include="EXEService.cpp" />
     <ClCompile Include="ml_easysrv.cpp" />
   </ItemGroup>
   <ItemGroup>

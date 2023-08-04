@@ -15,6 +15,7 @@
 
 #include <map>
 
+// Uncomment to disable reference handling
 //#define DISABLE_REFERENCE_FEATURE
 
 //////////////////////////
@@ -129,11 +130,6 @@ void loadServices()
 	addTreeItem(0, 1, "Services", TRUE, MLTREEIMAGE_BRANCH);
 	UINT_PTR index = 2;
 
-	// Testing
-	/*serviceMap[index] = new DLLService(L"e:\\Zsolt\\Projects\\WinAmp\\WinampEasyService\\WinampEasyService\\Debug\\srv_exampledll.dll", playerType);
-	addTreeItem(1, index, serviceMap[index]->GetNodeName(), FALSE, MLTREEIMAGE_BRANCH);
-	index++;*/
-
     // walk srv_*.dll
 	wchar_t searchCriteria[1024];
 	wsprintf(searchCriteria, L"%S\\srv_*.dll", pluginDir);
@@ -153,11 +149,37 @@ void loadServices()
 		FindClose(searchHandle);
 	}
 
-    // walk srv_*.exe
-    // TODO
+    // walk esrv_*.exe
+	wsprintf(searchCriteria, L"%S\\esrv_*.exe", pluginDir);
+	searchHandle = FindFirstFile(searchCriteria, &FindFileData);
+	if (searchHandle != INVALID_HANDLE_VALUE)
+	{
+		do
+		{
+			wchar_t absoluteName[1024];
+			wsprintf(absoluteName, L"\"%S\\%s\"", pluginDir, FindFileData.cFileName);
+			serviceMap[index] = new EXEService(absoluteName, playerType);
+			addTreeItem(1, index, serviceMap[index]->GetNodeName(), FALSE, MLTREEIMAGE_BRANCH);
+			index++;
+		} while (FindNextFile(searchHandle, &FindFileData));
+		FindClose(searchHandle);
+	}
 
     // walk msrv_*.dll
-    // TODO
+	wsprintf(searchCriteria, L"%S\\msrv_*.dll", pluginDir);
+	searchHandle = FindFirstFile(searchCriteria, &FindFileData);
+	if (searchHandle != INVALID_HANDLE_VALUE)
+	{
+		do
+		{
+			wchar_t absoluteName[1024];
+			wsprintf(absoluteName, L"\"%S\\isrv_managed.exe\" \"%S\\%s\"", pluginDir, FindFileData.cFileName);
+			serviceMap[index] = new EXEService(absoluteName, playerType);
+			addTreeItem(1, index, serviceMap[index]->GetNodeName(), FALSE, MLTREEIMAGE_BRANCH);
+			index++;
+		} while (FindNextFile(searchHandle, &FindFileData));
+		FindClose(searchHandle);
+	}
 }
 
 //////////////
