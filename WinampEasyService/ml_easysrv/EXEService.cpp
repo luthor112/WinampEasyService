@@ -39,6 +39,8 @@ HANDLE GetProcessOutputPipe(const wchar_t* cmdLine)
     siStartInfo.hStdOutput = g_hChildStd_OUT_Wr;
     siStartInfo.hStdInput = g_hChildStd_IN_Rd;
     siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
+    siStartInfo.wShowWindow = SW_HIDE;
+    siStartInfo.dwFlags |= STARTF_USESHOWWINDOW;
 
     // Create the child process
     bSuccess = CreateProcess(NULL,
