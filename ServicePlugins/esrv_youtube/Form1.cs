@@ -24,24 +24,19 @@ namespace esrv_youtube
 
         private async void button1_ClickAsync(object sender, EventArgs e)
         {
+            textBox1.Enabled = false;
             button1.Enabled = false;
-
-            int maxNum = 10;
+            button1.Text = "Please wait...";
 
             var youtube = new YoutubeClient();
             var videos = await youtube.Search.GetVideosAsync(textBox1.Text);
 
-            int i = 0;
             foreach (var item in videos)
             {
                 Console.WriteLine(item.Author);
                 Console.WriteLine(item.Title);
                 Console.WriteLine(item.Url);
                 Console.WriteLine("ref_" + item.Id);
-
-                i++;
-                if (i == maxNum)
-                    break;
             }
 
             Application.Exit();
