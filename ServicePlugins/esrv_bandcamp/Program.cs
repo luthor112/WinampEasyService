@@ -45,16 +45,16 @@ namespace esrv_bandcamp
                     var downloadMatchValue = downloadRegex.Match(downloadPage).Value;
                     string downloadURL = downloadMatchValue.Substring(6, matchValue.Length - 11).Replace(@"&amp;", "&");
 
-                    string outputFile = $"{System.IO.Path.GetTempPath()}\\bandcamp_{index}.mp3";
+                    string fileType = "mp3";
+                    if (downloadURL.Contains("/album"))
+                        fileType = "zip";
+                    string outputFile = $"{System.IO.Path.GetTempPath()}\\bandcamp_{index}.{fileType}";
                     var response = await client.GetAsync(downloadURL);
                     using (var fs = new FileStream(outputFile, FileMode.Create))
                     {
                         await response.Content.CopyToAsync(fs);
                     }
                     Console.WriteLine(outputFile);
-
-                    // Debugging
-                    File.WriteAllLines("e:\\bandcamp_debug.txt", new string[] { index.ToString(), username, identity, purchasesPageURL, downloadPageURL, downloadURL });
                 }
             }
         }
