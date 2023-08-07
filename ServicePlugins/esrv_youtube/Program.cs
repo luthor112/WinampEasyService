@@ -31,7 +31,7 @@ namespace esrv_youtube
                 var streamInfo = streamManifest.GetAudioOnlyStreams().GetWithHighestBitrate();
                 var stream = await youtube.Videos.Streams.GetAsync(streamInfo);
 
-                string outputFile = $"{System.IO.Path.GetTempPath()}\\audio.{streamInfo.Container}";
+                string outputFile = $"{System.IO.Path.GetTempPath()}\\{videoID}.{streamInfo.Container}";
                 await youtube.Videos.Streams.DownloadAsync(streamInfo, outputFile);
                 Console.WriteLine(outputFile);
             }

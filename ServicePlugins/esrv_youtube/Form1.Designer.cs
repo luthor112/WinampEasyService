@@ -67,7 +67,10 @@
             Controls.Add(button1);
             Controls.Add(textBox1);
             Controls.Add(label1);
+            MaximizeBox = false;
+            MinimizeBox = false;
             Name = "Form1";
+            StartPosition = FormStartPosition.CenterScreen;
             Text = "YouTube Search";
             Load += Form1_Load;
             ResumeLayout(false);
