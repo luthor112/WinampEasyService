@@ -21,6 +21,8 @@ Service plugin development:
         * The Filename can be a direct filename (e.g. `e:\\example.mp3`) or a reference (e.g. `ref_examplefile`)
         * PlayerType is 0 for WinAmp, 1 for WACUP
     * Optional: `public string GetFileName(string fileID)` should return the direct filename when called with a reference
+    * Important: If you wish to show a window, call `ShowWindow(form.Handle, SW_SHOW);` on your Form after creation
+        * ShowWindow resides in `user32.dll`, `SW_SHOW` equals 5
     * Full example: `WinampEasyService\\msrv_exampledll`
 * Unmanaged DLLs have to be named `srv_\*.dll` and implement the functions in `WinampEasyService\\ml_easysrv\\easysrv.h`:
     * `const char\* GetNodeName()` should return the name you wish to show in the Media Library
@@ -39,8 +41,30 @@ Service plugin development:
         * Quit when done
         * `PlayerType` can be `PLAYERTYPE_WINAMP` or `PLAYERTYPE_WACUP`
     * Optional: `GetFileName FileID`: Print the direct filename corresponding to the reference `FileID` to STDOUT
+    * Important: If you wish to show a window, call `ShowWindow(form.Handle, SW_SHOW);` on your Form after creation
+        * ShowWindow resides in `user32.dll`, `SW_SHOW` equals 5
     * Full example: `WinampEasyService\\esrv_exampleexe`
 
 Bugs:
 * WinAmp crashes in list_OnNotify in ml_easysrv
     * WACUP works correctly
+
+# ServicePlugins
+
+The following plugins have been developed using this framework:
+* esrv_bandcamp: Bandcamp integration
+    * Needs a username and the content of the identity cookie
+    * Can save credentials for later
+    * Only works for purchased items
+    * Works for both tracks and albums
+* esrv_soundcloud: SoundCloud integration
+    * Uses SoundCloudExplode under the hood
+* esrv_spotify: Spotify integration
+    * Falls back to YouTube if a track is unavailable and its YouTube ID is set
+    * Uses SpotifyExplode and YouTubeExplode under the hood
+* esrv_youtube: YouTube integration
+    * Unfortunately slow
+    * Uses YouTubeExplode under the hood
+
+Common operation:
+* Downloaded files and saved credentials are stored in `System.IO.Path.GetTempPath()`
