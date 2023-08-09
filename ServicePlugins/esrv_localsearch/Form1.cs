@@ -28,6 +28,13 @@ namespace esrv_localsearch
 
         private void searchButton_Click(object sender, EventArgs e)
         {
+            directoryBox.Enabled = false;
+            patternBox.Enabled = false;
+            recursiveBox.Enabled = false;
+            selectButton.Enabled = false;
+            searchButton.Enabled = false;
+            searchButton.Text = "Please wait...";
+
             foreach (string fileName in Directory.EnumerateFiles(directoryBox.Text, patternBox.Text, recursiveBox.Checked ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly))
             {
                 Console.WriteLine(System.IO.Path.GetFileName(fileName));
