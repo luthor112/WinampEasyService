@@ -71,3 +71,7 @@ The following plugins have been developed using this framework:
 
 Common operation:
 * Downloaded files and saved credentials are stored in `System.IO.Path.GetTempPath()`
+
+# Screenshot
+
+![Screenshot](screenshot.png)
