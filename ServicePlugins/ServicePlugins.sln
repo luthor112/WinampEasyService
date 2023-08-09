@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "esrv_spotify", "esrv_spotif
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "esrv_bandcamp", "esrv_bandcamp\esrv_bandcamp.csproj", "{873D77CB-CE6C-438D-8A2C-129F575F2D62}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "esrv_soundcloud", "esrv_soundcloud\esrv_soundcloud.csproj", "{A13742D7-563E-441E-811D-E6448BDE1050}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "esrv_soundcloud", "esrv_soundcloud\esrv_soundcloud.csproj", "{A13742D7-563E-441E-811D-E6448BDE1050}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "esrv_localsearch", "esrv_localsearch\esrv_localsearch.csproj", "{9E1AEEEA-1D06-4F40-963E-5B1CDD2EC122}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{A13742D7-563E-441E-811D-E6448BDE1050}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A13742D7-563E-441E-811D-E6448BDE1050}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A13742D7-563E-441E-811D-E6448BDE1050}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9E1AEEEA-1D06-4F40-963E-5B1CDD2EC122}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E1AEEEA-1D06-4F40-963E-5B1CDD2EC122}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E1AEEEA-1D06-4F40-963E-5B1CDD2EC122}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E1AEEEA-1D06-4F40-963E-5B1CDD2EC122}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

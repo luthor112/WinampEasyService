@@ -57,6 +57,9 @@ The following plugins have been developed using this framework:
     * Can save credentials for later
     * Only works for purchased items
     * Works for both tracks and albums
+* esrv_localsearch: Local file search
+    * Searches the given directory for the given file pattern
+    * Has recursive search option
 * esrv_soundcloud: SoundCloud integration
     * Uses SoundCloudExplode under the hood
 * esrv_spotify: Spotify integration
