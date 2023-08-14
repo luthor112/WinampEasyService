@@ -108,16 +108,22 @@ extern "C" __declspec(dllexport) const wchar_t* GetPluginFileName(const wchar_t*
 
 void addTreeItem(UINT_PTR parentId, UINT_PTR id, const char* title, BOOL hasChildren, int imageIndex)
 {
-    MLTREEITEM treeItem = {
-        sizeof(MLTREEITEM),
+	const size_t cSize = strlen(title) + 1;
+	wchar_t* wc = new wchar_t[cSize];
+	//mbstowcs_s(wc, title, cSize);
+	size_t retSize;
+	mbstowcs_s(&retSize, wc, cSize, title, cSize);
+
+	MLTREEITEMW treeItem = {
+        sizeof(MLTREEITEMW),
         id,							// id
         parentId,					// parentId, 0 for root
-        const_cast<char*>(title),	// title
+        wc,							// title
         strlen(title),			// titleLen
         hasChildren,				// hasChildren
         imageIndex					// imageIndex
     };
-    SendMessage(plugin.hwndLibraryParent, WM_ML_IPC, (WPARAM)&treeItem, ML_IPC_TREEITEM_ADD);
+    SendMessage(plugin.hwndLibraryParent, WM_ML_IPC, (WPARAM)&treeItem, ML_IPC_TREEITEM_ADDW);
 }
 
 void loadServices()
