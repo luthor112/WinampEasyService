@@ -27,33 +27,49 @@ namespace esrv_spotify
             else if (args[0] == "GetFileName")
             {
                 string trackID = args[1].Substring(4);
-                
-                var spotify = new SpotifyClient();
-                string trackURL = "https://open.spotify.com/track/" + trackID;
-                var downloadUrl = await spotify.Tracks.GetDownloadUrlAsync(trackURL);
 
-                try
+                string outputFile = $"{System.IO.Path.GetTempPath()}\\s_{trackID}.mp3";
+                if (File.Exists(outputFile))
                 {
-                    string outputFile = $"{System.IO.Path.GetTempPath()}\\{trackID}.mp3";
-                    using (var client = new WebClient())
-                    {
-                        client.DownloadFile(downloadUrl, outputFile);
-                    }
-
                     Console.WriteLine(outputFile);
                 }
-                catch (Exception ex)
+                else
                 {
-                    string videoID = await spotify.Tracks.GetYoutubeIdAsync(trackURL);
+                    var spotify = new SpotifyClient();
+                    string trackURL = "https://open.spotify.com/track/" + trackID;
+                    var downloadUrl = await spotify.Tracks.GetDownloadUrlAsync(trackURL);
 
-                    var youtube = new YoutubeClient();
-                    var streamManifest = await youtube.Videos.Streams.GetManifestAsync("https://www.youtube.com/watch?v=" + videoID);
-                    var streamInfo = streamManifest.GetAudioOnlyStreams().GetWithHighestBitrate();
-                    var stream = await youtube.Videos.Streams.GetAsync(streamInfo);
+                    try
+                    {
+                        //string outputFile = $"{System.IO.Path.GetTempPath()}\\{trackID}.mp3";
+                        using (var client = new WebClient())
+                        {
+                            client.DownloadFile(downloadUrl, outputFile);
+                        }
 
-                    string outputFile = $"{System.IO.Path.GetTempPath()}\\{videoID}.{streamInfo.Container}";
-                    await youtube.Videos.Streams.DownloadAsync(streamInfo, outputFile);
-                    Console.WriteLine(outputFile);
+                        Console.WriteLine(outputFile);
+                    }
+                    catch (Exception)
+                    {
+                        string videoID = await spotify.Tracks.GetYoutubeIdAsync(trackURL);
+
+                        string[] cachedFiles = Directory.GetFiles(System.IO.Path.GetTempPath(), $"yt_{videoID}.*", SearchOption.TopDirectoryOnly);
+                        if (cachedFiles.Length == 0)
+                        {
+                            var youtube = new YoutubeClient();
+                            var streamManifest = await youtube.Videos.Streams.GetManifestAsync("https://www.youtube.com/watch?v=" + videoID);
+                            var streamInfo = streamManifest.GetAudioOnlyStreams().GetWithHighestBitrate();
+                            var stream = await youtube.Videos.Streams.GetAsync(streamInfo);
+
+                            string outputFile2 = $"{System.IO.Path.GetTempPath()}\\yt_{videoID}.{streamInfo.Container}";
+                            await youtube.Videos.Streams.DownloadAsync(streamInfo, outputFile2);
+                            Console.WriteLine(outputFile2);
+                        }
+                        else
+                        {
+                            Console.WriteLine(cachedFiles[0]);
+                        }
+                    }
                 }
             }
         }

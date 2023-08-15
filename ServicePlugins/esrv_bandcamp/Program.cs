@@ -49,12 +49,20 @@ namespace esrv_bandcamp
                     if (downloadURL.Contains("/album"))
                         fileType = "zip";
                     string outputFile = $"{System.IO.Path.GetTempPath()}\\bandcamp_{index}.{fileType}";
-                    var response = await client.GetAsync(downloadURL);
-                    using (var fs = new FileStream(outputFile, FileMode.Create))
+
+                    if (File.Exists(outputFile))
                     {
-                        await response.Content.CopyToAsync(fs);
+                        Console.WriteLine(outputFile);
                     }
-                    Console.WriteLine(outputFile);
+                    else
+                    {
+                        var response = await client.GetAsync(downloadURL);
+                        using (var fs = new FileStream(outputFile, FileMode.Create))
+                        {
+                            await response.Content.CopyToAsync(fs);
+                        }
+                        Console.WriteLine(outputFile);
+                    }
                 }
             }
         }

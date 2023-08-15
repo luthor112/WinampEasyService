@@ -23,13 +23,18 @@ namespace esrv_soundcloud
             {
                 string trackID = args[1].Substring(4);
 
-                var soundcloud = new SoundCloudClient();
-                var track = await soundcloud.Tracks.GetByIdAsync(long.Parse(trackID));
-                var trackName = string.Join("_", track.Title.Split(Path.GetInvalidFileNameChars()));
-
-                string outputFile = $"{System.IO.Path.GetTempPath()}\\{trackName}.mp3";
-                await soundcloud.DownloadAsync(track, outputFile);
-                Console.WriteLine(outputFile);
+                string outputFile = $"{System.IO.Path.GetTempPath()}\\sc_{trackID}.mp3";
+                if (File.Exists(outputFile))
+                {
+                    Console.WriteLine(outputFile);
+                }
+                else
+                {
+                    var soundcloud = new SoundCloudClient();
+                    var track = await soundcloud.Tracks.GetByIdAsync(long.Parse(trackID));
+                    await soundcloud.DownloadAsync(track, outputFile);
+                    Console.WriteLine(outputFile);
+                }
             }
         }
     }
