@@ -36,7 +36,7 @@ namespace esrv_soundcloud
                 {
                     case TrackSearchResult track:
                         {
-                            Console.WriteLine(track.User.FullName);
+                            Console.WriteLine(track?.User?.FullName ?? "");
                             Console.WriteLine(track.Title);
                             Console.WriteLine(track.Url);
                             Console.WriteLine("ref_" + track.Id);

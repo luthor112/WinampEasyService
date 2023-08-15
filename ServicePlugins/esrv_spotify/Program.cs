@@ -41,7 +41,6 @@ namespace esrv_spotify
 
                     try
                     {
-                        //string outputFile = $"{System.IO.Path.GetTempPath()}\\{trackID}.mp3";
                         using (var client = new WebClient())
                         {
                             client.DownloadFile(downloadUrl, outputFile);
@@ -63,6 +62,13 @@ namespace esrv_spotify
 
                             string outputFile2 = $"{System.IO.Path.GetTempPath()}\\yt_{videoID}.{streamInfo.Container}";
                             await youtube.Videos.Streams.DownloadAsync(streamInfo, outputFile2);
+
+                            var videoInfo = await youtube.Videos.GetAsync("https://www.youtube.com/watch?v=" + videoID);
+                            var tfile = TagLib.File.Create(outputFile2);
+                            tfile.Tag.Performers = new string[] { videoInfo.Author.ChannelTitle };
+                            tfile.Tag.Title = videoInfo.Title;
+                            tfile.Save();
+
                             Console.WriteLine(outputFile2);
                         }
                         else

@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="SpotifyExplode" Version="1.0.7" />
+    <PackageReference Include="TagLibSharp" Version="2.3.0" />
     <PackageReference Include="YoutubeExplode" Version="6.3.1" />
   </ItemGroup>
 

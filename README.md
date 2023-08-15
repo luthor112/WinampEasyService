@@ -48,6 +48,7 @@ Service plugin development:
 Bugs:
 * WinAmp crashes in list_OnNotify in ml_easysrv
     * WACUP works correctly
+* WinAmp/WACUP doesn't display metadata for `webm` files
 
 # ServicePlugins
 
@@ -75,7 +76,3 @@ Common operation:
 # Screenshot
 
 ![Screenshot](screenshot.png)
-
-# TODO
-
-* Working cache

@@ -33,6 +33,13 @@ namespace esrv_soundcloud
                     var soundcloud = new SoundCloudClient();
                     var track = await soundcloud.Tracks.GetByIdAsync(long.Parse(trackID));
                     await soundcloud.DownloadAsync(track, outputFile);
+
+                    // Update tags
+                    var tfile = TagLib.File.Create(outputFile);
+                    tfile.Tag.Performers = new string[] { track?.User?.FullName ?? "" };
+                    tfile.Tag.Title = track.Title;
+                    tfile.Save();
+
                     Console.WriteLine(outputFile);
                 }
             }
