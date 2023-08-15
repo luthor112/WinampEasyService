@@ -111,15 +111,17 @@ EXEService::EXEService(const wchar_t* exeName, int _playerType)
     _exeName = _wcsdup(exeName);
 }
 
-const char* EXEService::GetNodeName()
+const wchar_t* EXEService::GetNodeName()
 {
     wchar_t cmdLine[1024];
     wsprintf(cmdLine, L"%s GetNodeName", _exeName);
-    std::istringstream inSS(ReadProcessOutput(cmdLine));
+    std::string s1 = ReadProcessOutput(cmdLine);
+    std::wstring ws1 = std::wstring(s1.begin(), s1.end());
+    std::wistringstream inSS(ws1);
 
-    std::string line;
+    std::wstring line;
     std::getline(inSS, line);
-    return _strdup(line.c_str());
+    return _wcsdup(line.c_str());
 }
 
 std::vector<ItemInfo> EXEService::InvokeService()

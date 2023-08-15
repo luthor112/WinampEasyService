@@ -106,20 +106,14 @@ extern "C" __declspec(dllexport) const wchar_t* GetPluginFileName(const wchar_t*
 // SERVICES //
 //////////////
 
-void addTreeItem(UINT_PTR parentId, UINT_PTR id, const char* title, BOOL hasChildren, int imageIndex)
+void addTreeItem(UINT_PTR parentId, UINT_PTR id, const wchar_t* title, BOOL hasChildren, int imageIndex)
 {
-	// TODO: Change API and delete this
-	const size_t cSize = strlen(title) + 1;
-	wchar_t* wc = new wchar_t[cSize];
-	size_t retSize;
-	mbstowcs_s(&retSize, wc, cSize, title, cSize);
-
 	MLTREEITEMW treeItem = {
         sizeof(MLTREEITEMW),
         id,							// id
         parentId,					// parentId, 0 for root
-        wc,							// title
-        strlen(title),			// titleLen
+        const_cast<wchar_t*>(title),// title
+		wcslen(title),			// titleLen
         hasChildren,				// hasChildren
         imageIndex					// imageIndex
     };
@@ -133,7 +127,7 @@ void loadServices()
 	if (strstr(pluginDir, "WACUP"))
 		playerType = PLAYERTYPE_WACUP;
 
-	addTreeItem(0, 1, "Services", TRUE, MLTREEIMAGE_BRANCH);
+	addTreeItem(0, 1, L"Services", TRUE, MLTREEIMAGE_BRANCH);
 	UINT_PTR index = 2;
 
     // walk srv_*.dll

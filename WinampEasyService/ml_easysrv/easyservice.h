@@ -13,7 +13,7 @@ struct ItemInfo
     const wchar_t* filename;
 };
 
-typedef const char* (*GetNodeNameFunc)();
+typedef const wchar_t* (*GetNodeNameFunc)();
 typedef ItemInfo (*InvokeServiceFunc)(int PlayerType);
 typedef ItemInfo (*InvokeNextFunc)(int PleyerType);
 typedef const wchar_t* (*GetFileNameFunc)(const wchar_t* fileID);
@@ -21,7 +21,7 @@ typedef const wchar_t* (*GetFileNameFunc)(const wchar_t* fileID);
 class EasyService
 {
 public:
-    virtual const char* GetNodeName() = 0;
+    virtual const wchar_t* GetNodeName() = 0;
     virtual std::vector<ItemInfo> InvokeService() = 0;
     virtual const wchar_t* GetFileName(const wchar_t* fileID) = 0;
 
@@ -33,7 +33,7 @@ class DLLService : public EasyService
 public:
     DLLService(const wchar_t* dllName, int _playerType);
 
-    virtual const char* GetNodeName();
+    virtual const wchar_t* GetNodeName();
     virtual std::vector<ItemInfo> InvokeService();
     virtual const wchar_t* GetFileName(const wchar_t* fileID);
 
@@ -50,7 +50,7 @@ class EXEService : public EasyService
 public:
     EXEService(const wchar_t* exeName, int _playerType);
 
-    virtual const char* GetNodeName();
+    virtual const wchar_t* GetNodeName();
     virtual std::vector<ItemInfo> InvokeService();
     virtual const wchar_t* GetFileName(const wchar_t* fileID);
 

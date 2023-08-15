@@ -13,7 +13,7 @@ DLLService::DLLService(const wchar_t* dllName, int _playerType)
     _getFileName = reinterpret_cast<GetFileNameFunc>(GetProcAddress(dllModule, "GetFileName"));
 }
 
-const char* DLLService::GetNodeName()
+const wchar_t* DLLService::GetNodeName()
 {
     return _getNodeName();
 }

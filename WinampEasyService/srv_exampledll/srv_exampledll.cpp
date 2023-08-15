@@ -3,8 +3,8 @@
 
 int currentItem = 0;
 
-const char* GetNodeName() {
-    return "Example CPP Service Plugin";
+const wchar_t* GetNodeName() {
+    return L"Example CPP Service Plugin";
 }
 
 ItemInfo InvokeService(int PlayerType) {

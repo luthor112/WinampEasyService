@@ -21,7 +21,7 @@ struct ItemInfo
 extern "C" {
 #endif
 
-    EASY_API const char* GetNodeName();
+    EASY_API const wchar_t* GetNodeName();
     EASY_API ItemInfo InvokeService(int PlayerType);
     EASY_API ItemInfo InvokeNext(int PleyerType);
     EASY_API const wchar_t* GetFileName(const wchar_t* fileID);
