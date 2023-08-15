@@ -25,7 +25,7 @@ Service plugin development:
         * ShowWindow resides in `user32.dll`, `SW_SHOW` equals 5
     * Full example: `WinampEasyService\\msrv_exampledll`
 * Unmanaged DLLs have to be named `srv_\*.dll` and implement the functions in `WinampEasyService\\ml_easysrv\\easysrv.h`:
-    * `const char\* GetNodeName()` should return the name you wish to show in the Media Library
+    * `const wchar_t\* GetNodeName()` should return the name you wish to show in the Media Library
     * `ItemInfo InvokeService(int PlayerType)` should return the first entry to populate the Media Library ListView with
         * `ItemInfo` contains the following: Artist, Title, Info, Filename
         * The Filename can be a direct filename (e.g. `e:\\example.mp3`) or a reference (e.g. `ref_examplefile`)
@@ -75,3 +75,7 @@ Common operation:
 # Screenshot
 
 ![Screenshot](screenshot.png)
+
+# TODO
+
+* Working cache
