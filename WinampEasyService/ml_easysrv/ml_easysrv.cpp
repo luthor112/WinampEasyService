@@ -31,6 +31,7 @@ INT_PTR MessageProc(int message_type, INT_PTR param1, INT_PTR param2, INT_PTR pa
 void loadServices(void);
 
 // ListView
+void addLineToList(HWND hwnd, int index, const wchar_t* author, const wchar_t* title, const wchar_t* information);
 LRESULT CALLBACK viewDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /////////////////////
@@ -78,6 +79,15 @@ INT_PTR MessageProc(int message_type, INT_PTR param1, INT_PTR param2, INT_PTR pa
     {
 		HWND dialogWnd = CreateDialog(plugin.hDllInstance, MAKEINTRESOURCE(IDD_VIEW_EASYSRV), (HWND)(LONG_PTR)param2, (DLGPROC)viewDialogProc);
 		serviceHwndMap[dialogWnd] = param1;
+
+		std::vector<ItemInfo> itemsToAdd = serviceListItemMap[serviceHwndMap[dialogWnd]];
+		int index = 0;
+		for (ItemInfo info : itemsToAdd)
+		{
+			addLineToList(dialogWnd, index, info.author, info.title, info.info);
+			index++;
+		}
+
 		return (INT_PTR)dialogWnd;
     }
 
