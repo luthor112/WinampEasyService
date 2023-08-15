@@ -108,9 +108,9 @@ extern "C" __declspec(dllexport) const wchar_t* GetPluginFileName(const wchar_t*
 
 void addTreeItem(UINT_PTR parentId, UINT_PTR id, const char* title, BOOL hasChildren, int imageIndex)
 {
+	// TODO: Change API and delete this
 	const size_t cSize = strlen(title) + 1;
 	wchar_t* wc = new wchar_t[cSize];
-	//mbstowcs_s(wc, title, cSize);
 	size_t retSize;
 	mbstowcs_s(&retSize, wc, cSize, title, cSize);
 
@@ -192,9 +192,6 @@ void loadServices()
 // LISTVIEW //
 //////////////
 
-typedef void (*ChildResizeFunc)(HWND, ChildWndResizeItem*, int);
-static ChildResizeFunc ml_childresize_init = 0, ml_childresize_resize = 0;
-
 typedef int (*HookDialogFunc)(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static HookDialogFunc ml_hook_dialog_msg = 0;
 
@@ -233,15 +230,11 @@ static BOOL view_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 	/* gen_ml has some helper functions to deal with skinned dialogs,
 	   we're going to grab their function pointers.
 		 for definition of magic numbers, see gen_ml/ml.h	 */
-	if (!ml_childresize_init)
+	if (!ml_hook_dialog_msg)
 	{
 		/* skinning helper functions */
 		ml_hook_dialog_msg = (HookDialogFunc)SendMessage(plugin.hwndLibraryParent, WM_ML_IPC, (WPARAM)2, ML_IPC_SKIN_WADLG_GETFUNC);
 		ml_draw = (DrawFunc)SendMessage(plugin.hwndLibraryParent, WM_ML_IPC, (WPARAM)3, ML_IPC_SKIN_WADLG_GETFUNC);
-
-		/* resizing helper functions */
-		ml_childresize_init = (ChildResizeFunc)SendMessage(plugin.hwndLibraryParent, WM_ML_IPC, (WPARAM)32, ML_IPC_SKIN_WADLG_GETFUNC);
-		ml_childresize_resize = (ChildResizeFunc)SendMessage(plugin.hwndLibraryParent, WM_ML_IPC, (WPARAM)33, ML_IPC_SKIN_WADLG_GETFUNC);
 	}
 
 	HWND listWnd = GetDlgItem(hwnd, IDC_LIST);
@@ -280,15 +273,17 @@ static BOOL view_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 	sw.hwndToSkin = GetDlgItem(hwnd, IDC_INVOKE);
 	MLSkinWindow(plugin.hwndLibraryParent, &sw);
 
-	ml_childresize_init(hwnd, srvwnd_rlist, sizeof(srvwnd_rlist) / sizeof(srvwnd_rlist[0]));
+	// TODO: Implement resizing
+	//ml_childresize_init(hwnd, srvwnd_rlist, sizeof(srvwnd_rlist) / sizeof(srvwnd_rlist[0]));
 
 	return FALSE;
 }
 
 static BOOL view_OnSize(HWND hwnd, UINT state, int cx, int cy)
 {
-	if (state != SIZE_MINIMIZED)
-		ml_childresize_resize(hwnd, srvwnd_rlist, sizeof(srvwnd_rlist) / sizeof(srvwnd_rlist[0]));
+	// TODO: Implement resizing
+	/*if (state != SIZE_MINIMIZED)
+		ml_childresize_resize(hwnd, srvwnd_rlist, sizeof(srvwnd_rlist) / sizeof(srvwnd_rlist[0]));*/
 	return FALSE;
 }
 
