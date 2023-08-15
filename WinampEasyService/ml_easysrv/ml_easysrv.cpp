@@ -267,17 +267,20 @@ static BOOL view_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 	sw.hwndToSkin = GetDlgItem(hwnd, IDC_INVOKE);
 	MLSkinWindow(plugin.hwndLibraryParent, &sw);
 
-	// TODO: Implement resizing
-	//ml_childresize_init(hwnd, srvwnd_rlist, sizeof(srvwnd_rlist) / sizeof(srvwnd_rlist[0]));
-
 	return FALSE;
 }
 
 static BOOL view_OnSize(HWND hwnd, UINT state, int cx, int cy)
 {
-	// TODO: Implement resizing
-	/*if (state != SIZE_MINIMIZED)
-		ml_childresize_resize(hwnd, srvwnd_rlist, sizeof(srvwnd_rlist) / sizeof(srvwnd_rlist[0]));*/
+	if (state != SIZE_MINIMIZED)
+	{
+		HWND listWnd = GetDlgItem(hwnd, IDC_LIST);
+		HWND buttonWnd = GetDlgItem(hwnd, IDC_INVOKE);
+
+		MoveWindow(listWnd, 0, 0, cx, cy - 29, TRUE);
+		MoveWindow(buttonWnd, 1, cy - 25, 100, 25, TRUE);
+	}
+
 	return FALSE;
 }
 
