@@ -37,10 +37,10 @@ const wchar_t* DLLService::GetFileName(const wchar_t* fileID)
     return _getFileName(fileID);
 }
 
-HWND DLLService::GetCustomDialog()
+HWND DLLService::GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl)
 {
     if (_getCustomDialog != NULL)
-        return _getCustomDialog();
+        return _getCustomDialog(_hwndWinampParent, _hwndLibraryParent, hwndParentControl);
     else
         return NULL;
 }

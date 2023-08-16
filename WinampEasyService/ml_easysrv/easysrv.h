@@ -27,7 +27,7 @@ extern "C" {
     EASY_API ItemInfo InvokeService(int PlayerType);
     EASY_API ItemInfo InvokeNext(int PleyerType);
     EASY_API const wchar_t* GetFileName(const wchar_t* fileID);
-    EASY_API HWND GetCustomDialog();
+    EASY_API HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl);
 
 #ifdef __cplusplus
 }

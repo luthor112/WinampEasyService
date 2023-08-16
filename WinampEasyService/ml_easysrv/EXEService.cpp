@@ -176,7 +176,7 @@ const wchar_t* EXEService::GetFileName(const wchar_t* fileID)
     return _wcsdup(line.c_str());
 }
 
-HWND EXEService::GetCustomDialog()
+HWND EXEService::GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl)
 {
     return NULL;
 }
