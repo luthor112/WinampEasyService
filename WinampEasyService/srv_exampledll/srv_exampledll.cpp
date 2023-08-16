@@ -1,22 +1,25 @@
 #include "..\ml_easysrv\easysrv.h"
 #include <string.h>
 
-int currentItem = 0;
+int currentItemIndex = 0;
 
 const wchar_t* GetNodeName() {
     return L"Example CPP Service Plugin";
 }
 
 ItemInfo InvokeService(int PlayerType) {
-    currentItem++;
+    currentItemIndex = 0;
     ItemInfo currentItem = { L"Example Author", L"Example Title", L"This is a direct filename", L"e:\\example.mp3" };
+
+    currentItemIndex++;
     return currentItem;
 }
 
 ItemInfo InvokeNext(int PleyerType) {
-    if (currentItem == 1) {
-        currentItem++;
+    if (currentItemIndex == 1) {
         ItemInfo currentItem = { L"Example Author", L"Example Title 2", L"This will use a reference", L"ref_examplefile" };
+
+        currentItemIndex++;
         return currentItem;
     } else {
         return ItemInfo();
