@@ -175,3 +175,8 @@ const wchar_t* EXEService::GetFileName(const wchar_t* fileID)
     std::getline(inSS, line);
     return _wcsdup(line.c_str());
 }
+
+HWND EXEService::GetCustomDialog()
+{
+    return NULL;
+}

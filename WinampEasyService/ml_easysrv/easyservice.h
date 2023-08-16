@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Windows.h>
 #include <vector>
 
 #define PLAYERTYPE_WINAMP 0
@@ -17,6 +18,7 @@ typedef const wchar_t* (*GetNodeNameFunc)();
 typedef ItemInfo (*InvokeServiceFunc)(int PlayerType);
 typedef ItemInfo (*InvokeNextFunc)(int PleyerType);
 typedef const wchar_t* (*GetFileNameFunc)(const wchar_t* fileID);
+typedef HWND (*GetCustomDialogFunc)();
 
 class EasyService
 {
@@ -24,6 +26,7 @@ public:
     virtual const wchar_t* GetNodeName() = 0;
     virtual std::vector<ItemInfo> InvokeService() = 0;
     virtual const wchar_t* GetFileName(const wchar_t* fileID) = 0;
+    virtual HWND GetCustomDialog() = 0;
 
     virtual ~EasyService() {}
 };
@@ -36,6 +39,7 @@ public:
     virtual const wchar_t* GetNodeName();
     virtual std::vector<ItemInfo> InvokeService();
     virtual const wchar_t* GetFileName(const wchar_t* fileID);
+    virtual HWND GetCustomDialog();
 
 private:
     int playerType;
@@ -43,6 +47,7 @@ private:
     InvokeServiceFunc _invokeService;
     InvokeNextFunc _invokeNext;
     GetFileNameFunc _getFileName;
+    GetCustomDialogFunc _getCustomDialog;
 };
 
 class EXEService : public EasyService
@@ -53,6 +58,7 @@ public:
     virtual const wchar_t* GetNodeName();
     virtual std::vector<ItemInfo> InvokeService();
     virtual const wchar_t* GetFileName(const wchar_t* fileID);
+    virtual HWND GetCustomDialog();
 
 private:
     int playerType;

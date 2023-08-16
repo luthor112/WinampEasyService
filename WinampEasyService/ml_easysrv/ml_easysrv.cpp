@@ -77,18 +77,28 @@ INT_PTR MessageProc(int message_type, INT_PTR param1, INT_PTR param2, INT_PTR pa
 {
     if (message_type == ML_MSG_TREE_ONCREATEVIEW && param1 > 1)
     {
-		HWND dialogWnd = CreateDialog(plugin.hDllInstance, MAKEINTRESOURCE(IDD_VIEW_EASYSRV), (HWND)(LONG_PTR)param2, (DLGPROC)viewDialogProc);
-		serviceHwndMap[dialogWnd] = param1;
-
-		std::vector<ItemInfo> itemsToAdd = serviceListItemMap[serviceHwndMap[dialogWnd]];
-		int index = 0;
-		for (ItemInfo info : itemsToAdd)
+		HWND customWnd = serviceMap[param1]->GetCustomDialog();
+		if (customWnd != NULL)
 		{
-			addLineToList(dialogWnd, index, info.author, info.title, info.info);
-			index++;
-		}
+			serviceHwndMap[customWnd] = param1;
 
-		return (INT_PTR)dialogWnd;
+			return (INT_PTR)customWnd;
+		}
+		else
+		{
+			HWND dialogWnd = CreateDialog(plugin.hDllInstance, MAKEINTRESOURCE(IDD_VIEW_EASYSRV), (HWND)(LONG_PTR)param2, (DLGPROC)viewDialogProc);
+			serviceHwndMap[dialogWnd] = param1;
+
+			std::vector<ItemInfo> itemsToAdd = serviceListItemMap[serviceHwndMap[dialogWnd]];
+			int index = 0;
+			for (ItemInfo info : itemsToAdd)
+			{
+				addLineToList(dialogWnd, index, info.author, info.title, info.info);
+				index++;
+			}
+
+			return (INT_PTR)dialogWnd;
+		}
     }
 
     return 0;

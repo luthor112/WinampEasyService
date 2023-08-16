@@ -11,6 +11,7 @@ DLLService::DLLService(const wchar_t* dllName, int _playerType)
     _invokeService = reinterpret_cast<InvokeServiceFunc>(GetProcAddress(dllModule, "InvokeService"));
     _invokeNext = reinterpret_cast<InvokeNextFunc>(GetProcAddress(dllModule, "InvokeNext"));
     _getFileName = reinterpret_cast<GetFileNameFunc>(GetProcAddress(dllModule, "GetFileName"));
+    _getCustomDialog = reinterpret_cast<GetCustomDialogFunc>(GetProcAddress(dllModule, "GetCustomDialog"));
 }
 
 const wchar_t* DLLService::GetNodeName()
@@ -34,4 +35,12 @@ std::vector<ItemInfo> DLLService::InvokeService()
 const wchar_t* DLLService::GetFileName(const wchar_t* fileID)
 {
     return _getFileName(fileID);
+}
+
+HWND DLLService::GetCustomDialog()
+{
+    if (_getCustomDialog != NULL)
+        return _getCustomDialog();
+    else
+        return NULL;
 }
