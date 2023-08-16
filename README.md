@@ -4,11 +4,13 @@ Making it easier to integrate services with good old WinAmp
 Goal:
 * Make it easier to write plugins and integrate services into WinAmp and WACUP
 
-Using plugins:
+Installing plugins:
 * Put the ml_easysrv and in_easyfngetter plugins in the WinAmp or WACUP `Plugins` folder
 * Also put isrv_managed in the WinAmp or WACUP `Plugins` folder
 * Put any service plugins (`esrv_\*.exe, msrv_\*.dll, srv_\*.dll`) in the same folder
 * The services will be accessible in the `Services` tree of the Media Library
+
+Using plugins (Instead of this, plugins can now provide their own custom UI):
 * Press the `Invoke plugin` button to interact with the selected service
 * Double click an entry in the list to play it
 * Alt + double click an entry in the list to enqueue it
@@ -34,6 +36,10 @@ Service plugin development:
         * Return and empty `ItemInfo()` to denote the end of the list
     * Optional: `const wchar_t\* GetFileName(const wchar_t\* fileID)` should return the direct filename when called with a reference
     * Full example: `WinampEasyService\\srv_exampledll`
+* Unmanaged DLLs with custom UIs have to be named `srv_\*.dll` and implement the functions in `WinampEasyService\\ml_easysrv\\easysrv.h`:
+    * `const wchar_t\* GetNodeName()` should return the name you wish to show in the Media Library
+    * `HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl)` should return the HWND of the newly created child dialog
+    * Full example: `WinampEasyService\\srv_cdlexampledll`
 * EXE files (doesn't matter if managed or unmanaged) have to be named `esrv_\*.exe` and respond to the following command line arguments:
     * `GetNodeName`: Print the name you wish to show in the Media Library to STDOUT
     * `InvokeService PlayerType`: Print the entries to populate the Media Library ListView with to STDOUT in the following way:
