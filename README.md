@@ -77,8 +77,8 @@ The following plugins have been developed using this framework:
     * Uses YouTubeExplode under the hood
 * srv_skinbrowser: Browse and switch WinAmp skins right from the Media Library!
     * Presumes the `Skins` directory is next to the `Plugins` directory
-    * TODO: Update filelist every second or so
-    * TODO: Automatically apply new skins if checkbox is checked
+    * Updates the filelist with newly appeared files every second
+    * Automatically applies newly added skins if checkbox is checked
 
 Common operation:
 * Downloaded files and saved credentials are stored in `System.IO.Path.GetTempPath()`

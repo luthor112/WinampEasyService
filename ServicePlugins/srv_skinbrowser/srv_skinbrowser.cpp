@@ -12,10 +12,11 @@
 #include "resource.h"
 
 #include <string.h>
-
 #include <vector>
 
 #include "resource.h"
+
+#define RESCAN_TIMER_ID 111
 
 HINSTANCE myself = NULL;
 HWND hwndWinampParent = NULL;
@@ -42,8 +43,15 @@ void clearList(HWND hwnd)
 	ListView_DeleteAllItems(hwndList);
 }
 
-void addLineToList(HWND hwnd, const wchar_t* filename)
+// Returns TRUE if the entry was new and added
+bool addLineToList(HWND hwnd, const wchar_t* filename)
 {
+	for (const wchar_t* currFileName : fileList)
+	{
+		if (!wcscmp(currFileName, filename))
+			return FALSE;
+	}
+
 	fileList.push_back(filename);
 
 	HWND hwndList = GetDlgItem(hwnd, IDC_LIST);
@@ -54,13 +62,15 @@ void addLineToList(HWND hwnd, const wchar_t* filename)
 	lvi.pszText = (LPTSTR)filename;
 	lvi.cchTextMax = lstrlenW(filename);
 	SendMessage(hwndList, LVM_INSERTITEMW, 0, (LPARAM)&lvi);
+
+	return TRUE;
 }
 
-void fillFileList(HWND hwnd)
+// Returns the first entry that's being newly added to the list
+const wchar_t* fillFileList(HWND hwnd)
 {
-	clearList(hwnd);
-
 	char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
+	const wchar_t* newFile = NULL;
 	
 	wchar_t searchCriteria[1024];
 	wsprintf(searchCriteria, L"%S\\..\\Skins\\*", pluginDir);
@@ -72,10 +82,18 @@ void fillFileList(HWND hwnd)
 		do
 		{
 			if (FindFileData.cFileName[0] != '.')
-				addLineToList(hwnd, _wcsdup(FindFileData.cFileName));
+			{
+				const wchar_t* fileNameCopy = _wcsdup(FindFileData.cFileName);
+				if (addLineToList(hwnd, fileNameCopy))
+				{
+					newFile = fileNameCopy;
+				}
+			}
 		} while (FindNextFile(searchHandle, &FindFileData));
 		FindClose(searchHandle);
 	}
+
+	return newFile;
 }
 
 typedef int (*HookDialogFunc)(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -151,6 +169,8 @@ static BOOL view_OnSize(HWND hwnd, UINT state, int cx, int cy)
 
 static BOOL view_OnDestroy(HWND hwnd)
 {
+	KillTimer(hwnd, RESCAN_TIMER_ID);
+
 	return FALSE;
 }
 
@@ -169,6 +189,7 @@ static BOOL view_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 	break;
 	case IDC_RESCAN:
 	{
+		clearList(hwnd);
 		fillFileList(hwnd);
 	}
 	break;
@@ -192,6 +213,18 @@ static BOOL list_OnNotify(HWND hwnd, int wParam, NMHDR* lParam)
 	return FALSE;
 }
 
+static void view_OnTimer(HWND hwnd, UINT id)
+{
+	if (id == RESCAN_TIMER_ID)
+	{
+		const wchar_t* newFile = fillFileList(hwnd);
+		if (newFile != NULL && autoApply)
+		{
+			SendMessage(hwndWinampParent, WM_WA_IPC, (WPARAM)newFile, IPC_SETSKINW);
+		}
+	}
+}
+
 LRESULT CALLBACK customDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	/* first, ask the dialog skinning system if it wants to do anything with the message
@@ -207,6 +240,7 @@ LRESULT CALLBACK customDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 	switch (uMsg) {
 		HANDLE_MSG(hwndDlg, WM_INITDIALOG, view_OnInitDialog);
+		HANDLE_MSG(hwndDlg, WM_TIMER, view_OnTimer);
 		HANDLE_MSG(hwndDlg, WM_COMMAND, view_OnCommand);
 		HANDLE_MSG(hwndDlg, WM_SIZE, view_OnSize);
 		HANDLE_MSG(hwndDlg, WM_NOTIFY, list_OnNotify);
@@ -229,6 +263,7 @@ HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndP
 
 	HWND dialogWnd = CreateDialog(myself, MAKEINTRESOURCE(IDD_VIEW_CUSTOM), hwndParentControl, (DLGPROC)customDialogProc);
 	
+	clearList(dialogWnd);
 	fillFileList(dialogWnd);
 
 	HWND checkWnd = GetDlgItem(dialogWnd, IDC_CHECK);
@@ -236,6 +271,8 @@ HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndP
 		SendMessage(checkWnd, BM_SETCHECK, BST_CHECKED, 0);
 	else
 		SendMessage(checkWnd, BM_SETCHECK, BST_UNCHECKED, 0);
+
+	SetTimer(dialogWnd, RESCAN_TIMER_ID, 1000, NULL);
 
 	return dialogWnd;
 }
