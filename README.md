@@ -79,10 +79,16 @@ The following plugins have been developed using this framework:
     * Presumes the `Skins` directory is next to the `Plugins` directory
     * Updates the filelist with newly appeared files every second
     * Automatically applies newly added skins if checkbox is checked
+* srv_skinbrowser2: Browse and switch WinAmp skins from the Media Library using thumbnails!
+    * Presumes the `Skins` directory is next to the `Plugins` directory
+    * Updates the filelist with newly appeared files and thumbnails every second
+    * Automatically applies newly added skins if checkbox is checked
 
 Common operation:
 * Downloaded files and saved credentials are stored in `System.IO.Path.GetTempPath()`
 
-# Screenshot
+# Screenshots
 
 ![Screenshot](screenshot.png)
+
+![Skin Browser 2 Screenshot](screenshot2.png)
