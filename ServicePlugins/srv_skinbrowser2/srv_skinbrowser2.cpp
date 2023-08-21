@@ -162,13 +162,6 @@ static BOOL view_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 
 	HWND listWnd = GetDlgItem(hwnd, IDC_LIST);
 
-	/* add listview columns */
-	/*LVCOLUMN lvc = {0,};
-	lvc.mask = LVCF_TEXT | LVCF_WIDTH;
-	lvc.pszText = (LPTSTR)L"Filename";
-	lvc.cx = 250;
-	SendMessageW(listWnd, LVM_INSERTCOLUMNW, (WPARAM)0, (LPARAM)&lvc);*/
-
 	/* skin dialog */
 	MLSKINWINDOW sw;
 	sw.skinType = SKINNEDWND_TYPE_DIALOG;
