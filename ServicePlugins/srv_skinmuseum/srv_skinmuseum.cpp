@@ -109,6 +109,14 @@ void setToPage(HWND hwnd, int page)
 	currentPage = page;
 	clearList(hwnd);
 
+	wchar_t pageText[128];
+	wsprintf(pageText, L"Page %d", currentPage);
+
+	HWND pageNumWnd = GetDlgItem(hwnd, IDC_PAGENUM);
+	SetWindowText(pageNumWnd, pageText);
+	RedrawWindow(pageNumWnd, NULL, NULL, RDW_INVALIDATE);
+
+
 	char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
 	wchar_t tempPath[MAX_PATH];
 	GetTempPath(MAX_PATH, tempPath);
