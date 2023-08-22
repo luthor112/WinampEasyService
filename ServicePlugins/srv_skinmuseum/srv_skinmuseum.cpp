@@ -70,6 +70,7 @@ HIMAGELIST previewImageList;
 void clearList(HWND hwnd)
 {
 	fileList.clear();
+	currentSkin = -1;
 
 	HWND hwndList = GetDlgItem(hwnd, IDC_LIST);
 	ListView_DeleteAllItems(hwndList);
@@ -239,9 +240,23 @@ static BOOL view_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 	break;
 	case IDC_KEEP:
 	{
-		// TODO
 		if (currentSkin != -1)
-			MessageBox(0, L"Keep button pressed!", L"", MB_OK);
+		{
+			char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
+			wchar_t keptFileName[1024];
+			wsprintf(keptFileName, L"%S\\..\\Skins\\%s", pluginDir, fileList[currentSkin].filename);
+
+			if (!PathFileExists(keptFileName))
+			{
+				wchar_t tempPath[MAX_PATH];
+				GetTempPath(MAX_PATH, tempPath);
+
+				wchar_t cacheFileName[1024];
+				wsprintf(cacheFileName, L"%swmp_museum_cache\\%s", tempPath, fileList[currentSkin].filename);
+
+				CopyFile(cacheFileName, keptFileName, FALSE);
+			}
+		}
 	}
 	break;
 	case IDC_PREV:

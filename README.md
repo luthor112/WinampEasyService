@@ -83,6 +83,10 @@ The following plugins have been developed using this framework:
     * Presumes the `Skins` directory is next to the `Plugins` directory
     * Updates the filelist with newly appeared files and thumbnails every second
     * Automatically applies newly added skins if checkbox is checked
+* srv_skinmuseum: Browse the WinAmp Skin Museum right from the Media Library
+    * Double click to download and set a skin
+    * Click "Keep current skin" to copy the last set skin from the current page to your Skins directory
+        * This only works if you have Write rights to the directory
 
 Common operation:
 * Downloaded files and saved credentials are stored in `System.IO.Path.GetTempPath()`
