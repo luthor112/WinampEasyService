@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "skinmuseum_helper": {
+      "commandName": "Project",
+      "commandLineArgs": "download cd251187a5e6ff54ce938d26f1f2de02 e:\\Zsolt\\Winamp3_Classified_v5.5.wsz"
+    }
+  }
+}
