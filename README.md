@@ -87,6 +87,7 @@ The following plugins have been developed using this framework:
     * Double click to download and set a skin
     * Click "Keep current skin" to copy the last set skin from the current page to your Skins directory
         * This only works if you have Write rights to the directory
+* srv_steamimport: Import the soundtracks you downloaded on steam to the Local Library or into individual playlists!
 
 Common operation:
 * Downloaded files and saved credentials are stored in `System.IO.Path.GetTempPath()`
