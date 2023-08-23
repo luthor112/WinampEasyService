@@ -16,6 +16,7 @@
 #include <string>
 #include <fstream>
 #include <filesystem>
+#include <map>
 
 #include "resource.h"
 
@@ -34,6 +35,26 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 
 const wchar_t* GetNodeName() {
 	return L"Steam Music Importer";
+}
+
+// std::codecvt_utf8 is deprecated in C++17
+// https://stackoverflow.com/a/69410299
+std::string wide_string_to_string(const std::wstring& wide_string)
+{
+	if (wide_string.empty())
+	{
+		return "";
+	}
+
+	const auto size_needed = WideCharToMultiByte(CP_UTF8, 0, &wide_string.at(0), (int)wide_string.size(), nullptr, 0, nullptr, nullptr);
+	if (size_needed <= 0)
+	{
+		throw std::runtime_error("WideCharToMultiByte() failed: " + std::to_string(size_needed));
+	}
+
+	std::string result(size_needed, 0);
+	WideCharToMultiByte(CP_UTF8, 0, &wide_string.at(0), (int)wide_string.size(), &result.at(0), size_needed, nullptr, nullptr);
+	return result;
 }
 
 enum class UpdateTarget { LocalLibrary, Playlists };
@@ -73,9 +94,14 @@ void scanFiles(UpdateTarget updateTarget)
 		wchar_t musicDir[1024];
 		wsprintf(musicDir, L"%s\\steamapps\\music", libraryPath.c_str());
 
+		wchar_t tempPath[MAX_PATH];
+		GetTempPath(MAX_PATH, tempPath);
+
 		using recursive_directory_iterator = std::filesystem::recursive_directory_iterator;
 		if (PathFileExists(musicDir))
 		{
+			std::map<std::wstring, std::ofstream> plStreams;
+
 			for (const auto& dirEntry : recursive_directory_iterator(musicDir, std::filesystem::directory_options::skip_permission_denied))
 			{
 				if (dirEntry.is_regular_file())
@@ -86,16 +112,46 @@ void scanFiles(UpdateTarget updateTarget)
 						{
 							LMDB_FILE_ADD_INFOW newFile = {
 								_wcsdup(dirEntry.path().native().c_str()),
-								-1,
-								-1
+								-1,		// metadata get mode (0 - don't use metadata, 1 - use metadata; -1 - read from user settings (ini file)
+								-1		// metadata guessing mode (0 - smart, 1 - simple; 2 - no, -1 - read from user settings (ini file)
 							};
 							SendMessage(hwndLibraryParent, WM_ML_IPC, (WPARAM)&newFile, ML_IPC_DB_ADDORUPDATEFILEW);
 						}
 						else
 						{
-							// TODO
+							std::wstring albumName = dirEntry.path().parent_path().filename().native();
+							if (plStreams.count(albumName) == 0)
+							{
+								wchar_t plFileName[MAX_PATH];
+								wsprintf(plFileName, L"%ssteam_pl_%s.m3u8", tempPath, albumName.c_str());
+								plStreams[albumName] = std::ofstream(plFileName);
+							}
+
+							plStreams[albumName] << wide_string_to_string(dirEntry.path().native()) << "\n";
 						}
 					}
+				}
+			}
+
+			for (auto& [key, val] : plStreams)
+			{
+				val.close();
+
+				if (updateTarget == UpdateTarget::Playlists)
+				{
+					wchar_t plFileName[MAX_PATH];
+					wsprintf(plFileName, L"%ssteam_pl_%s.m3u8", tempPath, key.c_str());
+
+					mlAddPlaylist newPlaylist = {
+						sizeof(mlAddPlaylist),
+						_wcsdup(key.c_str()),	// playlistName
+						_wcsdup(plFileName),		// filename
+						PL_FLAGS_IMPORT,				// set to have ml_playlists make a copy (only valid for mlAddPlaylist)
+						-1,								// numItems, set to -1 if you don't know
+						-1								// length, in seconds, set to -1 if you don't know
+					};
+
+					SendMessage(hwndLibraryParent, WM_ML_IPC, (WPARAM)&newPlaylist, ML_IPC_PLAYLIST_ADD);
 				}
 			}
 		}
