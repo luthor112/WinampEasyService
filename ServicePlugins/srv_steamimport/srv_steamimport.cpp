@@ -9,9 +9,17 @@
 #include "gen_ml/ml_ipc_0313.h"
 #include "gen_ml/childwnd.h"
 #include "Winamp/wa_dlg.h"
-#include "resource.h"
+
+#include <string.h>
+#include <vector>
+#include <Shlwapi.h>
+#include <string>
+#include <fstream>
+#include <filesystem>
 
 #include "resource.h"
+
+#pragma comment(lib, "Shlwapi.lib")
 
 HINSTANCE myself = NULL;
 HWND hwndWinampParent = NULL;
@@ -26,6 +34,74 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 
 const wchar_t* GetNodeName() {
 	return L"Steam Music Importer";
+}
+
+enum class UpdateTarget { LocalLibrary, Playlists };
+
+void scanFiles(UpdateTarget updateTarget)
+{
+	wchar_t steamDir[MAX_PATH];
+	DWORD steamDirLen = MAX_PATH;
+	RegGetValueW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Wow6432Node\\Valve\\Steam", L"InstallPath", RRF_RT_REG_SZ, NULL, steamDir, &steamDirLen);
+
+	wchar_t folderListFile[MAX_PATH];
+	wsprintf(folderListFile, L"%s\\steamapps\\libraryfolders.vdf", steamDir);
+
+	std::vector<std::wstring> libraryList;
+
+	std::wifstream folderListStream(folderListFile);
+	std::wstring line;
+	while (std::getline(folderListStream, line))
+	{
+		size_t keyBeg = line.find(L"\"path\"");
+		if (keyBeg != std::wstring::npos)
+		{
+			size_t libraryBeg = line.find('\"', keyBeg + 6) + 1;
+			size_t libraryEnd = line.rfind('\"');
+
+			std::wstring libraryPath;
+			for (size_t i = libraryBeg; i < libraryEnd; i++)
+				if (!(line[i] == '\\' && line[i - 1] == '\\'))
+					libraryPath += line[i];
+
+			libraryList.push_back(libraryPath);
+		}
+	}
+
+	for (std::wstring libraryPath : libraryList)
+	{
+		wchar_t musicDir[1024];
+		wsprintf(musicDir, L"%s\\steamapps\\music", libraryPath.c_str());
+
+		using recursive_directory_iterator = std::filesystem::recursive_directory_iterator;
+		if (PathFileExists(musicDir))
+		{
+			for (const auto& dirEntry : recursive_directory_iterator(musicDir, std::filesystem::directory_options::skip_permission_denied))
+			{
+				if (dirEntry.is_regular_file())
+				{
+					if (dirEntry.path().extension() == ".mp3" || dirEntry.path().extension() == ".wav" || dirEntry.path().extension() == ".flac")
+					{
+						if (updateTarget == UpdateTarget::LocalLibrary)
+						{
+							LMDB_FILE_ADD_INFOW newFile = {
+								_wcsdup(dirEntry.path().native().c_str()),
+								-1,
+								-1
+							};
+							SendMessage(hwndLibraryParent, WM_ML_IPC, (WPARAM)&newFile, ML_IPC_DB_ADDORUPDATEFILEW);
+						}
+						else
+						{
+							// TODO
+						}
+					}
+				}
+			}
+		}
+	}
+
+	SendMessage(hwndLibraryParent, WM_ML_IPC, 0, ML_IPC_DB_SYNCDB);
 }
 
 typedef int (*HookDialogFunc)(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -78,14 +154,14 @@ static BOOL view_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 	switch (id) {
 	case IDC_RESCANLIB:
 	{
-		// TODO
-		MessageBox(0, L"TODO", L"", MB_OK);
+		scanFiles(UpdateTarget::LocalLibrary);
+		MessageBox(0, L"Update finished!", L"Steam Music Importer", MB_OK);
 	}
 	break;
 	case IDC_RESCANPL:
 	{
-		// TODO
-		MessageBox(0, L"TODO", L"", MB_OK);
+		scanFiles(UpdateTarget::Playlists);
+		MessageBox(0, L"Update finished!", L"Steam Music Importer", MB_OK);
 	}
 	break;
 	}
