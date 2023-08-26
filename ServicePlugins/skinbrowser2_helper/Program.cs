@@ -36,7 +36,7 @@ namespace skinbrowser2_helper
 
         static void ExtractThumbnail(string skinFilename, string thumbsDir)
         {
-            string[] validThumbnails = { "main.png", "main.bmp", "mainframe.png", "mainframe.bmp", "screenshot.png", "screenshot.bmp" };
+            string[] validThumbnails = { "main.png", "main.bmp", "mainframe.png", "mainframe.bmp", "screenshot.png", "screenshot.bmp", "wacupscreenshot.png", "wacupscreenshot.bmp" };
 
             if (Directory.Exists(skinFilename))
             {
