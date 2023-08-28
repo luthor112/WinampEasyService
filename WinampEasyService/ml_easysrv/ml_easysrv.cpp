@@ -36,6 +36,7 @@ void loadServices(void);
 // ListView
 void addLineToList(HWND hwnd, int index, const wchar_t* info);
 LRESULT CALLBACK viewDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+BOOL view_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam);
 
 /////////////////////
 // LOADED SERVICES //
@@ -89,7 +90,7 @@ INT_PTR MessageProc(int message_type, INT_PTR param1, INT_PTR param2, INT_PTR pa
 		}
 		else
 		{
-			HWND dialogWnd = CreateDialog(plugin.hDllInstance, MAKEINTRESOURCE(IDD_VIEW_EASYSRV), (HWND)(LONG_PTR)param2, (DLGPROC)viewDialogProc);
+			HWND dialogWnd = CreateDialogParamW(plugin.hDllInstance, MAKEINTRESOURCE(IDD_VIEW_EASYSRV), (HWND)(LONG_PTR)param2, (DLGPROC)viewDialogProc, (LPARAM)param1);
 			serviceHwndMap[dialogWnd] = param1;
 
 			std::vector<CustomItemInfo> itemsToAdd = serviceListItemMap[serviceHwndMap[dialogWnd]];
@@ -246,6 +247,8 @@ void addLineToList(HWND hwnd, int index, const wchar_t* info)
 
 static BOOL view_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 {
+	UINT_PTR serviceID = lParam;
+
 	/* gen_ml has some helper functions to deal with skinned dialogs,
 	   we're going to grab their function pointers.
 		 for definition of magic numbers, see gen_ml/ml.h	 */
@@ -261,9 +264,9 @@ static BOOL view_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 	/* add listview columns */
 	LVCOLUMN lvc = { 0, };
 	lvc.mask = LVCF_TEXT | LVCF_WIDTH;
-	
+
 	int columnIndex = 0;
-	const wchar_t* columnList = serviceMap[serviceHwndMap[hwnd]]->GetColumnNames();
+	const wchar_t* columnList = serviceMap[serviceID]->GetColumnNames();
 	const wchar_t* currentStr = columnList;
 	while (wcslen(currentStr) != 0)
 	{
