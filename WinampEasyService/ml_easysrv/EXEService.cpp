@@ -124,7 +124,7 @@ const wchar_t* EXEService::GetNodeName()
     return _wcsdup(line.c_str());
 }
 
-const wchar_t** EXEService::GetColumnNames()
+const wchar_t* EXEService::GetColumnNames()
 {
     // TODO
     return NULL;

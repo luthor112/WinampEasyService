@@ -34,7 +34,7 @@ INT_PTR MessageProc(int message_type, INT_PTR param1, INT_PTR param2, INT_PTR pa
 void loadServices(void);
 
 // ListView
-void addLineToList(HWND hwnd, int index, const wchar_t** info);
+void addLineToList(HWND hwnd, int index, const wchar_t* info);
 LRESULT CALLBACK viewDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /////////////////////
@@ -222,7 +222,7 @@ static HookDialogFunc ml_hook_dialog_msg = 0;
 typedef void (*DrawFunc)(HWND hwndDlg, int* tab, int tabsize);
 static DrawFunc ml_draw = 0;
 
-void addLineToList(HWND hwnd, int index, const wchar_t** info)
+void addLineToList(HWND hwnd, int index, const wchar_t* info)
 {
 	HWND hwndList = GetDlgItem(hwnd, IDC_LIST);
 
@@ -230,12 +230,17 @@ void addLineToList(HWND hwnd, int index, const wchar_t** info)
 	lvi.mask = LVIF_TEXT;
 	lvi.iItem = index;
 	
-	for (int i = 0; info[i] != NULL; i++)
+	int subItemIndex = 0;
+	const wchar_t* currentStr = info;
+	while (wcslen(currentStr) != 0)
 	{
-		lvi.iSubItem = i;
-		lvi.pszText = (LPTSTR)info[i];
-		lvi.cchTextMax = lstrlenW(info[i]);
+		lvi.iSubItem = subItemIndex;
+		lvi.pszText = (LPTSTR)currentStr;
+		lvi.cchTextMax = lstrlenW(currentStr);
 		SendMessage(hwndList, LVM_INSERTITEMW, 0, (LPARAM)&lvi);
+
+		subItemIndex++;
+		currentStr += wcslen(currentStr) + 1;
 	}
 }
 
@@ -257,13 +262,17 @@ static BOOL view_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 	LVCOLUMN lvc = { 0, };
 	lvc.mask = LVCF_TEXT | LVCF_WIDTH;
 	
-	const wchar_t** columnList = serviceMap[serviceHwndMap[hwnd]]->GetColumnNames();
-	//for (int i = 0; columnList[i] != NULL; i++)
-	for (int i = 0; i < 1; i++)
+	int columnIndex = 0;
+	const wchar_t* columnList = serviceMap[serviceHwndMap[hwnd]]->GetColumnNames();
+	const wchar_t* currentStr = columnList;
+	while (wcslen(currentStr) != 0)
 	{
-		lvc.pszText = (LPTSTR)(columnList[i]);
+		lvc.pszText = (LPTSTR)currentStr;
 		lvc.cx = 250;
-		SendMessageW(listWnd, LVM_INSERTCOLUMNW, (WPARAM)i, (LPARAM)&lvc);
+		SendMessageW(listWnd, LVM_INSERTCOLUMNW, (WPARAM)columnIndex, (LPARAM)&lvc);
+
+		columnIndex++;
+		currentStr += wcslen(currentStr) + 1;
 	}
 
 	/* skin dialog */

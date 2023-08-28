@@ -21,7 +21,7 @@ struct ItemInfo
 
 struct CustomItemInfo
 {
-    const wchar_t** info;
+    const wchar_t* info;
     const wchar_t* plTitle;
     const wchar_t* filename;
 };
@@ -35,7 +35,7 @@ extern "C" {
     EASY_API ItemInfo InvokeNext(int PleyerType);
     EASY_API const wchar_t* GetFileName(const wchar_t* fileID);
     EASY_API HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl);
-    EASY_API const wchar_t** GetColumnNames();
+    EASY_API const wchar_t* GetColumnNames();
     EASY_API CustomItemInfo InvokeServiceCustom(int PlayerType);
     EASY_API CustomItemInfo InvokeNextCustom(int PlayerType);
 
