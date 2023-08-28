@@ -124,7 +124,20 @@ const wchar_t* EXEService::GetNodeName()
     return _wcsdup(line.c_str());
 }
 
-std::vector<ItemInfo> EXEService::InvokeService()
+const wchar_t** EXEService::GetColumnNames()
+{
+    // TODO
+    return NULL;
+}
+
+std::vector<CustomItemInfo> EXEService::InvokeService()
+{
+    // TODO
+    std::vector<CustomItemInfo> retItems;
+    return retItems;
+}
+
+/*std::vector<ItemInfo> EXEService::InvokeService()
 {
     wchar_t cmdLine[1024];
     wsprintf(cmdLine, L"%s InvokeService %s", _exeName, playerType == PLAYERTYPE_WACUP ? L"PLAYERTYPE_WACUP" : L"PLAYERTYPE_WINAMP");
@@ -160,7 +173,7 @@ std::vector<ItemInfo> EXEService::InvokeService()
     }
 
     return retItems;
-}
+}*/
 
 const wchar_t* EXEService::GetFileName(const wchar_t* fileID)
 {

@@ -15,8 +15,11 @@
 
 #include <map>
 
-// Uncomment to disable reference handling
+// Uncomment to disable features
 //#define DISABLE_REFERENCE_FEATURE
+//#define DISABLE_SRV_DLL
+#define DISABLE_MSRV_DLL
+#define DISABLE_ESRV_EXE
 
 //////////////////////////
 // FORWARD DECLARATIONS //
@@ -31,7 +34,7 @@ INT_PTR MessageProc(int message_type, INT_PTR param1, INT_PTR param2, INT_PTR pa
 void loadServices(void);
 
 // ListView
-void addLineToList(HWND hwnd, int index, const wchar_t* author, const wchar_t* title, const wchar_t* information);
+void addLineToList(HWND hwnd, int index, const wchar_t** info);
 LRESULT CALLBACK viewDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /////////////////////
@@ -40,7 +43,7 @@ LRESULT CALLBACK viewDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
 
 std::map<UINT_PTR, EasyService*> serviceMap;
 std::map<HWND, UINT_PTR> serviceHwndMap;
-std::map<UINT_PTR, std::vector<ItemInfo>> serviceListItemMap;
+std::map<UINT_PTR, std::vector<CustomItemInfo>> serviceListItemMap;
 
 ////////////
 // PLUGIN //
@@ -89,11 +92,11 @@ INT_PTR MessageProc(int message_type, INT_PTR param1, INT_PTR param2, INT_PTR pa
 			HWND dialogWnd = CreateDialog(plugin.hDllInstance, MAKEINTRESOURCE(IDD_VIEW_EASYSRV), (HWND)(LONG_PTR)param2, (DLGPROC)viewDialogProc);
 			serviceHwndMap[dialogWnd] = param1;
 
-			std::vector<ItemInfo> itemsToAdd = serviceListItemMap[serviceHwndMap[dialogWnd]];
+			std::vector<CustomItemInfo> itemsToAdd = serviceListItemMap[serviceHwndMap[dialogWnd]];
 			int index = 0;
-			for (ItemInfo info : itemsToAdd)
+			for (CustomItemInfo info : itemsToAdd)
 			{
-				addLineToList(dialogWnd, index, info.author, info.title, info.info);
+				addLineToList(dialogWnd, index, info.info);
 				index++;
 			}
 
@@ -150,12 +153,14 @@ void loadServices()
 	addTreeItem(0, 1, L"Services", TRUE, MLTREEIMAGE_BRANCH);
 	UINT_PTR index = 2;
 
-    // walk srv_*.dll
 	wchar_t searchCriteria[1024];
-	wsprintf(searchCriteria, L"%S\\srv_*.dll", pluginDir);
-
 	WIN32_FIND_DATA FindFileData;
-	HANDLE searchHandle = FindFirstFile(searchCriteria, &FindFileData);
+	HANDLE searchHandle = INVALID_HANDLE_VALUE;
+
+#ifndef DISABLE_SRV_DLL
+	// walk srv_*.dll
+	wsprintf(searchCriteria, L"%S\\srv_*.dll", pluginDir);
+	searchHandle = FindFirstFile(searchCriteria, &FindFileData);
 	if (searchHandle != INVALID_HANDLE_VALUE)
 	{
 		do
@@ -168,7 +173,9 @@ void loadServices()
 		} while (FindNextFile(searchHandle, &FindFileData));
 		FindClose(searchHandle);
 	}
+#endif
 
+#ifndef DISABLE_ESRV_EXE
     // walk esrv_*.exe
 	wsprintf(searchCriteria, L"%S\\esrv_*.exe", pluginDir);
 	searchHandle = FindFirstFile(searchCriteria, &FindFileData);
@@ -184,7 +191,9 @@ void loadServices()
 		} while (FindNextFile(searchHandle, &FindFileData));
 		FindClose(searchHandle);
 	}
+#endif
 
+#ifndef DISABLE_MSRV_DLL
     // walk msrv_*.dll
 	wsprintf(searchCriteria, L"%S\\msrv_*.dll", pluginDir);
 	searchHandle = FindFirstFile(searchCriteria, &FindFileData);
@@ -200,6 +209,7 @@ void loadServices()
 		} while (FindNextFile(searchHandle, &FindFileData));
 		FindClose(searchHandle);
 	}
+#endif
 }
 
 //////////////
@@ -212,31 +222,21 @@ static HookDialogFunc ml_hook_dialog_msg = 0;
 typedef void (*DrawFunc)(HWND hwndDlg, int* tab, int tabsize);
 static DrawFunc ml_draw = 0;
 
-static ChildWndResizeItem srvwnd_rlist[] = {
-	{IDC_LIST,0x0011},
-	{IDC_INVOKE,0x0101},
-};
-
-void addLineToList(HWND hwnd, int index, const wchar_t* author, const wchar_t* title, const wchar_t* information)
+void addLineToList(HWND hwnd, int index, const wchar_t** info)
 {
 	HWND hwndList = GetDlgItem(hwnd, IDC_LIST);
 
 	LVITEM lvi = { 0, };
 	lvi.mask = LVIF_TEXT;
 	lvi.iItem = index;
-	lvi.pszText = (LPTSTR)author;
-	lvi.cchTextMax = lstrlenW(author);
-	SendMessage(hwndList, LVM_INSERTITEMW, 0, (LPARAM)&lvi);
-
-	lvi.iSubItem = 1;
-	lvi.pszText = (LPTSTR)title;
-	lvi.cchTextMax = lstrlenW(title);
-	SendMessageW(hwndList, LVM_SETITEMW, 0, (LPARAM)&lvi);
-
-	lvi.iSubItem = 2;
-	lvi.pszText = (LPTSTR)information;
-	lvi.cchTextMax = lstrlenW(information);
-	SendMessageW(hwndList, LVM_SETITEMW, 0, (LPARAM)&lvi);
+	
+	for (int i = 0; info[i] != NULL; i++)
+	{
+		lvi.iSubItem = i;
+		lvi.pszText = (LPTSTR)info[i];
+		lvi.cchTextMax = lstrlenW(info[i]);
+		SendMessage(hwndList, LVM_INSERTITEMW, 0, (LPARAM)&lvi);
+	}
 }
 
 static BOOL view_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
@@ -256,17 +256,15 @@ static BOOL view_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 	/* add listview columns */
 	LVCOLUMN lvc = { 0, };
 	lvc.mask = LVCF_TEXT | LVCF_WIDTH;
-	lvc.pszText = (LPTSTR)L"Author";
-	lvc.cx = 250;
-	SendMessageW(listWnd, LVM_INSERTCOLUMNW, (WPARAM)0, (LPARAM)&lvc);
-
-	lvc.pszText = (LPTSTR)L"Title";
-	lvc.cx = 150;
-	SendMessageW(listWnd, LVM_INSERTCOLUMNW, (WPARAM)1, (LPARAM)&lvc);
-
-	lvc.pszText = (LPTSTR)L"Information";
-	lvc.cx = 150;
-	SendMessageW(listWnd, LVM_INSERTCOLUMNW, (WPARAM)2, (LPARAM)&lvc);
+	
+	const wchar_t** columnList = serviceMap[serviceHwndMap[hwnd]]->GetColumnNames();
+	//for (int i = 0; columnList[i] != NULL; i++)
+	for (int i = 0; i < 1; i++)
+	{
+		lvc.pszText = (LPTSTR)(columnList[i]);
+		lvc.cx = 250;
+		SendMessageW(listWnd, LVM_INSERTCOLUMNW, (WPARAM)i, (LPARAM)&lvc);
+	}
 
 	/* skin dialog */
 	MLSKINWINDOW sw;
@@ -314,16 +312,16 @@ static BOOL view_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 	switch (id) {
 	case IDC_INVOKE:
 	{
-		std::vector<ItemInfo> itemsToAdd = serviceMap[serviceHwndMap[hwnd]]->InvokeService();
+		std::vector<CustomItemInfo> itemsToAdd = serviceMap[serviceHwndMap[hwnd]]->InvokeService();
 		serviceListItemMap[serviceHwndMap[hwnd]] = itemsToAdd;
 
 		HWND hwndList = GetDlgItem(hwnd, IDC_LIST);
 		ListView_DeleteAllItems(hwndList);
 		int index = 0;
 		
-		for (ItemInfo info : itemsToAdd)
+		for (CustomItemInfo info : itemsToAdd)
 		{
-			addLineToList(hwnd, index, info.author, info.title, info.info);
+			addLineToList(hwnd, index, info.info);
 			index++;
 		}
 	}
@@ -339,8 +337,7 @@ static BOOL list_OnNotify(HWND hwnd, int wParam, NMHDR* lParam)
 #if (_WIN32_IE >= 0x0400)
 		LPNMITEMACTIVATE lpnmia = (LPNMITEMACTIVATE)lParam;
 		
-		wchar_t playlistTitle[1024];
-		wsprintf(playlistTitle, L"%s - %s", serviceListItemMap[serviceHwndMap[hwnd]][lpnmia->iItem].author, serviceListItemMap[serviceHwndMap[hwnd]][lpnmia->iItem].title);
+		const wchar_t* playlistTitle = serviceListItemMap[serviceHwndMap[hwnd]][lpnmia->iItem].plTitle;
 
 		wchar_t playlistFN[1024];
 #ifndef DISABLE_REFERENCE_FEATURE
