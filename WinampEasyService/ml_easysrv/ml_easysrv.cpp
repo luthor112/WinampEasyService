@@ -18,7 +18,7 @@
 // Uncomment to disable features
 //#define DISABLE_REFERENCE_FEATURE
 //#define DISABLE_SRV_DLL
-#define DISABLE_MSRV_DLL
+//#define DISABLE_MSRV_DLL
 //#define DISABLE_ESRV_EXE
 
 //////////////////////////
