@@ -126,54 +126,103 @@ const wchar_t* EXEService::GetNodeName()
 
 const wchar_t* EXEService::GetColumnNames()
 {
-    // TODO
-    return NULL;
+    if (columnNameCache == NULL)
+    {
+        wchar_t cmdLine[1024];
+        wsprintf(cmdLine, L"%s GetColumnNames", _exeName);
+        std::string s1 = ReadProcessOutput(cmdLine);
+        std::wstring ws1 = std::wstring(s1.begin(), s1.end());
+        std::wistringstream inSS(ws1);
+
+        std::wstring line;
+        std::getline(inSS, line);
+        if (!line.empty())
+        {
+            columnNameCache = _wcsdup(line.c_str());
+            customColumnsSupported = TRUE;
+        }
+        else
+        {
+            columnNameCache = L"Author\tTitle\tInformation";
+            customColumnsSupported = FALSE;
+        }
+    }
+
+    return columnNameCache;
 }
 
 std::vector<CustomItemInfo> EXEService::InvokeService()
 {
-    // TODO
-    std::vector<CustomItemInfo> retItems;
-    return retItems;
-}
-
-/*std::vector<ItemInfo> EXEService::InvokeService()
-{
     wchar_t cmdLine[1024];
-    wsprintf(cmdLine, L"%s InvokeService %s", _exeName, playerType == PLAYERTYPE_WACUP ? L"PLAYERTYPE_WACUP" : L"PLAYERTYPE_WINAMP");
+    if (customColumnsSupported)
+        wsprintf(cmdLine, L"%s InvokeServiceCustom %s", _exeName, playerType == PLAYERTYPE_WACUP ? L"PLAYERTYPE_WACUP" : L"PLAYERTYPE_WINAMP");
+    else
+        wsprintf(cmdLine, L"%s InvokeService %s", _exeName, playerType == PLAYERTYPE_WACUP ? L"PLAYERTYPE_WACUP" : L"PLAYERTYPE_WINAMP");
     // Bugfixing
     std::string s1 = ReadProcessOutput(cmdLine);
     std::wstring ws1 = std::wstring(s1.begin(), s1.end());
     std::wistringstream inSS(ws1);
 
-    std::wstring authorLine;
-    std::wstring titleLine;
-    std::wstring infoLine;
-    std::wstring fileNameLine;
-    
-    std::vector<ItemInfo> retItems;
-    std::getline(inSS, authorLine);
-    while (!authorLine.empty()) {
-        std::getline(inSS, titleLine);
+    std::vector<CustomItemInfo> retItems;
+    if (customColumnsSupported)
+    {
+        std::wstring infoLine;
+        std::wstring plTitleLine;
+        std::wstring fileNameLine;
+
+
         std::getline(inSS, infoLine);
-        std::getline(inSS, fileNameLine);
+        while (!infoLine.empty()) {
+            std::getline(inSS, plTitleLine);
+            std::getline(inSS, fileNameLine);
 
-        if (fileNameLine[fileNameLine.length() - 1] == '\r' || fileNameLine[fileNameLine.length() - 1] == '\n')
-            fileNameLine[fileNameLine.length() - 1] = '\0';
+            if (fileNameLine[fileNameLine.length() - 1] == '\r' || fileNameLine[fileNameLine.length() - 1] == '\n')
+                fileNameLine[fileNameLine.length() - 1] = '\0';
 
-        ItemInfo currentItem = {
-            _wcsdup(authorLine.c_str()),
-            _wcsdup(titleLine.c_str()),
-            _wcsdup(infoLine.c_str()),
-            _wcsdup(fileNameLine.c_str())
-        };
-        retItems.push_back(currentItem);
+            CustomItemInfo currentItem = {
+                _wcsdup(infoLine.c_str()),
+                _wcsdup(plTitleLine.c_str()),
+                _wcsdup(fileNameLine.c_str())
+            };
+            retItems.push_back(currentItem);
+
+            std::getline(inSS, infoLine);
+        }
+    }
+    else
+    {
+        std::wstring authorLine;
+        std::wstring titleLine;
+        std::wstring infoLine;
+        std::wstring fileNameLine;
 
         std::getline(inSS, authorLine);
+        while (!authorLine.empty()) {
+            std::getline(inSS, titleLine);
+            std::getline(inSS, infoLine);
+            std::getline(inSS, fileNameLine);
+
+            if (fileNameLine[fileNameLine.length() - 1] == '\r' || fileNameLine[fileNameLine.length() - 1] == '\n')
+                fileNameLine[fileNameLine.length() - 1] = '\0';
+
+            wchar_t ciiInfo[1024];
+            wsprintf(ciiInfo, L"%s\t%s\t%s", authorLine.c_str(), titleLine.c_str(), infoLine.c_str());
+            wchar_t plTitle[1024];
+            wsprintf(plTitle, L"%s - %s", authorLine.c_str(), titleLine.c_str());
+
+            CustomItemInfo currentItem = {
+                _wcsdup(ciiInfo),
+                _wcsdup(plTitle),
+                _wcsdup(fileNameLine.c_str())
+            };
+            retItems.push_back(currentItem);
+
+            std::getline(inSS, authorLine);
+        }
     }
 
     return retItems;
-}*/
+}
 
 const wchar_t* EXEService::GetFileName(const wchar_t* fileID)
 {
