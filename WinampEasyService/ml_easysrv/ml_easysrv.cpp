@@ -90,7 +90,7 @@ INT_PTR MessageProc(int message_type, INT_PTR param1, INT_PTR param2, INT_PTR pa
 		}
 		else
 		{
-			HWND dialogWnd = CreateDialogParamW(plugin.hDllInstance, MAKEINTRESOURCE(IDD_VIEW_EASYSRV), (HWND)(LONG_PTR)param2, (DLGPROC)viewDialogProc, (LPARAM)param1);
+			HWND dialogWnd = CreateDialogParam(plugin.hDllInstance, MAKEINTRESOURCE(IDD_VIEW_EASYSRV), (HWND)(LONG_PTR)param2, (DLGPROC)viewDialogProc, (LPARAM)param1);
 			serviceHwndMap[dialogWnd] = param1;
 
 			std::vector<CustomItemInfo> itemsToAdd = serviceListItemMap[serviceHwndMap[dialogWnd]];
@@ -227,21 +227,27 @@ void addLineToList(HWND hwnd, int index, const wchar_t* info)
 {
 	HWND hwndList = GetDlgItem(hwnd, IDC_LIST);
 
-	LVITEM lvi = { 0, };
+	LVITEM lvi = {0,};
 	lvi.mask = LVIF_TEXT;
 	lvi.iItem = index;
 	
 	int subItemIndex = 0;
-	const wchar_t* currentStr = info;
-	while (wcslen(currentStr) != 0)
+	wchar_t* infoList = _wcsdup(info);
+	wchar_t* context = NULL;
+	wchar_t* token = wcstok_s(infoList, L"\t", &context);
+	while (token)
 	{
 		lvi.iSubItem = subItemIndex;
-		lvi.pszText = (LPTSTR)currentStr;
-		lvi.cchTextMax = lstrlenW(currentStr);
-		SendMessage(hwndList, LVM_INSERTITEMW, 0, (LPARAM)&lvi);
+		lvi.pszText = (LPTSTR)token;
+		lvi.cchTextMax = lstrlenW(token);
+
+		if (subItemIndex == 0)
+			SendMessage(hwndList, LVM_INSERTITEMW, 0, (LPARAM)&lvi);
+		else
+			SendMessage(hwndList, LVM_SETITEMW, 0, (LPARAM)&lvi);
 
 		subItemIndex++;
-		currentStr += wcslen(currentStr) + 1;
+		token = wcstok_s(NULL, L"\t", &context);
 	}
 }
 
@@ -266,16 +272,17 @@ static BOOL view_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 	lvc.mask = LVCF_TEXT | LVCF_WIDTH;
 
 	int columnIndex = 0;
-	const wchar_t* columnList = serviceMap[serviceID]->GetColumnNames();
-	const wchar_t* currentStr = columnList;
-	while (wcslen(currentStr) != 0)
+	wchar_t* columnList = _wcsdup(serviceMap[serviceID]->GetColumnNames());
+	wchar_t* context = NULL;
+	wchar_t* token = wcstok_s(columnList, L"\t", &context);
+	while (token)
 	{
-		lvc.pszText = (LPTSTR)currentStr;
+		lvc.pszText = (LPTSTR)token;
 		lvc.cx = 250;
 		SendMessageW(listWnd, LVM_INSERTCOLUMNW, (WPARAM)columnIndex, (LPARAM)&lvc);
 
 		columnIndex++;
-		currentStr += wcslen(currentStr) + 1;
+		token = wcstok_s(NULL, L"\t", &context);
 	}
 
 	/* skin dialog */

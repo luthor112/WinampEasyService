@@ -35,7 +35,7 @@ const wchar_t* DLLService::GetColumnNames()
         }
         else
         {
-            columnNameCache = L"Author\0Title\0Information\0\0";
+            columnNameCache = L"Author\tTitle\tInformation";
         }
     }
 
@@ -59,10 +59,10 @@ std::vector<CustomItemInfo> DLLService::InvokeService()
         ItemInfo currItem = _invokeService(playerType);
         while (currItem.filename != NULL) {
             wchar_t ciiInfo[1024];
-            wsprintf(ciiInfo, L"%s\0%s\0%s\0\0", currItem.author, currItem.title, currItem.info);
+            wsprintf(ciiInfo, L"%s\t%s\t%s", currItem.author, currItem.title, currItem.info);
             wchar_t plTitle[1024];
             wsprintf(plTitle, L"%s - %s", currItem.author, currItem.title);
-            CustomItemInfo cii = { ciiInfo, plTitle, currItem.filename };
+            CustomItemInfo cii = { _wcsdup(ciiInfo), _wcsdup(plTitle), currItem.filename};
             retItems.push_back(cii);
             currItem = _invokeNext(playerType);
         }
