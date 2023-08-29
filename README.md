@@ -51,6 +51,27 @@ Service plugin development:
         * ShowWindow resides in `user32.dll`, `SW_SHOW` equals 5
     * Full example: `WinampEasyService\\esrv_exampleexe`
 
+Service plugin development - using custom columns:
+* Managed (.NET based) DLLs:
+    * `public string GetColumnNames()` should return the column names you wish to show in the Media Library, delimited by `\t`
+    * `public List<List<string>> InvokeServiceCustom(int PlayerType)` should return the entries to populate the Media Library ListView with:
+        * The inner lists should always contain four strings in this order: Column contents delimited by `\t`, Title to show in the playlist, Filename
+    * Full example: `WinampEasyService\\msrv_exampledll2`
+* Unmanaged DLLs:
+    * `const wchar_t\* GetColumnNames()` should return the column names you wish to show in the Media Library, delimited by `\t`
+    * `CustomItemInfo InvokeServiceCustom(int PlayerType)` should return the first entry to populate the Media Library ListView with
+        * `CustomItemInfo` contains the following: Column contents delimited by `\t`, Title to show in the playlist, Filename
+    * `CustomItemInfo InvokeNextCustom(int PlayerType)` should return the next entry to populate the Media Library ListView with
+        * Return and empty `CustomItemInfo()` to denote the end of the list
+    * Full example: `WinampEasyService\\srv_exampledll2`
+* EXE files:
+    * `GetColumnNames`: Print the column names you wish to show in the Media Library, delimited by `\t`, to STDOUT
+    * `InvokeServiceCustom PlayerType`: Print the entries to populate the Media Library ListView with to STDOUT in the following way:
+        * `Column_names_delimited_by_\\t\\nTitle_in_playlist\\nFilename\\n`
+        * Quit when done
+        * `PlayerType` can be `PLAYERTYPE_WINAMP` or `PLAYERTYPE_WACUP`
+    * Full example: `WinampEasyService\\esrv_exampleexe2`
+
 Bugs:
 * WinAmp crashes in list_OnNotify in ml_easysrv
     * WACUP works correctly
