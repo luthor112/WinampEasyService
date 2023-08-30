@@ -19,10 +19,19 @@ namespace esrv_spotify
             {
                 Console.WriteLine("Spotify");
             }
+            else if (args[0] == "GetColumnNames")
+            {
+                Console.WriteLine("Title\tLink");
+            }
             else if (args[0] == "InvokeService")
             {
                 ApplicationConfiguration.Initialize();
-                Application.Run(new Form1());
+                Application.Run(new Form1(false));
+            }
+            else if (args[0] == "InvokeServiceCustom")
+            {
+                ApplicationConfiguration.Initialize();
+                Application.Run(new Form1(true));
             }
             else if (args[0] == "GetFileName")
             {

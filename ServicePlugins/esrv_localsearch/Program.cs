@@ -12,10 +12,19 @@ namespace esrv_localsearch
             {
                 Console.WriteLine("Local Search");
             }
+            else if (args[0] == "GetColumnNames")
+            {
+                Console.WriteLine("Filename\tFull path");
+            }
             else if (args[0] == "InvokeService")
             {
                 ApplicationConfiguration.Initialize();
-                Application.Run(new Form1());
+                Application.Run(new Form1(false));
+            }
+            else if (args[0] == "InvokeServiceCustom")
+            {
+                ApplicationConfiguration.Initialize();
+                Application.Run(new Form1(true));
             }
         }
     }

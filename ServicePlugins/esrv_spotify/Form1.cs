@@ -12,8 +12,12 @@ namespace esrv_spotify
         const int SW_HIDE = 0;
         const int SW_SHOW = 5;
 
-        public Form1()
+        bool useCustomColumns;
+
+        public Form1(bool _useCustomColumns)
         {
+            useCustomColumns = _useCustomColumns;
+
             InitializeComponent();
         }
 
@@ -37,10 +41,19 @@ namespace esrv_spotify
                 {
                     case TrackSearchResult track:
                         {
-                            Console.WriteLine(track.Title);
-                            Console.WriteLine(track.Title);
-                            Console.WriteLine(track.Url);
-                            Console.WriteLine("ref_" + track.Id);
+                            if (useCustomColumns)
+                            {
+                                Console.WriteLine(track.Title + "\t" + track.Url);
+                                Console.WriteLine(track.Title);
+                                Console.WriteLine("ref_" + track.Id);
+                            }
+                            else
+                            {
+                                Console.WriteLine(track.Title);
+                                Console.WriteLine(track.Title);
+                                Console.WriteLine(track.Url);
+                                Console.WriteLine("ref_" + track.Id);
+                            }
                             break;
                         }
                 }
