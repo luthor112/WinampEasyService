@@ -79,7 +79,7 @@ void quit() {}
 // Called by WinAmp to talk to our plugin
 INT_PTR MessageProc(int message_type, INT_PTR param1, INT_PTR param2, INT_PTR param3)
 {
-    if (message_type == ML_MSG_TREE_ONCREATEVIEW && param1 > 1)
+    if (message_type == ML_MSG_TREE_ONCREATEVIEW && serviceMap.count(param1))
     {
 		HWND customWnd = serviceMap[param1]->GetCustomDialog(plugin.hwndWinampParent, plugin.hwndLibraryParent, (HWND)(LONG_PTR)param2);
 		if (customWnd != NULL)
@@ -103,9 +103,11 @@ INT_PTR MessageProc(int message_type, INT_PTR param1, INT_PTR param2, INT_PTR pa
 
 			return (INT_PTR)dialogWnd;
 		}
+
+		return 1;	// Message is ours, stop processing it
     }
 
-    return 0;
+    return 0;		// Message is not ours, pass it along
 }
 
 // This is an export function called by winamp which returns this plugin info.
