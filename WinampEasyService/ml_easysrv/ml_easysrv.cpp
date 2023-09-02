@@ -132,11 +132,11 @@ extern "C" __declspec(dllexport) const wchar_t* GetPluginFileName(const wchar_t*
 // SERVICES //
 //////////////
 
-void addTreeItem(UINT_PTR parentId, UINT_PTR id, const wchar_t* title, BOOL hasChildren, int imageIndex)
+UINT_PTR addTreeItem(UINT_PTR parentId, const wchar_t* title, BOOL hasChildren, int imageIndex)
 {
 	MLTREEITEMW treeItem = {
         sizeof(MLTREEITEMW),
-        id,							// id
+        0,							// id, 0 for next available, in which case it will be filled in
         parentId,					// parentId, 0 for root
         const_cast<wchar_t*>(title),// title
 		wcslen(title),			// titleLen
@@ -144,6 +144,7 @@ void addTreeItem(UINT_PTR parentId, UINT_PTR id, const wchar_t* title, BOOL hasC
         imageIndex					// imageIndex
     };
     SendMessage(plugin.hwndLibraryParent, WM_ML_IPC, (WPARAM)&treeItem, ML_IPC_TREEITEM_ADDW);
+	return treeItem.id;
 }
 
 void loadServices()
@@ -153,9 +154,8 @@ void loadServices()
 	if (strstr(pluginDir, "WACUP"))
 		playerType = PLAYERTYPE_WACUP;
 
-	addTreeItem(0, 1, L"Services", TRUE, MLTREEIMAGE_BRANCH);
-	UINT_PTR index = 2;
-
+	UINT_PTR servicesNode = addTreeItem(0, L"Services", TRUE, MLTREEIMAGE_BRANCH);
+	
 	wchar_t searchCriteria[1024];
 	WIN32_FIND_DATA FindFileData;
 	HANDLE searchHandle = INVALID_HANDLE_VALUE;
@@ -170,9 +170,9 @@ void loadServices()
 		{
 			wchar_t absoluteName[1024];
 			wsprintf(absoluteName, L"%S\\%s", pluginDir, FindFileData.cFileName);
-			serviceMap[index] = new DLLService(absoluteName, playerType);
-			addTreeItem(1, index, serviceMap[index]->GetNodeName(), FALSE, MLTREEIMAGE_BRANCH);
-			index++;
+			EasyService* service = new DLLService(absoluteName, playerType);
+			UINT_PTR nodeID = addTreeItem(servicesNode, service->GetNodeName(), FALSE, MLTREEIMAGE_BRANCH);
+			serviceMap[nodeID] = service;
 		} while (FindNextFile(searchHandle, &FindFileData));
 		FindClose(searchHandle);
 	}
@@ -188,9 +188,9 @@ void loadServices()
 		{
 			wchar_t absoluteName[1024];
 			wsprintf(absoluteName, L"\"%S\\%s\"", pluginDir, FindFileData.cFileName);
-			serviceMap[index] = new EXEService(absoluteName, playerType);
-			addTreeItem(1, index, serviceMap[index]->GetNodeName(), FALSE, MLTREEIMAGE_BRANCH);
-			index++;
+			EasyService* service = new EXEService(absoluteName, playerType);
+			UINT_PTR nodeID = addTreeItem(servicesNode, service->GetNodeName(), FALSE, MLTREEIMAGE_BRANCH);
+			serviceMap[nodeID] = service;
 		} while (FindNextFile(searchHandle, &FindFileData));
 		FindClose(searchHandle);
 	}
@@ -206,9 +206,9 @@ void loadServices()
 		{
 			wchar_t absoluteName[1024];
 			wsprintf(absoluteName, L"\"%S\\isrv_managed.exe\" \"%S\\%s\"", pluginDir, pluginDir, FindFileData.cFileName);
-			serviceMap[index] = new EXEService(absoluteName, playerType);
-			addTreeItem(1, index, serviceMap[index]->GetNodeName(), FALSE, MLTREEIMAGE_BRANCH);
-			index++;
+			EasyService* service = new EXEService(absoluteName, playerType);
+			UINT_PTR nodeID = addTreeItem(servicesNode, service->GetNodeName(), FALSE, MLTREEIMAGE_BRANCH);
+			serviceMap[nodeID] = service;
 		} while (FindNextFile(searchHandle, &FindFileData));
 		FindClose(searchHandle);
 	}
