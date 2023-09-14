@@ -15,6 +15,7 @@
 
 #include <map>
 #include <thread>
+#include <mutex>
 
 // Uncomment to disable features
 //#define DISABLE_REFERENCE_FEATURE
@@ -46,6 +47,7 @@ BOOL view_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam);
 std::map<UINT_PTR, EasyService*> serviceMap;
 std::map<HWND, UINT_PTR> serviceHwndMap;
 std::map<UINT_PTR, std::vector<CustomItemInfo>> serviceListItemMap;
+std::mutex serviceListItemMapMutex;
 
 ////////////
 // PLUGIN //
@@ -94,6 +96,7 @@ INT_PTR MessageProc(int message_type, INT_PTR param1, INT_PTR param2, INT_PTR pa
 			HWND dialogWnd = CreateDialogParam(plugin.hDllInstance, MAKEINTRESOURCE(IDD_VIEW_EASYSRV), (HWND)(LONG_PTR)param2, (DLGPROC)viewDialogProc, (LPARAM)param1);
 			serviceHwndMap[dialogWnd] = param1;
 
+			std::lock_guard<std::mutex> guard(serviceListItemMapMutex);
 			std::vector<CustomItemInfo> itemsToAdd = serviceListItemMap[serviceHwndMap[dialogWnd]];
 			int index = 0;
 			for (CustomItemInfo info : itemsToAdd)
@@ -329,11 +332,9 @@ static BOOL view_OnDestroy(HWND hwnd)
 	return FALSE;
 }
 
-// TODO: Unsafe
 static void view_OnCommand_InvokeService(HWND hwnd)
 {
 	std::vector<CustomItemInfo> itemsToAdd = serviceMap[serviceHwndMap[hwnd]]->InvokeService();
-	serviceListItemMap[serviceHwndMap[hwnd]] = itemsToAdd;
 
 	HWND hwndList = GetDlgItem(hwnd, IDC_LIST);
 	ListView_DeleteAllItems(hwndList);
@@ -344,6 +345,9 @@ static void view_OnCommand_InvokeService(HWND hwnd)
 		addLineToList(hwnd, index, info.info);
 		index++;
 	}
+
+	std::lock_guard<std::mutex> guard(serviceListItemMapMutex);
+	serviceListItemMap[serviceHwndMap[hwnd]] = itemsToAdd;
 }
 
 static BOOL view_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
@@ -370,6 +374,7 @@ static BOOL list_OnNotify(HWND hwnd, int wParam, NMHDR* lParam)
 #if (_WIN32_IE >= 0x0400)
 		LPNMITEMACTIVATE lpnmia = (LPNMITEMACTIVATE)lParam;
 		
+		std::lock_guard<std::mutex> guard(serviceListItemMapMutex);
 		const wchar_t* playlistTitle = serviceListItemMap[serviceHwndMap[hwnd]][lpnmia->iItem].plTitle;
 
 		wchar_t playlistFN[1024];
