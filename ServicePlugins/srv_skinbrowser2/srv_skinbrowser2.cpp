@@ -15,6 +15,9 @@
 #include <vector>
 #include <Shlwapi.h>
 
+#include <thread>
+#include <mutex>
+
 #include "resource.h"
 
 #pragma comment(lib, "comctl32.lib")
@@ -56,9 +59,11 @@ void runProcessInBackground(wchar_t* cmdLine)
 
 std::vector<const wchar_t*> fileList;
 HIMAGELIST previewImageList;
+std::mutex fileListMutex;
 
 void clearList(HWND hwnd)
 {
+	std::lock_guard<std::mutex> guard(fileListMutex);
 	fileList.clear();
 
 	HWND hwndList = GetDlgItem(hwnd, IDC_LIST);
@@ -115,6 +120,7 @@ bool addItemToList(HWND hwnd, const wchar_t* filename)
 // Returns the first entry that's being newly added to the list
 const wchar_t* fillFileList(HWND hwnd)
 {
+	std::lock_guard<std::mutex> guard(fileListMutex);
 	char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
 	const wchar_t* newFile = NULL;
 
@@ -229,7 +235,8 @@ static BOOL view_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 	case IDC_RESCAN:
 	{
 		clearList(hwnd);
-		fillFileList(hwnd);
+		std::thread bgThread(fillFileList, hwnd); //fillFileList(hwnd);
+		bgThread.detach();
 	}
 	break;
 	}
@@ -243,6 +250,7 @@ static BOOL list_OnNotify(HWND hwnd, int wParam, NMHDR* lParam)
 #if (_WIN32_IE >= 0x0400)
 		LPNMITEMACTIVATE lpnmia = (LPNMITEMACTIVATE)lParam;
 
+		std::lock_guard<std::mutex> guard(fileListMutex);
 		SendMessage(hwndWinampParent, WM_WA_IPC, (WPARAM)(fileList[lpnmia->iItem]), IPC_SETSKINW);
 #else
 		MessageBox(0, L"This should not happen...", L"", MB_OK);
@@ -295,15 +303,8 @@ LRESULT CALLBACK customDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 	return FALSE;
 }
 
-HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl)
+static void precacheThumbnails(HWND dialogWnd)
 {
-	// Save HWNDs
-	hwndWinampParent = _hwndWinampParent;
-	hwndLibraryParent = _hwndLibraryParent;
-
-	// Create dialog
-	HWND dialogWnd = CreateDialog(myself, MAKEINTRESOURCE(IDD_VIEW_CUSTOM), hwndParentControl, (DLGPROC)customDialogProc);
-
 	// Precache thumbnails
 	wchar_t tempPath[MAX_PATH];
 	GetTempPath(MAX_PATH, tempPath);
@@ -316,6 +317,19 @@ HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndP
 	clearList(dialogWnd);
 	fillFileList(dialogWnd);
 
+	// Set up directory auto-rescan
+	SetTimer(dialogWnd, RESCAN_TIMER_ID, 1000, NULL);
+}
+
+HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl)
+{
+	// Save HWNDs
+	hwndWinampParent = _hwndWinampParent;
+	hwndLibraryParent = _hwndLibraryParent;
+
+	// Create dialog
+	HWND dialogWnd = CreateDialog(myself, MAKEINTRESOURCE(IDD_VIEW_CUSTOM), hwndParentControl, (DLGPROC)customDialogProc);
+
 	// Set auto-apply checkbox to last known value
 	HWND checkWnd = GetDlgItem(dialogWnd, IDC_CHECK);
 	if (autoApply)
@@ -323,8 +337,8 @@ HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndP
 	else
 		SendMessage(checkWnd, BM_SETCHECK, BST_UNCHECKED, 0);
 
-	// Set up directory auto-rescan
-	SetTimer(dialogWnd, RESCAN_TIMER_ID, 1000, NULL);
+	std::thread bgThread(precacheThumbnails, dialogWnd);
+	bgThread.detach();
 
 	return dialogWnd;
 }
