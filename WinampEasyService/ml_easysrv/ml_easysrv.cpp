@@ -14,6 +14,7 @@
 #include "gen_tray/WINAMPCMD.H"
 
 #include <map>
+#include <thread>
 
 // Uncomment to disable features
 //#define DISABLE_REFERENCE_FEATURE
@@ -328,23 +329,34 @@ static BOOL view_OnDestroy(HWND hwnd)
 	return FALSE;
 }
 
+// TODO: Unsafe
+static void view_OnCommand_InvokeService(HWND hwnd)
+{
+	std::vector<CustomItemInfo> itemsToAdd = serviceMap[serviceHwndMap[hwnd]]->InvokeService();
+	serviceListItemMap[serviceHwndMap[hwnd]] = itemsToAdd;
+
+	HWND hwndList = GetDlgItem(hwnd, IDC_LIST);
+	ListView_DeleteAllItems(hwndList);
+	int index = 0;
+
+	for (CustomItemInfo info : itemsToAdd)
+	{
+		addLineToList(hwnd, index, info.info);
+		index++;
+	}
+}
+
 static BOOL view_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 {
 	switch (id) {
 	case IDC_INVOKE:
 	{
-		std::vector<CustomItemInfo> itemsToAdd = serviceMap[serviceHwndMap[hwnd]]->InvokeService();
-		serviceListItemMap[serviceHwndMap[hwnd]] = itemsToAdd;
-
 		HWND hwndList = GetDlgItem(hwnd, IDC_LIST);
 		ListView_DeleteAllItems(hwndList);
-		int index = 0;
-		
-		for (CustomItemInfo info : itemsToAdd)
-		{
-			addLineToList(hwnd, index, info.info);
-			index++;
-		}
+		addLineToList(hwnd, 0, L"Loading...");
+
+		std::thread bgThread(view_OnCommand_InvokeService, hwnd);
+		bgThread.detach();
 	}
 	break;
 	}
