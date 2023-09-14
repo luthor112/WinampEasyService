@@ -17,6 +17,9 @@
 #include <string>
 #include <fstream>
 
+#include <thread>
+#include <mutex>
+
 #include "resource.h"
 
 #pragma comment(lib, "comctl32.lib")
@@ -66,6 +69,7 @@ void runProcessInBackground(wchar_t* cmdLine)
 
 std::vector<SkinInfo> fileList;
 HIMAGELIST previewImageList;
+std::mutex fileListMutex;
 
 void clearList(HWND hwnd)
 {
@@ -106,6 +110,8 @@ void addItemToList(HWND hwnd, SkinInfo skinInfo)
 
 void setToPage(HWND hwnd, int page)
 {
+	std::lock_guard<std::mutex> guard(fileListMutex);
+
 	currentPage = page;
 	clearList(hwnd);
 
@@ -250,6 +256,8 @@ static BOOL view_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 	{
 		if (currentSkin != -1)
 		{
+			std::lock_guard<std::mutex> guard(fileListMutex);
+
 			char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
 			wchar_t keptFileName[1024];
 			wsprintf(keptFileName, L"%S\\..\\Skins\\%s", pluginDir, fileList[currentSkin].filename);
@@ -270,12 +278,16 @@ static BOOL view_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 	case IDC_PREV:
 	{
 		if (currentPage > 1)
-			setToPage(hwnd, currentPage - 1);
+		{
+			std::thread bgThread(setToPage, hwnd, currentPage - 1); //setToPage(hwnd, currentPage - 1);
+			bgThread.detach();
+		}
 	}
 	break;
 	case IDC_NEXT:
 	{
-		setToPage(hwnd, currentPage + 1);
+		std::thread bgThread(setToPage, hwnd, currentPage + 1); //setToPage(hwnd, currentPage + 1);
+		bgThread.detach();
 	}
 	break;
 	}
@@ -290,6 +302,8 @@ static BOOL list_OnNotify(HWND hwnd, int wParam, NMHDR* lParam)
 		LPNMITEMACTIVATE lpnmia = (LPNMITEMACTIVATE)lParam;
 
 		currentSkin = lpnmia->iItem;
+
+		fileListMutex.lock();
 
 		char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
 		wchar_t skinFile[1024];
@@ -311,6 +325,8 @@ static BOOL list_OnNotify(HWND hwnd, int wParam, NMHDR* lParam)
 			// Set from temp
 			SendMessage(hwndWinampParent, WM_WA_IPC, (WPARAM)cacheFileName, IPC_SETSKINW);
 
+			fileListMutex.unlock();
+
 			if (keepAll)
 				view_OnCommand(NULL, IDC_KEEP, NULL, NULL);
 		}
@@ -318,6 +334,8 @@ static BOOL list_OnNotify(HWND hwnd, int wParam, NMHDR* lParam)
 		{
 			// Set from Skins
 			SendMessage(hwndWinampParent, WM_WA_IPC, (WPARAM)(fileList[lpnmia->iItem].filename), IPC_SETSKINW);
+
+			fileListMutex.unlock();
 		}
 #else
 		MessageBox(0, L"This should not happen...", L"", MB_OK);
@@ -366,15 +384,16 @@ HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndP
 	// Create dialog
 	HWND dialogWnd = CreateDialog(myself, MAKEINTRESOURCE(IDD_VIEW_CUSTOM), hwndParentControl, (DLGPROC)customDialogProc);
 
-	// Switch to Page 1
-	setToPage(dialogWnd, 1);
-
 	// Set Kepp All checkbox to last known value
 	HWND checkWnd = GetDlgItem(dialogWnd, IDC_KEEPALL);
 	if (keepAll)
 		SendMessage(checkWnd, BM_SETCHECK, BST_CHECKED, 0);
 	else
 		SendMessage(checkWnd, BM_SETCHECK, BST_UNCHECKED, 0);
+
+	// Switch to Page 1
+	std::thread bgThread(setToPage, dialogWnd, 1); //setToPage(dialogWnd, 1);
+	bgThread.detach();
 
 	return dialogWnd;
 }
