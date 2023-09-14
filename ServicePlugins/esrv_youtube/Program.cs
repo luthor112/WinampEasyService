@@ -20,7 +20,7 @@ namespace esrv_youtube
             else if (args[0] == "InvokeService")
             {
                 ApplicationConfiguration.Initialize();
-                Application.Run(new Form1());
+                Application.Run(new Form1(args[1] == "PLAYERTYPE_WACUP"));
             }
             else if (args[0] == "GetFileName")
             {
