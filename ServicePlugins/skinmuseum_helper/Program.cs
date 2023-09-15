@@ -77,6 +77,16 @@ namespace skinmuseum_helper
                 using (var client = new HttpClient())
                 {
                     var response = await client.GetAsync($"https://r2.webampskins.org/skins/{md5}{outputFile.Substring(outputFile.Length - 4)}");
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        string[] validExts = { ".wsz", ".wal", ".zip" };
+                        foreach (string ext in validExts)
+                        {
+                            response = await client.GetAsync($"https://r2.webampskins.org/skins/{md5}{ext}");
+                            if (response.IsSuccessStatusCode)
+                                break;
+                        }
+                    }
                     using (var fs = new FileStream(outputFile, FileMode.Create))
                     {
                         await response.Content.CopyToAsync(fs);
