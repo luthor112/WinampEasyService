@@ -65,6 +65,7 @@ private:
     InvokeNextCustomFunc _invokeNextCustom;
     bool customColumnsSupported = FALSE;
     const wchar_t* columnNameCache = NULL;
+    const wchar_t* nodeNameCache = NULL;
 };
 
 class EXEService : public EasyService
@@ -83,4 +84,5 @@ private:
     wchar_t* _exeName;
     bool customColumnsSupported = FALSE;
     const wchar_t* columnNameCache = NULL;
+    const wchar_t* nodeNameCache = NULL;
 };

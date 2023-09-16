@@ -113,6 +113,8 @@ INT_PTR MessageProc(int message_type, INT_PTR param1, INT_PTR param2, INT_PTR pa
 {
     if (message_type == ML_MSG_TREE_ONCREATEVIEW && serviceMap.count(param1))
     {
+		trace(L"Activated node: ", serviceMap[param1]->GetNodeName());
+
 		HWND customWnd = serviceMap[param1]->GetCustomDialog(plugin.hwndWinampParent, plugin.hwndLibraryParent, (HWND)(LONG_PTR)param2);
 		if (customWnd != NULL)
 		{
@@ -443,6 +445,8 @@ static BOOL view_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 	switch (id) {
 	case IDC_INVOKE:
 	{
+		trace(L"Invoking plugin: ", serviceMap[serviceHwndMap[hwnd]]->GetNodeName());
+
 		HWND hwndList = GetDlgItem(hwnd, IDC_LIST);
 		ListView_DeleteAllItems(hwndList);
 		addLineToList(hwnd, 0, L"Loading...");
@@ -492,7 +496,7 @@ static BOOL list_OnNotify(HWND hwnd, int wParam, NMHDR* lParam)
 			SendMessage(plugin.hwndWinampParent, WM_COMMAND, MAKEWPARAM(WINAMP_BUTTON2, 0), 0);
 		}
 #else
-		MessageBox(0, L"This should not happen...", L"", MB_OK);
+		trace(L"This should not happen: _WIN32_IE < 0x0400");
 #endif
 	}
 

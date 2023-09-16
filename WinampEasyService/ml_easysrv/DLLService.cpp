@@ -22,7 +22,12 @@ DLLService::DLLService(const wchar_t* dllName, int _playerType)
 
 const wchar_t* DLLService::GetNodeName()
 {
-    return _getNodeName();
+    if (nodeNameCache == NULL)
+    {
+        nodeNameCache = _getNodeName();
+    }
+
+    return nodeNameCache;
 }
 
 const wchar_t* DLLService::GetColumnNames()

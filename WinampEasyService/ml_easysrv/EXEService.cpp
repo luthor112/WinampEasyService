@@ -113,15 +113,20 @@ EXEService::EXEService(const wchar_t* exeName, int _playerType)
 
 const wchar_t* EXEService::GetNodeName()
 {
-    wchar_t cmdLine[1024];
-    wsprintf(cmdLine, L"%s GetNodeName", _exeName);
-    std::string s1 = ReadProcessOutput(cmdLine);
-    std::wstring ws1 = std::wstring(s1.begin(), s1.end());
-    std::wistringstream inSS(ws1);
+    if (nodeNameCache == NULL)
+    {
+        wchar_t cmdLine[1024];
+        wsprintf(cmdLine, L"%s GetNodeName", _exeName);
+        std::string s1 = ReadProcessOutput(cmdLine);
+        std::wstring ws1 = std::wstring(s1.begin(), s1.end());
+        std::wistringstream inSS(ws1);
 
-    std::wstring line;
-    std::getline(inSS, line);
-    return _wcsdup(line.c_str());
+        std::wstring line;
+        std::getline(inSS, line);
+        nodeNameCache = _wcsdup(line.c_str());
+    }
+
+    return nodeNameCache;
 }
 
 const wchar_t* EXEService::GetColumnNames()
