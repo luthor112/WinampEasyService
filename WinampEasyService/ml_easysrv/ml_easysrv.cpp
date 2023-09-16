@@ -188,11 +188,15 @@ bool containsToken(const wchar_t* tokenSearchList, const wchar_t* searchToken)
 	while (token)
 	{
 		if (!wcscmp(token, searchToken))
+		{
+			free(tokenList);
 			return TRUE;
+		}
 
 		token = wcstok_s(NULL, L";", &context);
 	}
 
+	free(tokenList);
 	return FALSE;
 }
 
@@ -336,6 +340,8 @@ void addLineToList(HWND hwnd, int index, const wchar_t* info)
 		subItemIndex++;
 		token = wcstok_s(NULL, L"\t", &context);
 	}
+
+	free(infoList);
 }
 
 static BOOL view_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
@@ -371,6 +377,7 @@ static BOOL view_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 		columnIndex++;
 		token = wcstok_s(NULL, L"\t", &context);
 	}
+	free(columnList);
 
 	/* skin dialog */
 	MLSKINWINDOW sw;
