@@ -31,6 +31,11 @@
   <ItemGroup>
     <ResourceCompile Include="ml_easysrv.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="easysrv.ini">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

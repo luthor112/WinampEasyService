@@ -16,6 +16,7 @@
 #include <map>
 #include <thread>
 #include <mutex>
+#include <fstream>
 
 // Uncomment to disable features
 //#define DISABLE_REFERENCE_FEATURE
@@ -68,16 +69,44 @@ winampMediaLibraryPlugin plugin = {
   0     // hDllInstance
 };
 
+// Global variables
+wchar_t configFileName[MAX_PATH];
+bool tracingEnabled = FALSE;
+std::wfstream traceStream;
+
+// Helper function for tracing
+void trace(const wchar_t* part1, const wchar_t* part2 = NULL)
+{
+	if (tracingEnabled)
+		traceStream << part1 << (part2 ? part2 : L"") << L"\n";
+}
+
 // Called by WinAmp after loading
 int init()
 {
+	char* pluginDir = (char*)SendMessage(plugin.hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
+	wsprintf(configFileName, L"%S\\easysrv.ini", pluginDir);
+
+	wchar_t tracePath[MAX_PATH];
+	GetPrivateProfileString(L"easysrv", L"trace", L"", tracePath, MAX_PATH, configFileName);
+	if (wcslen(tracePath) > 0)
+	{
+		tracingEnabled = TRUE;
+		traceStream = std::wfstream(tracePath, std::ios::out | std::ios::ate);
+		traceStream << L"init()" << std::endl;
+	}
+
     loadServices();
 
     return 0;
 }
 
 // Called by WinAmp when quitting
-void quit() {}
+void quit()
+{
+	if (tracingEnabled)
+		traceStream << L"quit()" << std::endl;
+}
 
 // Called by WinAmp to talk to our plugin
 INT_PTR MessageProc(int message_type, INT_PTR param1, INT_PTR param2, INT_PTR param3)
@@ -151,6 +180,22 @@ UINT_PTR addTreeItem(UINT_PTR parentId, const wchar_t* title, BOOL hasChildren, 
 	return treeItem.id;
 }
 
+bool containsToken(const wchar_t* tokenSearchList, const wchar_t* searchToken)
+{
+	wchar_t* tokenList = _wcsdup(tokenSearchList);
+	wchar_t* context = NULL;
+	wchar_t* token = wcstok_s(tokenList, L";", &context);
+	while (token)
+	{
+		if (!wcscmp(token, searchToken))
+			return TRUE;
+
+		token = wcstok_s(NULL, L";", &context);
+	}
+
+	return FALSE;
+}
+
 void loadServices()
 {
 	int playerType = PLAYERTYPE_WINAMP;
@@ -158,11 +203,26 @@ void loadServices()
 	if (strstr(pluginDir, "WACUP"))
 		playerType = PLAYERTYPE_WACUP;
 
+	wchar_t overrideplayertype[32];
+	GetPrivateProfileString(L"easysrv", L"overrideplayertype", L"DEFAULT", overrideplayertype, 32, configFileName);
+	if (!wcscmp(overrideplayertype, L"winamp"))
+		playerType = PLAYERTYPE_WINAMP;
+	else if (!wcscmp(overrideplayertype, L"wacup"))
+		playerType = PLAYERTYPE_WACUP;
+	trace(L"PlayerType: ", (playerType == PLAYERTYPE_WINAMP ? L"PLAYERTYPE_WINAMP" : L"PLAYERTYPE_WACUP"));
+
 	UINT_PTR servicesNode = addTreeItem(0, L"Services", TRUE, MLTREEIMAGE_BRANCH);
+	trace(L"Services node added");
 	
+	wchar_t disabledList[4096];
+	GetPrivateProfileString(L"easysrv", L"disable", L"", disabledList, 4096, configFileName);
+	trace(L"Disabled services: ", disabledList);
+
 	wchar_t searchCriteria[1024];
 	WIN32_FIND_DATA FindFileData;
 	HANDLE searchHandle = INVALID_HANDLE_VALUE;
+
+	wchar_t absoluteName[1022];
 
 #ifndef DISABLE_SRV_DLL
 	// walk srv_*.dll
@@ -172,11 +232,18 @@ void loadServices()
 	{
 		do
 		{
-			wchar_t absoluteName[1024];
 			wsprintf(absoluteName, L"%S\\%s", pluginDir, FindFileData.cFileName);
-			EasyService* service = new DLLService(absoluteName, playerType);
-			UINT_PTR nodeID = addTreeItem(servicesNode, service->GetNodeName(), FALSE, MLTREEIMAGE_BRANCH);
-			serviceMap[nodeID] = service;
+			if (containsToken(disabledList, absoluteName) || containsToken(disabledList, FindFileData.cFileName))
+			{
+				trace(L"Skipping service: ", absoluteName);
+			}
+			else
+			{
+				EasyService* service = new DLLService(absoluteName, playerType);
+				UINT_PTR nodeID = addTreeItem(servicesNode, service->GetNodeName(), FALSE, MLTREEIMAGE_BRANCH);
+				serviceMap[nodeID] = service;
+				trace(L"Loaded service: ", absoluteName);
+			}
 		} while (FindNextFile(searchHandle, &FindFileData));
 		FindClose(searchHandle);
 	}
@@ -190,11 +257,18 @@ void loadServices()
 	{
 		do
 		{
-			wchar_t absoluteName[1024];
 			wsprintf(absoluteName, L"\"%S\\%s\"", pluginDir, FindFileData.cFileName);
-			EasyService* service = new EXEService(absoluteName, playerType);
-			UINT_PTR nodeID = addTreeItem(servicesNode, service->GetNodeName(), FALSE, MLTREEIMAGE_BRANCH);
-			serviceMap[nodeID] = service;
+			if (containsToken(disabledList, absoluteName) || containsToken(disabledList, FindFileData.cFileName))
+			{
+				trace(L"Skipping service: ", absoluteName);
+			}
+			else
+			{
+				EasyService* service = new EXEService(absoluteName, playerType);
+				UINT_PTR nodeID = addTreeItem(servicesNode, service->GetNodeName(), FALSE, MLTREEIMAGE_BRANCH);
+				serviceMap[nodeID] = service;
+				trace(L"Loaded service: ", absoluteName);
+			}
 		} while (FindNextFile(searchHandle, &FindFileData));
 		FindClose(searchHandle);
 	}
@@ -208,11 +282,18 @@ void loadServices()
 	{
 		do
 		{
-			wchar_t absoluteName[1024];
 			wsprintf(absoluteName, L"\"%S\\isrv_managed.exe\" \"%S\\%s\"", pluginDir, pluginDir, FindFileData.cFileName);
-			EasyService* service = new EXEService(absoluteName, playerType);
-			UINT_PTR nodeID = addTreeItem(servicesNode, service->GetNodeName(), FALSE, MLTREEIMAGE_BRANCH);
-			serviceMap[nodeID] = service;
+			if (containsToken(disabledList, absoluteName) || containsToken(disabledList, FindFileData.cFileName))
+			{
+				trace(L"Skipping service: ", absoluteName);
+			}
+			else
+			{
+				EasyService* service = new EXEService(absoluteName, playerType);
+				UINT_PTR nodeID = addTreeItem(servicesNode, service->GetNodeName(), FALSE, MLTREEIMAGE_BRANCH);
+				serviceMap[nodeID] = service;
+				trace(L"Loaded service: ", absoluteName);
+			}
 		} while (FindNextFile(searchHandle, &FindFileData));
 		FindClose(searchHandle);
 	}
