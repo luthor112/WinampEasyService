@@ -17,6 +17,9 @@
 #include <thread>
 #include <mutex>
 #include <fstream>
+#include <Shlwapi.h>
+
+#pragma comment(lib, "Shlwapi.lib")
 
 // Uncomment to disable features
 //#define DISABLE_REFERENCE_FEATURE
@@ -229,6 +232,15 @@ void loadServices()
 	HANDLE searchHandle = INVALID_HANDLE_VALUE;
 
 	wchar_t absoluteName[1022];
+
+	// Main page
+	wsprintf(absoluteName, L"%S\\isrv_mainpage.dll", pluginDir);
+	if (PathFileExists(absoluteName))
+	{
+		EasyService* service = new DLLService(absoluteName, playerType);
+		serviceMap[servicesNode] = service;
+		trace(L"Loaded service: ", absoluteName);
+	}
 
 #ifndef DISABLE_SRV_DLL
 	// walk srv_*.dll
