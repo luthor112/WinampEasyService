@@ -12,11 +12,11 @@ namespace esrv_youtube
         const int SW_HIDE = 0;
         const int SW_SHOW = 5;
 
-        bool _isWacup;
+        bool _directLink;
 
-        public Form1(bool isWACUP)
+        public Form1(bool directLink)
         {
-            _isWacup = isWACUP;
+            _directLink = directLink;
             InitializeComponent();
         }
 
@@ -39,7 +39,7 @@ namespace esrv_youtube
                 Console.WriteLine(item.Author);
                 Console.WriteLine(item.Title);
                 Console.WriteLine(item.Url);
-                if (_isWacup)
+                if (_directLink)
                     Console.WriteLine(item.Url);
                 else
                     Console.WriteLine("ref_" + item.Id);
