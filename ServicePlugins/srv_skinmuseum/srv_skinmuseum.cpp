@@ -33,6 +33,8 @@ HWND hwndLibraryParent = NULL;
 bool keepAll = FALSE;
 int currentPage = 1;
 int currentSkin = -1;
+wchar_t configFileName[MAX_PATH];
+wchar_t tempPath[MAX_PATH];
 
 struct SkinInfo
 {
@@ -87,9 +89,6 @@ void clearList(HWND hwnd)
 
 void addItemToList(HWND hwnd, SkinInfo skinInfo)
 {
-	wchar_t tempPath[MAX_PATH];
-	GetTempPath(MAX_PATH, tempPath);
-
 	wchar_t thumbFile[1024];
 	wsprintf(thumbFile, L"%swmp_museum_cache\\%s.bmp", tempPath, skinInfo.filename);
 
@@ -124,8 +123,6 @@ void setToPage(HWND hwnd, int page)
 
 
 	char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
-	wchar_t tempPath[MAX_PATH];
-	GetTempPath(MAX_PATH, tempPath);
 
 	wchar_t cacheDirName[1024];
 	wsprintf(cacheDirName, L"%swmp_museum_cache", tempPath);
@@ -264,9 +261,6 @@ static BOOL view_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 
 			if (!PathFileExists(keptFileName))
 			{
-				wchar_t tempPath[MAX_PATH];
-				GetTempPath(MAX_PATH, tempPath);
-
 				wchar_t cacheFileName[1024];
 				wsprintf(cacheFileName, L"%swmp_museum_cache\\%s", tempPath, fileList[currentSkin].filename);
 
@@ -312,9 +306,6 @@ static BOOL list_OnNotify(HWND hwnd, int wParam, NMHDR* lParam)
 		if (!PathFileExists(skinFile))
 		{
 			// Download to temp
-			wchar_t tempPath[MAX_PATH];
-			GetTempPath(MAX_PATH, tempPath);
-
 			wchar_t cacheFileName[1024];
 			wsprintf(cacheFileName, L"%swmp_museum_cache\\%s", tempPath, fileList[lpnmia->iItem].filename);
 
@@ -390,6 +381,15 @@ HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndP
 		SendMessage(checkWnd, BM_SETCHECK, BST_CHECKED, 0);
 	else
 		SendMessage(checkWnd, BM_SETCHECK, BST_UNCHECKED, 0);
+
+	char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
+	wsprintf(configFileName, L"%S\\easysrv.ini", pluginDir);
+
+	GetPrivateProfileString(L"skinmuseum", L"cachedir", L"", tempPath, MAX_PATH, configFileName);
+	if (wcslen(tempPath) == 0)
+		GetPrivateProfileString(L"global", L"cachedir", L"", tempPath, MAX_PATH, configFileName);
+	if (wcslen(tempPath) == 0)
+		GetTempPath(MAX_PATH, tempPath);
 
 	// Switch to Page 1
 	std::thread bgThread(setToPage, dialogWnd, 1); //setToPage(dialogWnd, 1);
