@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 
@@ -5,6 +7,28 @@ namespace esrv_bandcamp
 {
     internal static class Program
     {
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+        static extern uint GetPrivateProfileString(
+            string lpAppName,
+            string lpKeyName,
+            string lpDefault,
+            StringBuilder lpReturnedString,
+            uint nSize,
+            string lpFileName);
+
+        static string GetConfigString(string configKey, string defaultValue)
+        {
+            string configFileName = System.IO.Path.Join(System.IO.Path.GetDirectoryName(Application.ExecutablePath), "easysrv.ini");
+
+            StringBuilder configSBGlobal = new StringBuilder(256);
+            GetPrivateProfileString("global", configKey, defaultValue, configSBGlobal, (uint)configSBGlobal.Capacity, configFileName);
+
+            StringBuilder configSB = new StringBuilder(256);
+            GetPrivateProfileString("youtube", configKey, configSBGlobal.ToString(), configSB, (uint)configSB.Capacity, configFileName);
+
+            return configSB.ToString();
+        }
+
         /// <summary>
         ///  The main entry point for the application.
         /// </summary>
@@ -28,6 +52,7 @@ namespace esrv_bandcamp
                 int index = int.Parse(parts[1]);
                 string username = parts[2];
                 string identity = parts[3];
+                string cachePath = GetConfigString("cachedir", System.IO.Path.GetTempPath());
 
                 using (var client = new HttpClient())
                 {
@@ -48,7 +73,7 @@ namespace esrv_bandcamp
                     string fileType = "mp3";
                     if (downloadURL.Contains("/album"))
                         fileType = "zip";
-                    string outputFile = $"{System.IO.Path.GetTempPath()}\\bandcamp_{index}.{fileType}";
+                    string outputFile = System.IO.Path.Join(cachePath, $"bandcamp_{index}.{fileType}");
 
                     if (File.Exists(outputFile))
                     {
