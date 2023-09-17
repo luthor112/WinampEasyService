@@ -1,6 +1,10 @@
 using SpotifyExplode;
 using SpotifyExplode.Search;
 using System.Runtime.InteropServices;
+using YoutubeExplode;
+using YoutubeExplode.Common;
+using YoutubeExplode.Videos;
+using YoutubeExplode.Videos.Streams;
 
 namespace esrv_spotify
 {
@@ -13,10 +17,12 @@ namespace esrv_spotify
         const int SW_SHOW = 5;
 
         bool useCustomColumns;
+        bool _directLink;
 
-        public Form1(bool _useCustomColumns)
+        public Form1(bool _useCustomColumns, bool directLink)
         {
             useCustomColumns = _useCustomColumns;
+            _directLink = directLink;
 
             InitializeComponent();
         }
@@ -45,15 +51,35 @@ namespace esrv_spotify
                             {
                                 Console.WriteLine(track.Title + "\t" + track.Url);
                                 Console.WriteLine(track.Title);
-                                Console.WriteLine("ref_" + track.Id);
                             }
                             else
                             {
                                 Console.WriteLine(track.Title);
                                 Console.WriteLine(track.Title);
                                 Console.WriteLine(track.Url);
+                            }
+
+                            if (_directLink)
+                            {
+                                var downloadUrl = await spotify.Tracks.GetDownloadUrlAsync(track.Url);
+                                if (!string.IsNullOrEmpty(downloadUrl))
+                                {
+                                    Console.WriteLine(downloadUrl);
+                                }
+                                else
+                                {
+                                    string videoID = await spotify.Tracks.GetYoutubeIdAsync(track.Url);
+                                    var youtube = new YoutubeClient();
+                                    var streamManifest = await youtube.Videos.Streams.GetManifestAsync("https://www.youtube.com/watch?v=" + videoID);
+                                    var streamInfo = streamManifest.GetAudioOnlyStreams().GetWithHighestBitrate();
+                                    Console.WriteLine(streamInfo.Url);
+                                }
+                            }
+                            else
+                            {
                                 Console.WriteLine("ref_" + track.Id);
                             }
+
                             break;
                         }
                 }
