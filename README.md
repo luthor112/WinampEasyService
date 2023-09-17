@@ -111,7 +111,8 @@ The following plugins have been developed using this framework:
 * srv_steamimport: Import the soundtracks you downloaded on steam to the Local Library or into individual playlists!
 
 Common operation:
-* Downloaded files and saved credentials are stored in `System.IO.Path.GetTempPath()`
+* Most plguins, including the main ml_easysrv plugin, can be configured by editing the `easysrv.ini` in the `Plugins` folder
+* Downloaded files and saved credentials are stored in `System.IO.Path.GetTempPath()`, unless specified otherwise
 
 # Screenshots
 
