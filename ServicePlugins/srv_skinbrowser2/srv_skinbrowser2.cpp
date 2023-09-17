@@ -29,6 +29,8 @@ HINSTANCE myself = NULL;
 HWND hwndWinampParent = NULL;
 HWND hwndLibraryParent = NULL;
 bool autoApply = FALSE;
+wchar_t configFileName[MAX_PATH];
+wchar_t tempPath[MAX_PATH];
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
@@ -85,9 +87,6 @@ bool addItemToList(HWND hwnd, const wchar_t* filename)
 	}
 
 	fileList.push_back(filename);
-
-	wchar_t tempPath[MAX_PATH];
-	GetTempPath(MAX_PATH, tempPath);
 
 	wchar_t thumbFile[1024];
 	wsprintf(thumbFile, L"%swmp_skin_thm\\%s.bmp", tempPath, filename);
@@ -306,8 +305,6 @@ LRESULT CALLBACK customDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 static void precacheThumbnails(HWND dialogWnd)
 {
 	// Precache thumbnails
-	wchar_t tempPath[MAX_PATH];
-	GetTempPath(MAX_PATH, tempPath);
 	char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
 	wchar_t helperCmd[1024];
 	wsprintf(helperCmd, L"\"%S\\skinbrowser2_helper.exe\" all \"%S\\..\\Skins\" \"%swmp_skin_thm\"", pluginDir, pluginDir, tempPath);
@@ -336,6 +333,15 @@ HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndP
 		SendMessage(checkWnd, BM_SETCHECK, BST_CHECKED, 0);
 	else
 		SendMessage(checkWnd, BM_SETCHECK, BST_UNCHECKED, 0);
+
+	char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
+	wsprintf(configFileName, L"%S\\easysrv.ini", pluginDir);
+
+	GetPrivateProfileString(L"skinbrowser", L"cachedir", L"", tempPath, MAX_PATH, configFileName);
+	if (wcslen(tempPath) == 0)
+		GetPrivateProfileString(L"global", L"cachedir", L"", tempPath, MAX_PATH, configFileName);
+	if (wcslen(tempPath) == 0)
+		GetTempPath(MAX_PATH, tempPath);
 
 	std::thread bgThread(precacheThumbnails, dialogWnd);
 	bgThread.detach();
