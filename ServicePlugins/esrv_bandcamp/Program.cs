@@ -24,7 +24,7 @@ namespace esrv_bandcamp
             GetPrivateProfileString("global", configKey, defaultValue, configSBGlobal, (uint)configSBGlobal.Capacity, configFileName);
 
             StringBuilder configSB = new StringBuilder(256);
-            GetPrivateProfileString("youtube", configKey, configSBGlobal.ToString(), configSB, (uint)configSB.Capacity, configFileName);
+            GetPrivateProfileString("bandcamp", configKey, configSBGlobal.ToString(), configSB, (uint)configSB.Capacity, configFileName);
 
             return configSB.ToString();
         }
@@ -41,8 +41,11 @@ namespace esrv_bandcamp
             }
             else if (args[0] == "InvokeService")
             {
+                string cachePath = GetConfigString("cachedir", System.IO.Path.GetTempPath());
+                string saveFileName = System.IO.Path.Join(cachePath, "spotify_saved_login");
+
                 ApplicationConfiguration.Initialize();
-                Application.Run(new Form1());
+                Application.Run(new Form1(saveFileName));
             }
             else if (args[0] == "GetFileName")
             {

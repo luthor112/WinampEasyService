@@ -12,8 +12,11 @@ namespace esrv_soundcloud
         const int SW_HIDE = 0;
         const int SW_SHOW = 5;
 
-        public Form1()
+        bool _directLink;
+
+        public Form1(bool directLink)
         {
+            _directLink = directLink;
             InitializeComponent();
         }
 
@@ -39,7 +42,15 @@ namespace esrv_soundcloud
                             Console.WriteLine(track?.User?.FullName ?? "");
                             Console.WriteLine(track.Title);
                             Console.WriteLine(track.Url);
-                            Console.WriteLine("ref_" + track.Id);
+                            if (_directLink)
+                            {
+                                var downloadURL = await soundcloud.Tracks.GetDownloadUrlAsync(track);
+                                Console.WriteLine(downloadURL);
+                            }
+                            else
+                            {
+                                Console.WriteLine("ref_" + track.Id);
+                            }
                             break;
                         }
                 }

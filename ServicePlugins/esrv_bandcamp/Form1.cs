@@ -13,10 +13,11 @@ namespace esrv_bandcamp
         const int SW_HIDE = 0;
         const int SW_SHOW = 5;
 
-        string saveFileName = System.IO.Path.GetTempPath() + "\\spotify_saved_login";
+        string saveFileName;
 
-        public Form1()
+        public Form1(string _saveFileName)
         {
+            saveFileName = _saveFileName;
             InitializeComponent();
         }
 
