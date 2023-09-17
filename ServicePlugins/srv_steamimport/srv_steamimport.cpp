@@ -25,7 +25,7 @@
 HINSTANCE myself = NULL;
 HWND hwndWinampParent = NULL;
 HWND hwndLibraryParent = NULL;
-bool autoApply = FALSE;
+wchar_t configFileName[MAX_PATH];
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
@@ -95,7 +95,11 @@ void scanFiles(UpdateTarget updateTarget)
 		wsprintf(musicDir, L"%s\\steamapps\\music", libraryPath.c_str());
 
 		wchar_t tempPath[MAX_PATH];
-		GetTempPath(MAX_PATH, tempPath);
+		GetPrivateProfileString(L"steam", L"cachedir", L"", tempPath, MAX_PATH, configFileName);
+		if (wcslen(tempPath) == 0)
+			GetPrivateProfileString(L"global", L"cachedir", L"", tempPath, MAX_PATH, configFileName);
+		if (wcslen(tempPath) == 0)
+			GetTempPath(MAX_PATH, tempPath);
 
 		using recursive_directory_iterator = std::filesystem::recursive_directory_iterator;
 		if (PathFileExists(musicDir))
@@ -254,6 +258,9 @@ HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndP
 	hwndLibraryParent = _hwndLibraryParent;
 
 	HWND dialogWnd = CreateDialog(myself, MAKEINTRESOURCE(IDD_VIEW_CUSTOM), hwndParentControl, (DLGPROC)customDialogProc);
+
+	char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
+	wsprintf(configFileName, L"%S\\easysrv.ini", pluginDir);
 
 	return dialogWnd;
 }
