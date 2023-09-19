@@ -27,6 +27,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "srv_steamimport", "srv_stea
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "srv_heritageskins", "srv_heritageskins\srv_heritageskins.vcxproj", "{736BBDBB-8448-4A4A-9A82-304D0782CB1D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "heritageskins_helper", "heritageskins_helper\heritageskins_helper.csproj", "{148F71DE-D422-412A-A642-58B91D576DD7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -181,6 +183,18 @@ Global
 		{736BBDBB-8448-4A4A-9A82-304D0782CB1D}.Release|x64.Build.0 = Release|x64
 		{736BBDBB-8448-4A4A-9A82-304D0782CB1D}.Release|x86.ActiveCfg = Release|Win32
 		{736BBDBB-8448-4A4A-9A82-304D0782CB1D}.Release|x86.Build.0 = Release|Win32
+		{148F71DE-D422-412A-A642-58B91D576DD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{148F71DE-D422-412A-A642-58B91D576DD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{148F71DE-D422-412A-A642-58B91D576DD7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{148F71DE-D422-412A-A642-58B91D576DD7}.Debug|x64.Build.0 = Debug|Any CPU
+		{148F71DE-D422-412A-A642-58B91D576DD7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{148F71DE-D422-412A-A642-58B91D576DD7}.Debug|x86.Build.0 = Debug|Any CPU
+		{148F71DE-D422-412A-A642-58B91D576DD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{148F71DE-D422-412A-A642-58B91D576DD7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{148F71DE-D422-412A-A642-58B91D576DD7}.Release|x64.ActiveCfg = Release|Any CPU
+		{148F71DE-D422-412A-A642-58B91D576DD7}.Release|x64.Build.0 = Release|Any CPU
+		{148F71DE-D422-412A-A642-58B91D576DD7}.Release|x86.ActiveCfg = Release|Any CPU
+		{148F71DE-D422-412A-A642-58B91D576DD7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

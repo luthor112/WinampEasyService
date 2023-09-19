@@ -39,7 +39,7 @@ wchar_t tempPath[MAX_PATH];
 
 std::vector<const wchar_t*> catNames { L"Featured", L"Stylish", L"Entertainment", L"Cool Devices", L"Computer/OS", L"Animated", L"Consumption", L"Games", L"Retro",
 	L"Compact/Utility", L"SUI Skins", L"Sports/University", L"Transportation", L"Nature", L"WTF" };
-std::vector<const wchar_t*> catLinks{ L"", L"Stylish-13", L"Entertainment-115", L"Cool-Devices-12", L"Computer-OS-6", L"Animated-2", L"Consumption-3", L"Games-8", L"Retro-10",
+std::vector<const wchar_t*> catLinks{ L"_FEATURED_", L"Stylish-13", L"Entertainment-115", L"Cool-Devices-12", L"Computer-OS-6", L"Animated-2", L"Consumption-3", L"Games-8", L"Retro-10",
 	L"Compact-Utility-111", L"SUI-Skins-114", L"Sports-University-11", L"Transportation-4", L"Nature-16", L"WTF-112" };
 
 struct SkinInfo
@@ -130,7 +130,7 @@ void setToPage(HWND hwnd, int cat, int page)
 	RedrawWindow(pageNumWnd, NULL, NULL, RDW_INVALIDATE);
 
 
-	/*char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
+	char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
 
 	wchar_t cacheDirName[1024];
 	wsprintf(cacheDirName, L"%swmp_heritage_cache", tempPath);
@@ -157,11 +157,7 @@ void setToPage(HWND hwnd, int cat, int page)
 		fileList.push_back(si);
 
 		addItemToList(hwnd, si);
-	}*/
-
-	wchar_t msgText[1024];
-	wsprintf(msgText, L"Cat: %d, Page: %d", currentCat, currentPage);
-	MessageBox(0, msgText, L"", MB_OK);
+	}
 }
 
 typedef int (*HookDialogFunc)(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
