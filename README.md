@@ -109,6 +109,11 @@ The following plugins have been developed using this framework:
     * Click "Keep current skin" to copy the last set skin from the current page to your Skins directory
         * This only works if you have Write rights to the directory
 * srv_steamimport: Import the soundtracks you downloaded on steam to the Local Library or into individual playlists!
+* srv_heritageskins: Browse the WinAmp Heritage Skin colleciton right from the Media Library
+    * Double click to download and set a skin
+    * Click "Keep current skin" to copy the last set skin from the current page to your Skins directory
+        * This only works if you have Write rights to the directory
+    * Default category can be set in the config file
 
 Common operation:
 * Most plguins, including the main ml_easysrv plugin, can be configured by editing the `easysrv.ini` in the `Plugins` folder
