@@ -160,7 +160,7 @@ static BOOL view_OnSize(HWND hwnd, UINT state, int cx, int cy)
 		HWND buttonWnd = GetDlgItem(hwnd, IDC_RESCAN);
 
 		MoveWindow(listWnd, 0, 0, cx, cy - 46, TRUE);
-		MoveWindow(checkWnd, 0, cy - 43, 300, 15, TRUE);
+		MoveWindow(checkWnd, 1, cy - 43, 300, 15, TRUE);
 		MoveWindow(buttonWnd, 1, cy - 25, 300, 25, TRUE);
 	}
 
