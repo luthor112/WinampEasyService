@@ -95,7 +95,21 @@ namespace heritageskins_helper
                 {
                     var response = await client.GetAsync($"https://winampheritage.com{relLink}");
                     Image imageData = Image.FromStream(response.Content.ReadAsStream());
-                    imageData.Save(outputFile, ImageFormat.Bmp);
+                    if (imageData.Width == 178 && imageData.Height == 75)
+                    {
+                        imageData.Save(outputFile, ImageFormat.Bmp);
+                    }
+                    else
+                    {
+                        Image resizedImage = new Bitmap(178, 75, PixelFormat.Format24bppRgb);
+                        using (Graphics grp = Graphics.FromImage(resizedImage))
+                        {
+                            //grp.FillRectangle(Brushes.DarkGray, 0, 0, 178, 75);
+                            grp.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.High;
+                            grp.DrawImage(imageData, 0, 0, 178, 75);
+                        }
+                        resizedImage.Save(outputFile, ImageFormat.Bmp);
+                    }
                 }
             }
         }
