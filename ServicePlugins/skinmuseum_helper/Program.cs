@@ -3,12 +3,15 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO.Compression;
+using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace skinmuseum_helper
 {
     internal class Program
     {
-        const int pageLength = 50;
+        [DllImport("kernel32.dll")]
+        static extern uint GetPrivateProfileInt(string lpAppName, string lpKeyName, int nDefault, string lpFileName);
 
         static async Task Main(string[] args)
         {
@@ -36,6 +39,9 @@ namespace skinmuseum_helper
             {
                 string pageURL = "https://api.webampskins.org/graphql";
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
+
+                string configFileName = System.IO.Path.Join(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "easysrv.ini");
+                int pageLength = (int)GetPrivateProfileInt("skinmuseum", "pagelength", 50, configFileName);
 
                 StringContent jsonContent = new StringContent("{\"query\":\"\\n        query MuseumPage($offset: Int, $first: Int) {\\n          skins(offset: $offset, first: $first, sort: MUSEUM) {\\n            count\\n            nodes {\\n              md5\\n              filename\\n              nsfw\\n            }\\n          }\\n        }\\n      \",\"variables\":{\"offset\":" + ((pageNum - 1) * pageLength).ToString() + ",\"first\":" + pageLength.ToString() + "}}",
                                                               System.Text.Encoding.UTF8,

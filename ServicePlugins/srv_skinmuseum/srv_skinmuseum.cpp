@@ -25,8 +25,6 @@
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(lib, "Shlwapi.lib")
 
-const int pageLength = 50;
-
 HINSTANCE myself = NULL;
 HWND hwndWinampParent = NULL;
 HWND hwndLibraryParent = NULL;
@@ -35,6 +33,8 @@ int currentPage = 1;
 int currentSkin = -1;
 wchar_t configFileName[MAX_PATH];
 wchar_t tempPath[MAX_PATH];
+int pageLength = 50;
+int pageSkip = 5;
 
 struct SkinInfo
 {
@@ -214,16 +214,20 @@ static BOOL view_OnSize(HWND hwnd, UINT state, int cx, int cy)
 		HWND listWnd = GetDlgItem(hwnd, IDC_LIST);
 		HWND keepButtonWnd = GetDlgItem(hwnd, IDC_KEEP);
 		HWND keepCheckWnd = GetDlgItem(hwnd, IDC_KEEPALL);
+		HWND prevSkipWnd = GetDlgItem(hwnd, IDC_PREVSKIP);
 		HWND prevButtonWnd = GetDlgItem(hwnd, IDC_PREV);
 		HWND pageNumWnd = GetDlgItem(hwnd, IDC_PAGENUM);
 		HWND nextButtonWnd = GetDlgItem(hwnd, IDC_NEXT);
+		HWND nextSkipnWnd = GetDlgItem(hwnd, IDC_NEXTSKIP);
 
 		MoveWindow(listWnd, 0, 0, cx, cy - 56, TRUE);
 		MoveWindow(keepButtonWnd, 1, cy - 53, 200, 25, TRUE);
 		MoveWindow(keepCheckWnd, 209, cy - 48, 150, 15, TRUE);
-		MoveWindow(prevButtonWnd, 1, cy - 25, 117, 25, TRUE);
+		MoveWindow(prevSkipWnd, 1, cy - 25, 10, 25, TRUE);
+		MoveWindow(prevButtonWnd, 11, cy - 25, 107, 25, TRUE);
 		MoveWindow(pageNumWnd, 126, cy - 20, 64, 15, TRUE);
-		MoveWindow(nextButtonWnd, 188, cy - 25, 117, 25, TRUE);
+		MoveWindow(nextButtonWnd, 188, cy - 25, 107, 25, TRUE);
+		MoveWindow(nextSkipnWnd, 295, cy - 25, 10, 25, TRUE);
 
 		RedrawWindow(pageNumWnd, NULL, NULL, RDW_INVALIDATE);
 	}
@@ -281,6 +285,21 @@ static BOOL view_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 	case IDC_NEXT:
 	{
 		std::thread bgThread(setToPage, hwnd, currentPage + 1); //setToPage(hwnd, currentPage + 1);
+		bgThread.detach();
+	}
+	break;
+	case IDC_PREVSKIP:
+	{
+		if (currentPage - pageSkip > 0)
+		{
+			std::thread bgThread(setToPage, hwnd, currentPage - pageSkip); //setToPage(hwnd, currentPage - 1);
+			bgThread.detach();
+		}
+	}
+	break;
+	case IDC_NEXTSKIP:
+	{
+		std::thread bgThread(setToPage, hwnd, currentPage + pageSkip); //setToPage(hwnd, currentPage + 1);
 		bgThread.detach();
 	}
 	break;
@@ -390,6 +409,10 @@ HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndP
 		GetPrivateProfileString(L"global", L"cachedir", L"", tempPath, MAX_PATH, configFileName);
 	if (wcslen(tempPath) == 0)
 		GetTempPath(MAX_PATH, tempPath);
+
+	pageLength = GetPrivateProfileInt(L"skinmuseum", L"pagelength", 50, configFileName);
+
+	pageSkip = GetPrivateProfileInt(L"skinmuseum", L"pageskip", 5, configFileName);
 
 	// Switch to Page 1
 	std::thread bgThread(setToPage, dialogWnd, 1); //setToPage(dialogWnd, 1);
