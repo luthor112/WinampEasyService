@@ -1,0 +1,40 @@
+NOTICE AND ATTRIBUTION
+----------------------
+
+WinampEasyService:
+- Code in this repository
+  - License: The Unlicense
+  - License File: LICENSE, LICENSES/UNLICENSE
+
+ServicePlugins:
+- Code in this repository
+  - License: The Unlicense
+  - License File: LICENSE, LICENSES/UNLICENSE
+- SoundCloudExplode
+  - License: LGPL-3.0-only
+  - License File: LICENSES/LGPL-3
+  - Obtained from: https://www.nuget.org/packages/SoundCloudExplode/1.5.0
+  - Copyright: (c) Jerry Berry
+- SpotifyExplode
+  - License: LGPL-3.0-only
+  - License File: LICENSES/LGPL-3
+  - Obtained from: https://www.nuget.org/packages/SpotifyExplode/1.0.7
+  - Copyright: (c) Jerry Berry
+- YoutubeExplode
+  - License: LGPL-3.0-only
+  - License File: LICENSES/LGPL-3
+  - Obtained from: https://www.nuget.org/packages/YoutubeExplode/6.3.1
+  - Copyright: (c) Oleksii Holub
+- TagLibSharp
+  - License: LGPL-2.1-only
+  - License File: LICENSES/LGPL-2.1
+  - Obtained from: https://www.nuget.org/packages/TagLibSharp/2.3.0
+  - Copyright: (c) 2006-2007 Brian Nickel. (c) 2009-2020 Other contributors
+- Newtonsoft.Json
+  - License: MIT
+  - License File: LICENSES/MIT
+  - Copyright: (c) James Newton-King 2008
+- System.Drawing.Common
+  - License: MIT
+  - License File: LICENSES/MIT
+  - Copyright: (c) Microsoft Corporation. All rights reserved.
