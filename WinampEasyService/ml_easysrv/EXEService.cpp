@@ -1,5 +1,7 @@
 #include "easyservice.h"
 
+#include "Winamp/wa_ipc.h"
+
 #include <Windows.h>
 #include <string>
 #include <sstream>
@@ -277,8 +279,11 @@ HWND EXEService::GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent
         si.cb = sizeof(si);
         ZeroMemory(&pi, sizeof(pi));
 
+        wchar_t skinPath[MAX_PATH];
+        SendMessage(_hwndWinampParent, WM_WA_IPC, (WPARAM)skinPath, IPC_GETSKINW);
+
         wchar_t cmdLine[1024];
-        wsprintf(cmdLine, L"%s GetCustomDialog %d %d %d", _exeName, _hwndWinampParent, _hwndLibraryParent, hwndParentControl);
+        wsprintf(cmdLine, L"%s GetCustomDialog %d %d %d \"%s\"", _exeName, _hwndWinampParent, _hwndLibraryParent, hwndParentControl, skinPath);
         if (CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
         {
             customDialogPID = pi.dwProcessId;

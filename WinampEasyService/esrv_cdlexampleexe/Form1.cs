@@ -1,3 +1,5 @@
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 
 namespace esrv_cdlexampleexe
@@ -50,14 +52,16 @@ namespace esrv_cdlexampleexe
         IntPtr hwndWinampParent;
         IntPtr hwndLibraryParent;
         IntPtr hwndParentControl;
+        string skinPath;
 
         IntPtr hook;
 
-        public Form1(IntPtr _hwndWinampParent, IntPtr _hwndLibraryParent, IntPtr _hwndParentControl)
+        public Form1(IntPtr _hwndWinampParent, IntPtr _hwndLibraryParent, IntPtr _hwndParentControl, string _skinPath)
         {
             hwndWinampParent = _hwndWinampParent;
             hwndLibraryParent = _hwndLibraryParent;
             hwndParentControl = _hwndParentControl;
+            skinPath = _skinPath;
 
             InitializeComponent();
         }
@@ -70,6 +74,17 @@ namespace esrv_cdlexampleexe
             uint winampProcessID;
             uint libraryThreadID = GetWindowThreadProcessId(hwndLibraryParent, out winampProcessID);
             hook = SetWinEventHook(EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_LOCATIONCHANGE, IntPtr.Zero, WindowChangeHook, winampProcessID, libraryThreadID, WINEVENT_OUTOFCONTEXT);
+
+            string genexFilename = System.IO.Path.Join(skinPath, "genex.bmp");
+            if (File.Exists(genexFilename))
+            {
+                Bitmap genex = new Bitmap(genexFilename);
+                Color windowBackgroundColor = genex.GetPixel(52, 0);
+                Color windowTextColor = genex.GetPixel(48, 0);
+
+                BackColor = windowBackgroundColor;
+                label1.ForeColor = windowTextColor;
+            }
         }
 
         private void WindowChangeHook(IntPtr hWinEventHook, uint eventType,
