@@ -88,3 +88,5 @@ HWND DLLService::GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent
     else
         return NULL;
 }
+
+void DLLService::DestroyingCustomDialog() {}

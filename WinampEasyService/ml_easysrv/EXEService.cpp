@@ -245,5 +245,60 @@ const wchar_t* EXEService::GetFileName(const wchar_t* fileID)
 
 HWND EXEService::GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl)
 {
+    if (customDialogSupported == -1)
+    {
+        wchar_t cmdLine[1024];
+        wsprintf(cmdLine, L"%s CanGetCustomDialog", _exeName);
+        std::string s1 = ReadProcessOutput(cmdLine);
+        std::wstring ws1 = std::wstring(s1.begin(), s1.end());
+        std::wistringstream inSS(ws1);
+
+        std::wstring line;
+        std::getline(inSS, line);
+        if (!line.empty())
+        {
+            if (line.c_str()[0] == '1')
+                customDialogSupported = 1;
+            else
+                customDialogSupported = 0;
+        }
+        else
+        {
+            customDialogSupported = 0;
+        }
+    }
+
+    if (customDialogSupported == 1)
+    {
+        STARTUPINFOW si;
+        PROCESS_INFORMATION pi;
+
+        ZeroMemory(&si, sizeof(si));
+        si.cb = sizeof(si);
+        ZeroMemory(&pi, sizeof(pi));
+
+        wchar_t cmdLine[1024];
+        wsprintf(cmdLine, L"%s GetCustomDialog %d %d %d", _exeName, _hwndWinampParent, _hwndLibraryParent, hwndParentControl);
+        if (CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+        {
+            customDialogPID = pi.dwProcessId;
+            CloseHandle(pi.hProcess);
+            CloseHandle(pi.hThread);
+        }
+    }
+
+    // Return NULL, as the foreign process will handle everything
     return NULL;
+}
+
+void EXEService::DestroyingCustomDialog()
+{
+    if (customDialogPID != -1)
+    {
+        HANDLE procHandle = OpenProcess(PROCESS_TERMINATE, false, customDialogPID);
+        TerminateProcess(procHandle, 0);
+        CloseHandle(procHandle);
+
+        customDialogPID = -1;
+    }
 }

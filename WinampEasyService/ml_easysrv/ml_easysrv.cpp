@@ -431,6 +431,7 @@ static BOOL view_OnSize(HWND hwnd, UINT state, int cx, int cy)
 
 static BOOL view_OnDestroy(HWND hwnd)
 {
+	serviceMap[serviceHwndMap[hwnd]]->DestroyingCustomDialog();
 	return FALSE;
 }
 
