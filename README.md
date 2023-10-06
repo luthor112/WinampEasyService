@@ -47,9 +47,16 @@ Service plugin development:
         * Quit when done
         * `PlayerType` can be `PLAYERTYPE_WINAMP` or `PLAYERTYPE_WACUP`
     * Optional: `GetFileName FileID`: Print the direct filename corresponding to the reference `FileID` to STDOUT
-    * Important: If you wish to show a window, call `ShowWindow(form.Handle, SW_SHOW);` on your Form after creation
+    * Important: If you wish to show a window, you might have to call `ShowWindow(form.Handle, SW_SHOW);` on your Form after creation
         * ShowWindow resides in `user32.dll`, `SW_SHOW` equals 5
     * Full example: `WinampEasyService\\esrv_exampleexe`
+* EXE files (doesn't matter if managed or unmanaged) with custom UIs have to be named `esrv_\*.exe` and respond to the following command line arguments:
+	* `GetNodeName`: Print the name you wish to show in the Media Library to STDOUT
+	* `CanGetCustomDialog`: Print `1` to STDOUT if you support full custom UI
+	* `GetCustomDialog WinampHWND MediaLibraryHWND ParentControlHWND CurrentSkinPath`: Show a correctly set up window
+	* Important: If you wish to show a window, you might have to call `ShowWindow(form.Handle, SW_SHOW);` on your Form after creation
+        * ShowWindow resides in `user32.dll`, `SW_SHOW` equals 5
+    * Full example: `WinampEasyService\\esrv_cldexampleexe`
 
 Service plugin development - using custom columns:
 * Managed (.NET based) DLLs:
