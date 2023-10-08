@@ -1,9 +1,10 @@
-﻿using System.Reflection;
+using System.Reflection;
 
 namespace isrv_managed
 {
-    internal class Program
+    internal static class Program
     {
+        [STAThread]
         static void Main(string[] args)
         {
             var DLL = Assembly.LoadFile(args[0]);
@@ -56,6 +57,29 @@ namespace isrv_managed
                             Console.WriteLine(attr);
                         }
                     }
+                }
+            }
+            else if (args[1] == "CanGetCustomDialog")
+            {
+                var method = theType.GetMethod("GetCustomDialog");
+                if (method != null)
+                {
+                    Console.WriteLine("1");
+                }
+            }
+            else if (args[1] == "GetCustomDialog")
+            {
+                IntPtr hwndWinampParent = IntPtr.Parse(args[2]);
+                IntPtr hwndLibraryParent = IntPtr.Parse(args[3]);
+                IntPtr hwndParentControl = IntPtr.Parse(args[4]);
+                string skinPath = args[5];
+
+                var method = theType.GetMethod("GetCustomDialog");
+                if (method != null)
+                {
+                    ApplicationConfiguration.Initialize();
+                    UserControl customUI = (UserControl)method.Invoke(c, new object[] { hwndWinampParent });
+                    Application.Run(new Form1(hwndWinampParent, hwndLibraryParent, hwndParentControl, skinPath, customUI));
                 }
             }
         }

@@ -26,6 +26,9 @@ Service plugin development:
     * Important: If you wish to show a window, call `ShowWindow(form.Handle, SW_SHOW);` on your Form after creation
         * ShowWindow resides in `user32.dll`, `SW_SHOW` equals 5
     * Full example: `WinampEasyService\\msrv_exampledll`
+* Managed (.NET based) DLLs with custom UIs have to be named `msrv_\*.dll` and contain the `msrv.EasyService` class implementing the following:
+	* `public string GetNodeName()` should return the name you wish to show in the Media Library
+	* `public CustomControl GetCustomDialog(IntPtr WinampHWND)` should return the `System.Windows.Forms.CustomControl` you'd like to show
 * Unmanaged DLLs have to be named `srv_\*.dll` and implement the functions in `WinampEasyService\\ml_easysrv\\easysrv.h`:
     * `const wchar_t\* GetNodeName()` should return the name you wish to show in the Media Library
     * `ItemInfo InvokeService(int PlayerType)` should return the first entry to populate the Media Library ListView with

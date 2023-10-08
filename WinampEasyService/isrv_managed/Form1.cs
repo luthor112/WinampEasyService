@@ -1,8 +1,6 @@
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 
-namespace esrv_cdlexampleexe
+namespace isrv_managed
 {
     public partial class Form1 : Form
     {
@@ -57,18 +55,22 @@ namespace esrv_cdlexampleexe
         IntPtr locationHook;
         IntPtr minimizeHook;
 
-        public Form1(IntPtr _hwndWinampParent, IntPtr _hwndLibraryParent, IntPtr _hwndParentControl, string _skinPath)
+        UserControl customUI;
+
+        public Form1(IntPtr _hwndWinampParent, IntPtr _hwndLibraryParent, IntPtr _hwndParentControl, string _skinPath, UserControl _customUI)
         {
             hwndWinampParent = _hwndWinampParent;
             hwndLibraryParent = _hwndLibraryParent;
             hwndParentControl = _hwndParentControl;
             skinPath = _skinPath;
-
+            customUI = _customUI;
             InitializeComponent();
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            Controls.Add(customUI);
+            customUI.Dock = DockStyle.Fill;
             ShowWindow(this.Handle, SW_SHOW);
             RelocateSelf();
 
@@ -80,6 +82,7 @@ namespace esrv_cdlexampleexe
             string genexFilename = System.IO.Path.Join(skinPath, "genex.bmp");
             if (File.Exists(genexFilename))
             {
+                // Needs more colours
                 Bitmap genex = new Bitmap(genexFilename);
                 Color itemBgColor = genex.GetPixel(48, 0);
                 Color itemFgColor = genex.GetPixel(50, 0);
@@ -94,10 +97,29 @@ namespace esrv_cdlexampleexe
                 }
 
                 BackColor = windowBackgroundColor;
-                label1.ForeColor = itemFgColor;
-                button1.BackColor = itemBgColor;
-                button1.ForeColor = buttonTextColor;
-                button1.BackgroundImage = buttonBgImage;
+                customUI.BackColor = windowBackgroundColor;
+
+                foreach (Control control in customUI.Controls)
+                {
+                    if (control is Label)
+                    {
+                        Label label = (Label)control;
+                        label.ForeColor = itemFgColor;
+                    }
+                    else if (control is Button)
+                    {
+                        Button button = (Button)control;
+                        button.BackColor = itemBgColor;
+                        button.ForeColor = buttonTextColor;
+                        button.BackgroundImage = buttonBgImage;
+                        button.BackgroundImageLayout = ImageLayout.Stretch;
+                    }
+                    else
+                    {
+                        control.BackColor = itemBgColor;
+                        control.ForeColor = itemFgColor;
+                    }
+                }
             }
         }
 
@@ -140,11 +162,6 @@ namespace esrv_cdlexampleexe
         {
             UnhookWinEvent(locationHook);
             UnhookWinEvent(minimizeHook);
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-
         }
     }
 }

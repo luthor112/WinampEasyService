@@ -1,14 +1,14 @@
-﻿namespace esrv_cdlexampleexe
+﻿namespace msrv_cdlexampledll
 {
-    partial class Form1
+    partial class ExampleUserControl
     {
-        /// <summary>
-        ///  Required designer variable.
+        /// <summary> 
+        /// Required designer variable.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        ///  Clean up any resources being used.
+        /// <summary> 
+        /// Clean up any resources being used.
         /// </summary>
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
@@ -20,11 +20,11 @@
             base.Dispose(disposing);
         }
 
-        #region Windows Form Designer generated code
+        #region Component Designer generated code
 
-        /// <summary>
-        ///  Required method for Designer support - do not modify
-        ///  the contents of this method with the code editor.
+        /// <summary> 
+        /// Required method for Designer support - do not modify 
+        /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent()
         {
@@ -35,37 +35,30 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Font = new Font("Segoe UI", 20F, FontStyle.Regular, GraphicsUnit.Point);
-            label1.Location = new Point(52, 36);
+            label1.Font = new Font("Segoe UI", 18F, FontStyle.Regular, GraphicsUnit.Point);
+            label1.Location = new Point(78, 44);
             label1.Name = "label1";
-            label1.Size = new Size(161, 37);
+            label1.Size = new Size(200, 32);
             label1.TabIndex = 0;
-            label1.Text = "Hello There!";
+            label1.Text = "Hello from a DLL!";
             // 
             // button1
             // 
-            button1.BackgroundImageLayout = ImageLayout.Stretch;
-            button1.Location = new Point(52, 87);
+            button1.Location = new Point(68, 100);
             button1.Name = "button1";
-            button1.Size = new Size(161, 30);
+            button1.Size = new Size(210, 36);
             button1.TabIndex = 1;
-            button1.Text = "Button time!";
+            button1.Text = "Button!";
             button1.UseVisualStyleBackColor = true;
-            button1.Click += button1_Click;
             // 
-            // Form1
+            // ExampleUserControl
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(299, 164);
             Controls.Add(button1);
             Controls.Add(label1);
-            FormBorderStyle = FormBorderStyle.None;
-            Name = "Form1";
-            ShowInTaskbar = false;
-            Text = "Form1";
-            FormClosing += Form1_FormClosing;
-            Load += Form1_Load;
+            Name = "ExampleUserControl";
+            Size = new Size(349, 187);
             ResumeLayout(false);
             PerformLayout();
         }
