@@ -16,5 +16,10 @@ namespace msrv_cdlexampledll
         {
             InitializeComponent();
         }
+
+        private void ExampleUserControl_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }

@@ -59,6 +59,7 @@
             Controls.Add(label1);
             Name = "ExampleUserControl";
             Size = new Size(349, 187);
+            Load += ExampleUserControl_Load;
             ResumeLayout(false);
             PerformLayout();
         }

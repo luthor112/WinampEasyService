@@ -42,8 +42,10 @@ namespace isrv_managed
 
         const int SW_HIDE = 0;
         const int SW_SHOW = 5;
+        const uint EVENT_SYSTEM_FOREGROUND = 0x0003;
         const uint EVENT_SYSTEM_MINIMIZESTART = 0x0016;
         const uint EVENT_SYSTEM_MINIMIZEEND = 0x0017;
+        const uint EVENT_OBJECT_FOCUS = 0x8005;
         const uint EVENT_OBJECT_LOCATIONCHANGE = 0x800B;
         const uint WINEVENT_OUTOFCONTEXT = 0x0000;
 
@@ -54,6 +56,7 @@ namespace isrv_managed
 
         IntPtr locationHook;
         IntPtr minimizeHook;
+        IntPtr focusHook;
 
         UserControl customUI;
 
@@ -78,6 +81,7 @@ namespace isrv_managed
             uint libraryThreadID = GetWindowThreadProcessId(hwndLibraryParent, out winampProcessID);
             locationHook = SetWinEventHook(EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_LOCATIONCHANGE, IntPtr.Zero, WindowChangeHook, winampProcessID, libraryThreadID, WINEVENT_OUTOFCONTEXT);
             minimizeHook = SetWinEventHook(EVENT_SYSTEM_MINIMIZESTART, EVENT_SYSTEM_MINIMIZEEND, IntPtr.Zero, WindowChangeHook, winampProcessID, libraryThreadID, WINEVENT_OUTOFCONTEXT);
+            focusHook = SetWinEventHook(EVENT_OBJECT_FOCUS, EVENT_OBJECT_FOCUS, IntPtr.Zero, WindowChangeHook, winampProcessID, libraryThreadID, WINEVENT_OUTOFCONTEXT);
 
             string genexFilename = System.IO.Path.Join(skinPath, "genex.bmp");
             if (File.Exists(genexFilename))
@@ -133,6 +137,11 @@ namespace isrv_managed
             else if (eventType == EVENT_SYSTEM_MINIMIZEEND)
             {
                 WindowState = FormWindowState.Normal;
+            }
+            else if (eventType == EVENT_OBJECT_FOCUS)
+            {
+                TopMost = true;
+                TopMost = false;
             }
             else
             {
