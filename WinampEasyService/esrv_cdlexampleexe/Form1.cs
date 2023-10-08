@@ -81,11 +81,23 @@ namespace esrv_cdlexampleexe
             if (File.Exists(genexFilename))
             {
                 Bitmap genex = new Bitmap(genexFilename);
+                Color itemBgColor = genex.GetPixel(48, 0);
+                Color itemFgColor = genex.GetPixel(50, 0);
                 Color windowBackgroundColor = genex.GetPixel(52, 0);
-                Color windowTextColor = genex.GetPixel(48, 0);
+                Color buttonTextColor = genex.GetPixel(54, 0);
+                Color windowTextColor = genex.GetPixel(56, 0);
+
+                Bitmap buttonBgImage = new Bitmap(47, 15);
+                using (Graphics gr = Graphics.FromImage(buttonBgImage))
+                {
+                    gr.DrawImage(genex, new Rectangle(0, 0, 47, 15), new Rectangle(0, 0, 47, 15), GraphicsUnit.Pixel);
+                }
 
                 BackColor = windowBackgroundColor;
-                label1.ForeColor = windowTextColor;
+                label1.ForeColor = itemFgColor;
+                button1.BackColor = itemBgColor;
+                button1.ForeColor = buttonTextColor;
+                button1.BackgroundImage = buttonBgImage;
             }
         }
 
@@ -95,7 +107,8 @@ namespace esrv_cdlexampleexe
             if (eventType == EVENT_SYSTEM_MINIMIZESTART)
             {
                 WindowState = FormWindowState.Minimized;
-            } else if (eventType == EVENT_SYSTEM_MINIMIZEEND)
+            }
+            else if (eventType == EVENT_SYSTEM_MINIMIZEEND)
             {
                 WindowState = FormWindowState.Normal;
             }

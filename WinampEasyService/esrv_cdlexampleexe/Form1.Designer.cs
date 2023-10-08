@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             label1 = new Label();
+            button1 = new Button();
             SuspendLayout();
             // 
             // label1
@@ -41,11 +42,22 @@
             label1.TabIndex = 0;
             label1.Text = "Hello There!";
             // 
+            // button1
+            // 
+            button1.BackgroundImageLayout = ImageLayout.Stretch;
+            button1.Location = new Point(52, 87);
+            button1.Name = "button1";
+            button1.Size = new Size(161, 30);
+            button1.TabIndex = 1;
+            button1.Text = "Button time!";
+            button1.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(278, 133);
+            ClientSize = new Size(299, 164);
+            Controls.Add(button1);
             Controls.Add(label1);
             FormBorderStyle = FormBorderStyle.None;
             Name = "Form1";
@@ -60,5 +72,6 @@
         #endregion
 
         private Label label1;
+        private Button button1;
     }
 }
