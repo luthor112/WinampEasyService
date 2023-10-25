@@ -1,4 +1,4 @@
-#include "easyservice.h"
+#include "easysrv_internal.h"
 
 #include <windows.h>
 #include "Winamp/wa_ipc.h"
@@ -24,8 +24,8 @@
 // Uncomment to disable features
 //#define DISABLE_REFERENCE_FEATURE
 //#define DISABLE_SRV_DLL
-//#define DISABLE_MSRV_DLL
-//#define DISABLE_ESRV_EXE
+#define DISABLE_MSRV_DLL
+#define DISABLE_ESRV_EXE
 
 //////////////////////////
 // FORWARD DECLARATIONS //

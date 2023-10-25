@@ -50,7 +50,7 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Dialog
+// Dialogs
 //
 
 IDD_VIEW_EASYSRV DIALOGEX 0, 0, 215, 120
@@ -65,6 +65,13 @@ BEGIN
                     WS_TABSTOP,0,106,50,11
 END
 
+IDD_VIEW_EMPTY DIALOGEX 0, 0, 215, 120
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CLIPSIBLINGS | 
+    WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+	LTEXT           "",IDC_EMPTY,0,0,1,1,SS_NOPREFIX
+END
 
 /////////////////////////////////////////////////////////////////////////////
 //

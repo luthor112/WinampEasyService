@@ -1,4 +1,4 @@
-#include "easyservice.h"
+#include "easysrv_internal.h"
 
 #include <Windows.h>
 

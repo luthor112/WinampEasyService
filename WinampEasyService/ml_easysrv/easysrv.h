@@ -8,36 +8,32 @@
 #define EASY_API __declspec(dllexport)
 #endif
 
-#define PLAYERTYPE_WINAMP 0
-#define PLAYERTYPE_WACUP 1
+// Functions passed to InitService()
+typedef void (*AddItemFunc)(wchar_t* displayInfo, wchar_t* playlistInfo, wchar_t* filename);
+typedef wchar_t* (*GetOptionFunc)(wchar_t* optionName, wchar_t* defaultValue);
+typedef void (*SetOptionFunc)(wchar_t* optionName, wchar_t* optionValue);
 
-struct ItemInfo
-{
-    const wchar_t* author;
-    const wchar_t* title;
-    const wchar_t* info;
-    const wchar_t* filename;
-};
+// Values for NodeDescriptor.Capabilities
+#define CAP_DEFAULT 0;
+#define CAP_CUSTOMDIALOG 1;
 
-struct CustomItemInfo
+struct NodeDescriptor
 {
-    const wchar_t* info;
-    const wchar_t* plTitle;
-    const wchar_t* filename;
+    const wchar_t* Category;
+    const wchar_t* NodeName;
+    const wchar_t* ColumnNames;
+    unsigned int Capabilities;
 };
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-    EASY_API const wchar_t* GetNodeName();
-    EASY_API ItemInfo InvokeService(int PlayerType);
-    EASY_API ItemInfo InvokeNext(int PleyerType);
+    EASY_API void InitService(AddItemFunc addItemFunc, GetOptionFunc getOptionFunc, SetOptionFunc setOptionFunc, const wchar_t* pluginDir, UINT_PTR serviceID);
+    EASY_API NodeDescriptor GetNodeDesc();
+    EASY_API void InvokeService(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl, wchar_t* skinPath);
     EASY_API const wchar_t* GetFileName(const wchar_t* fileID);
-    EASY_API HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl);
-    EASY_API const wchar_t* GetColumnNames();
-    EASY_API CustomItemInfo InvokeServiceCustom(int PlayerType);
-    EASY_API CustomItemInfo InvokeNextCustom(int PlayerType);
+    EASY_API HWND GetCustomDialog(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl, wchar_t* skinPath);
 
 #ifdef __cplusplus
 }

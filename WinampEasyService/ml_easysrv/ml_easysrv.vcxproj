@@ -24,17 +24,12 @@
     <ClCompile Include="ml_easysrv.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="easyservice.h" />
+    <ClInclude Include="easysrv_internal.h" />
     <ClInclude Include="easysrv.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ml_easysrv.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <CopyFileToFolders Include="easysrv.ini">
-      <FileType>Document</FileType>
-    </CopyFileToFolders>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
