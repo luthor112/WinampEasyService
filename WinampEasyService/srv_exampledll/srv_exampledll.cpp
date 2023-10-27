@@ -1,36 +1,39 @@
 #include "..\ml_easysrv\easysrv.h"
 #include <string.h>
 
-int currentItemIndex = 0;
+AddItemFunc AddItem;
+GetOptionFunc GetOption;
+SetOptionFunc SetOption;
+const wchar_t* myDirectory;
+UINT_PTR myServiceID;
 
-const wchar_t* GetNodeName() {
-    return L"Example CPP Service Plugin";
+void InitService(AddItemFunc addItemFunc, GetOptionFunc getOptionFunc, SetOptionFunc setOptionFunc, const wchar_t* pluginDir, UINT_PTR serviceID)
+{
+    AddItem = addItemFunc;
+    GetOption = getOptionFunc;
+    SetOption = setOptionFunc;
+    myDirectory = pluginDir;
+    myServiceID = serviceID;
 }
 
-ItemInfo InvokeService(int PlayerType) {
-    currentItemIndex = 0;
-    ItemInfo currentItem = { L"Example Author", L"Example Title", L"This is a direct filename", L"e:\\example.mp3" };
-
-    currentItemIndex++;
-    return currentItem;
+NodeDescriptor GetNodeDesc()
+{
+    NodeDescriptor desc = { L"Examples", L"Example CPP Plugin", L"Title\tType of item", CAP_DEFAULT };
+    return desc;
 }
 
-ItemInfo InvokeNext(int PleyerType) {
-    if (currentItemIndex == 1) {
-        ItemInfo currentItem = { L"Example Author", L"Example Title 2", L"This will use a reference", L"ref_examplefile" };
-
-        currentItemIndex++;
-        return currentItem;
-    } else {
-        return ItemInfo();
-    }
+void InvokeService(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl, wchar_t* skinPath)
+{
+    AddItem(L"Example Title\tThis is a direct filename", L"Example PLaylist Title", L"e:\\example.mp3", myServiceID);
+    AddItem(L"Example Title 2\tThis will use a reference", L"Example PLaylist Title 2", L"ref_examplefile", myServiceID);
 }
 
 const wchar_t* GetFileName(const wchar_t* fileID)
 {
     if (!wcscmp(fileID, L"ref_examplefile")) {
         return L"e:\\example.mp3";
-    } else {
+    }
+    else {
         return L"This really shouldn't happen...";
     }
 }

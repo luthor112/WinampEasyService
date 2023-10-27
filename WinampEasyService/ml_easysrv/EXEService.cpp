@@ -1,4 +1,4 @@
-#include "easysrv_internal.h"
+/*#include "easysrv_internal.h"
 
 #include "Winamp/wa_ipc.h"
 
@@ -307,3 +307,4 @@ void EXEService::DestroyingCustomDialog()
         customDialogPID = -1;
     }
 }
+*/

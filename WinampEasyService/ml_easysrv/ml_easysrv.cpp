@@ -23,6 +23,7 @@
 
 // Uncomment to disable features
 //#define DISABLE_REFERENCE_FEATURE
+#define DISABLE_MAIN_PAGE
 //#define DISABLE_SRV_DLL
 #define DISABLE_MSRV_DLL
 #define DISABLE_ESRV_EXE
@@ -36,13 +37,15 @@ int  init(void);
 void quit(void);
 INT_PTR MessageProc(int message_type, INT_PTR param1, INT_PTR param2, INT_PTR param3);
 
-// Services
+// Service handling
 void loadServices(void);
 
-// ListView
-void addLineToList(HWND hwnd, int index, const wchar_t* info);
+// ListView Dialog
+void view_addLineToList(HWND hwnd, int index, const wchar_t* info);
 LRESULT CALLBACK viewDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-BOOL view_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam);
+
+// Empty Dialog
+LRESULT CALLBACK emptyDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /////////////////////
 // LOADED SERVICES //
@@ -50,7 +53,7 @@ BOOL view_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam);
 
 std::map<UINT_PTR, EasyService*> serviceMap;
 std::map<HWND, UINT_PTR> serviceHwndMap;
-std::map<UINT_PTR, std::vector<CustomItemInfo>> serviceListItemMap;
+std::map<UINT_PTR, std::vector<ItemInfo>> serviceListItemMap;
 std::mutex serviceListItemMapMutex;
 
 ////////////
@@ -74,6 +77,7 @@ winampMediaLibraryPlugin plugin = {
 
 // Global variables
 wchar_t configFileName[MAX_PATH];
+wchar_t pluginDir[MAX_PATH];
 bool tracingEnabled = FALSE;
 std::wfstream traceStream;
 
@@ -81,14 +85,14 @@ std::wfstream traceStream;
 void trace(const wchar_t* part1, const wchar_t* part2 = NULL)
 {
 	if (tracingEnabled)
-		traceStream << part1 << (part2 ? part2 : L"") << L"\n";
+		traceStream << part1 << (part2 ? part2 : L"") << std::endl;
 }
 
 // Called by WinAmp after loading
 int init()
 {
-	char* pluginDir = (char*)SendMessage(plugin.hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
-	wsprintf(configFileName, L"%S\\easysrv.ini", pluginDir);
+	char* iniDir = (char*)SendMessage(plugin.hwndWinampParent, WM_WA_IPC, 0, IPC_GETINIDIRECTORY);
+	wsprintf(configFileName, L"%S\\easysrv.ini", iniDir);
 
 	wchar_t tracePath[MAX_PATH];
 	GetPrivateProfileString(L"easysrv", L"trace", L"", tracePath, MAX_PATH, configFileName);
@@ -98,6 +102,9 @@ int init()
 		traceStream = std::wfstream(tracePath, std::ios::out | std::ios::ate);
 		traceStream << L"init()" << std::endl;
 	}
+
+	char* pluginDirCS = (char*)SendMessage(plugin.hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
+	wsprintf(pluginDir, L"%S", pluginDirCS);
 
     loadServices();
 
@@ -116,14 +123,25 @@ INT_PTR MessageProc(int message_type, INT_PTR param1, INT_PTR param2, INT_PTR pa
 {
     if (message_type == ML_MSG_TREE_ONCREATEVIEW && serviceMap.count(param1))
     {
-		trace(L"Activated node: ", serviceMap[param1]->GetNodeName());
+		trace(L"Activated node: ", serviceMap[param1]->GetNodeDesc().NodeName);
 
-		HWND customWnd = serviceMap[param1]->GetCustomDialog(plugin.hwndWinampParent, plugin.hwndLibraryParent, (HWND)(LONG_PTR)param2);
-		if (customWnd != NULL)
+		bool supportsCustomDialog = serviceMap[param1]->GetNodeDesc().Capabilities & CAP_CUSTOMDIALOG;
+		if (supportsCustomDialog)
 		{
-			serviceHwndMap[customWnd] = param1;
+			HWND customWnd = serviceMap[param1]->GetCustomDialog(plugin.hwndWinampParent, plugin.hwndLibraryParent, (HWND)(LONG_PTR)param2);
+			if (customWnd != NULL)
+			{
+				serviceHwndMap[customWnd] = param1;
 
-			return (INT_PTR)customWnd;
+				return (INT_PTR)customWnd;
+			}
+			else
+			{
+				HWND dialogWnd = CreateDialogParam(plugin.hDllInstance, MAKEINTRESOURCE(IDD_VIEW_EMPTY), (HWND)(LONG_PTR)param2, (DLGPROC)emptyDialogProc, (LPARAM)param1);
+				serviceHwndMap[dialogWnd] = param1;
+
+				return (INT_PTR)dialogWnd;
+			}
 		}
 		else
 		{
@@ -131,11 +149,11 @@ INT_PTR MessageProc(int message_type, INT_PTR param1, INT_PTR param2, INT_PTR pa
 			serviceHwndMap[dialogWnd] = param1;
 
 			std::lock_guard<std::mutex> guard(serviceListItemMapMutex);
-			std::vector<CustomItemInfo> itemsToAdd = serviceListItemMap[serviceHwndMap[dialogWnd]];
+			std::vector<ItemInfo>& itemsToAdd = serviceListItemMap[serviceHwndMap[dialogWnd]];
 			int index = 0;
-			for (CustomItemInfo info : itemsToAdd)
+			for (ItemInfo& info : itemsToAdd)
 			{
-				addLineToList(dialogWnd, index, info.info);
+				view_addLineToList(dialogWnd, index, info.info);
 				index++;
 			}
 
@@ -148,12 +166,18 @@ INT_PTR MessageProc(int message_type, INT_PTR param1, INT_PTR param2, INT_PTR pa
     return 0;		// Message is not ours, pass it along
 }
 
+////////////////////////
+// EXPORTED FUNCTIONS //
+////////////////////////
+
 // This is an export function called by winamp which returns this plugin info.
 // We wrap the code in 'extern "C"' to ensure the export isn't mangled if used in a CPP file.
 extern "C" __declspec(dllexport) winampMediaLibraryPlugin * winampGetMediaLibraryPlugin() {
     return &plugin;
 }
 
+// This is an export function called by in_easyfngetter which returns the real filename.
+// We wrap the code in 'extern "C"' to ensure the export isn't mangled if used in a CPP file.
 extern "C" __declspec(dllexport) const wchar_t* GetPluginFileName(const wchar_t* referenceName) {
 	int serviceID;
 	int serviceIDLen;
@@ -166,9 +190,9 @@ extern "C" __declspec(dllexport) const wchar_t* GetPluginFileName(const wchar_t*
 	return serviceMap[serviceID]->GetFileName(onlyRefName);
 }
 
-//////////////
-// SERVICES //
-//////////////
+//////////////////////
+// SERVICE HANDLING //
+//////////////////////
 
 UINT_PTR addTreeItem(UINT_PTR parentId, const wchar_t* title, BOOL hasChildren, int imageIndex)
 {
@@ -177,7 +201,7 @@ UINT_PTR addTreeItem(UINT_PTR parentId, const wchar_t* title, BOOL hasChildren, 
         0,							// id, 0 for next available, in which case it will be filled in
         parentId,					// parentId, 0 for root
         const_cast<wchar_t*>(title),// title
-		wcslen(title),			// titleLen
+		wcslen(title),		// titleLen
         hasChildren,				// hasChildren
         imageIndex					// imageIndex
     };
@@ -205,21 +229,19 @@ bool containsToken(const wchar_t* tokenSearchList, const wchar_t* searchToken)
 	return FALSE;
 }
 
+UINT_PTR getCategoryNodeID(std::map<const wchar_t*, UINT_PTR>& categoryMap, const wchar_t* category)
+{
+	for (auto const& x : categoryMap)
+	{
+		if (!wcscmp(x.first, category))
+			return x.second;
+	}
+
+	return 0;
+}
+
 void loadServices()
 {
-	int playerType = PLAYERTYPE_WINAMP;
-	char* pluginDir = (char*)SendMessage(plugin.hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
-	if (strstr(pluginDir, "WACUP"))
-		playerType = PLAYERTYPE_WACUP;
-
-	wchar_t overrideplayertype[32];
-	GetPrivateProfileString(L"easysrv", L"overrideplayertype", L"DEFAULT", overrideplayertype, 32, configFileName);
-	if (!wcscmp(overrideplayertype, L"winamp"))
-		playerType = PLAYERTYPE_WINAMP;
-	else if (!wcscmp(overrideplayertype, L"wacup"))
-		playerType = PLAYERTYPE_WACUP;
-	trace(L"PlayerType: ", (playerType == PLAYERTYPE_WINAMP ? L"PLAYERTYPE_WINAMP" : L"PLAYERTYPE_WACUP"));
-
 	UINT_PTR servicesNode = addTreeItem(0, L"Services", TRUE, MLTREEIMAGE_BRANCH);
 	trace(L"Services node added");
 	
@@ -227,39 +249,64 @@ void loadServices()
 	GetPrivateProfileString(L"easysrv", L"disable", L"", disabledList, 4096, configFileName);
 	trace(L"Disabled services: ", disabledList);
 
+	std::map<const wchar_t*, UINT_PTR> catMap;
+
 	wchar_t searchCriteria[1024];
 	WIN32_FIND_DATA FindFileData;
 	HANDLE searchHandle = INVALID_HANDLE_VALUE;
 
 	wchar_t absoluteName[1022];
 
+#ifndef DISABLE_MAIN_PAGE
 	// Main page
-	wsprintf(absoluteName, L"%S\\isrv_mainpage.dll", pluginDir);
+	wsprintf(absoluteName, L"%s\\isrv_mainpage.dll", pluginDir);
 	if (PathFileExists(absoluteName))
 	{
-		EasyService* service = new DLLService(absoluteName, playerType);
+		wsprintf(absoluteName, L"\"%s\\isrv_managed.exe\" \"%s\\isrv_mainpage.dll\"", pluginDir, pluginDir);
+		EasyService* service = new EXEService(absoluteName);
 		serviceMap[servicesNode] = service;
+		service->InitService(servicesNode);
 		trace(L"Loaded service: ", absoluteName);
 	}
+#endif
 
 #ifndef DISABLE_SRV_DLL
 	// walk srv_*.dll
-	wsprintf(searchCriteria, L"%S\\srv_*.dll", pluginDir);
+	wsprintf(searchCriteria, L"%s\\srv_*.dll", pluginDir);
 	searchHandle = FindFirstFile(searchCriteria, &FindFileData);
 	if (searchHandle != INVALID_HANDLE_VALUE)
 	{
 		do
 		{
-			wsprintf(absoluteName, L"%S\\%s", pluginDir, FindFileData.cFileName);
+			wsprintf(absoluteName, L"%s\\%s", pluginDir, FindFileData.cFileName);
 			if (containsToken(disabledList, absoluteName) || containsToken(disabledList, FindFileData.cFileName))
 			{
 				trace(L"Skipping service: ", absoluteName);
 			}
 			else
 			{
-				EasyService* service = new DLLService(absoluteName, playerType);
-				UINT_PTR nodeID = addTreeItem(servicesNode, service->GetNodeName(), FALSE, MLTREEIMAGE_BRANCH);
+				EasyService* service = new DLLService(absoluteName, FindFileData.cFileName);
+
+				UINT_PTR nodeID;
+				const wchar_t* catName = service->GetNodeDesc().Category;
+				if (catName == NULL)
+				{
+					nodeID = addTreeItem(servicesNode, service->GetNodeDesc().NodeName, FALSE, MLTREEIMAGE_BRANCH);
+				}
+				else
+				{
+					UINT_PTR catNodeID = getCategoryNodeID(catMap, catName);
+					if (catNodeID == 0)
+					{
+						catNodeID = addTreeItem(servicesNode, catName, TRUE, MLTREEIMAGE_BRANCH);
+						catMap[catName] = catNodeID;
+					}
+					
+					nodeID = addTreeItem(catNodeID, service->GetNodeDesc().NodeName, FALSE, MLTREEIMAGE_BRANCH);
+				}
+
 				serviceMap[nodeID] = service;
+				service->InitService(nodeID);
 				trace(L"Loaded service: ", absoluteName);
 			}
 		} while (FindNextFile(searchHandle, &FindFileData));
@@ -318,9 +365,9 @@ void loadServices()
 #endif
 }
 
-//////////////
-// LISTVIEW //
-//////////////
+///////////////////////////
+// FUNCTIONS FOR DIALOGS //
+///////////////////////////
 
 typedef int (*HookDialogFunc)(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static HookDialogFunc ml_hook_dialog_msg = 0;
@@ -328,7 +375,11 @@ static HookDialogFunc ml_hook_dialog_msg = 0;
 typedef void (*DrawFunc)(HWND hwndDlg, int* tab, int tabsize);
 static DrawFunc ml_draw = 0;
 
-void addLineToList(HWND hwnd, int index, const wchar_t* info)
+/////////////////////
+// LISTVIEW DIALOG //
+/////////////////////
+
+void view_addLineToList(HWND hwnd, int index, const wchar_t* info)
 {
 	HWND hwndList = GetDlgItem(hwnd, IDC_LIST);
 
@@ -379,7 +430,7 @@ static BOOL view_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 	lvc.mask = LVCF_TEXT | LVCF_WIDTH;
 
 	int columnIndex = 0;
-	wchar_t* columnList = _wcsdup(serviceMap[serviceID]->GetColumnNames());
+	wchar_t* columnList = _wcsdup(serviceMap[serviceID]->GetNodeDesc().ColumnNames);
 	wchar_t* context = NULL;
 	wchar_t* token = wcstok_s(columnList, L"\t", &context);
 	while (token)
@@ -437,20 +488,19 @@ static BOOL view_OnDestroy(HWND hwnd)
 
 static void view_OnCommand_InvokeService(HWND hwnd)
 {
-	std::vector<CustomItemInfo> itemsToAdd = serviceMap[serviceHwndMap[hwnd]]->InvokeService();
+	serviceMap[serviceHwndMap[hwnd]]->InvokeService(plugin.hwndWinampParent, plugin.hwndLibraryParent, hwnd);
 
 	HWND hwndList = GetDlgItem(hwnd, IDC_LIST);
 	ListView_DeleteAllItems(hwndList);
-	int index = 0;
-
-	for (CustomItemInfo info : itemsToAdd)
-	{
-		addLineToList(hwnd, index, info.info);
-		index++;
-	}
 
 	std::lock_guard<std::mutex> guard(serviceListItemMapMutex);
-	serviceListItemMap[serviceHwndMap[hwnd]] = itemsToAdd;
+	std::vector<ItemInfo>& itemsToAdd = serviceListItemMap[serviceHwndMap[hwnd]];
+	int index = 0;
+	for (ItemInfo& info : itemsToAdd)
+	{
+		view_addLineToList(hwnd, index, info.info);
+		index++;
+	}
 }
 
 static BOOL view_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
@@ -458,11 +508,11 @@ static BOOL view_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 	switch (id) {
 	case IDC_INVOKE:
 	{
-		trace(L"Invoking plugin: ", serviceMap[serviceHwndMap[hwnd]]->GetNodeName());
+		trace(L"Invoking plugin: ", serviceMap[serviceHwndMap[hwnd]]->GetNodeDesc().NodeName);
 
 		HWND hwndList = GetDlgItem(hwnd, IDC_LIST);
 		ListView_DeleteAllItems(hwndList);
-		addLineToList(hwnd, 0, L"Loading...");
+		view_addLineToList(hwnd, 0, L"Loading...");
 
 		std::thread bgThread(view_OnCommand_InvokeService, hwnd);
 		bgThread.detach();
@@ -472,7 +522,7 @@ static BOOL view_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 	return 0;
 }
 
-static BOOL list_OnNotify(HWND hwnd, int wParam, NMHDR* lParam)
+static BOOL view_OnNotify(HWND hwnd, int wParam, NMHDR* lParam)
 {
 	if (lParam->code == LVN_ITEMACTIVATE)
 	{
@@ -533,7 +583,7 @@ LRESULT CALLBACK viewDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
 		HANDLE_MSG(hwndDlg, WM_INITDIALOG, view_OnInitDialog);
 		HANDLE_MSG(hwndDlg, WM_COMMAND, view_OnCommand);
 		HANDLE_MSG(hwndDlg, WM_SIZE, view_OnSize);
-		HANDLE_MSG(hwndDlg, WM_NOTIFY, list_OnNotify);
+		HANDLE_MSG(hwndDlg, WM_NOTIFY, view_OnNotify);
 	case WM_PAINT:
 	{
 		int tab[] = { IDC_LIST | DCW_SUNKENBORDER };
@@ -541,6 +591,60 @@ LRESULT CALLBACK viewDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
 	}
 	return 0;
 	HANDLE_MSG(hwndDlg, WM_DESTROY, view_OnDestroy);
+
+	}
+	return FALSE;
+}
+
+//////////////////
+// EMPTY DIALOG //
+//////////////////
+
+static BOOL empty_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
+{
+	/* gen_ml has some helper functions to deal with skinned dialogs,
+	   we're going to grab their function pointers.
+		 for definition of magic numbers, see gen_ml/ml.h	 */
+	if (!ml_hook_dialog_msg)
+	{
+		/* skinning helper functions */
+		ml_hook_dialog_msg = (HookDialogFunc)SendMessage(plugin.hwndLibraryParent, WM_ML_IPC, (WPARAM)2, ML_IPC_SKIN_WADLG_GETFUNC);
+		ml_draw = (DrawFunc)SendMessage(plugin.hwndLibraryParent, WM_ML_IPC, (WPARAM)3, ML_IPC_SKIN_WADLG_GETFUNC);
+	}
+
+	/* skin dialog */
+	MLSKINWINDOW sw;
+	sw.skinType = SKINNEDWND_TYPE_DIALOG;
+	sw.style = SWS_USESKINCOLORS | SWS_USESKINCURSORS | SWS_USESKINFONT;
+	sw.hwndToSkin = hwnd;
+	MLSkinWindow(plugin.hwndLibraryParent, &sw);
+
+	return FALSE;
+}
+
+static BOOL empty_OnDestroy(HWND hwnd)
+{
+	serviceMap[serviceHwndMap[hwnd]]->DestroyingCustomDialog();
+	return FALSE;
+}
+
+LRESULT CALLBACK emptyDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	/* first, ask the dialog skinning system if it wants to do anything with the message
+	   the function pointer gets set during WM_INITDIALOG so might be NULL for the first few messages
+		 in theory we could grab it right here if we don't have it, but it's not necessary
+		 and I wanted to put all the function pointer gathering code in the same place for this example	*/
+	if (ml_hook_dialog_msg)
+	{
+		INT_PTR a = ml_hook_dialog_msg(hwndDlg, uMsg, wParam, lParam);
+		if (a)
+			return a;
+	}
+
+	switch (uMsg) {
+		HANDLE_MSG(hwndDlg, WM_INITDIALOG, empty_OnInitDialog);
+	return 0;
+	HANDLE_MSG(hwndDlg, WM_DESTROY, empty_OnDestroy);
 
 	}
 	return FALSE;

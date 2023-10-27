@@ -4,6 +4,8 @@
 
 #include <Windows.h>
 #include <vector>
+#include <map>
+#include <mutex>
 
 struct ItemInfo
 {
@@ -21,12 +23,13 @@ typedef HWND (*GetCustomDialogFunc)(HWND hwndWinampParent, HWND hwndLibraryParen
 class EasyService
 {
 public:
-    virtual void InitService(const wchar_t* pluginDir, UINT_PTR serviceID) = 0;
-    virtual NodeDescriptor GetNodeDesc() = 0;
-    virtual std::vector<ItemInfo> InvokeService(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl) = 0;
+    virtual void InitService(UINT_PTR serviceID) = 0;
+    virtual NodeDescriptor& GetNodeDesc() = 0;
+    virtual void InvokeService(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl) = 0;
     virtual const wchar_t* GetFileName(const wchar_t* fileID) = 0;
     virtual HWND GetCustomDialog(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl) = 0;
     virtual void DestroyingCustomDialog() = 0;
+    virtual const wchar_t* GetShortName() = 0;
 
     virtual ~EasyService() {}
 };
@@ -34,14 +37,15 @@ public:
 class DLLService : public EasyService
 {
 public:
-    DLLService(const wchar_t* dllName);
+    DLLService(const wchar_t* dllFullPath, const wchar_t* _shortName);
 
-    virtual void InitService(const wchar_t* pluginDir, UINT_PTR serviceID);
-    virtual NodeDescriptor GetNodeDesc();
-    virtual std::vector<ItemInfo> InvokeService(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl);
+    virtual void InitService(UINT_PTR serviceID);
+    virtual NodeDescriptor& GetNodeDesc();
+    virtual void InvokeService(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl);
     virtual const wchar_t* GetFileName(const wchar_t* fileID);
     virtual HWND GetCustomDialog(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl);
     virtual void DestroyingCustomDialog();
+    virtual const wchar_t* GetShortName();
 
 private:
     InitServiceFunc _initService;
@@ -49,17 +53,20 @@ private:
     InvokeServiceFunc _invokeService;
     GetFileNameFunc _getFileName;
     GetCustomDialogFunc _getCustomDialog;
+    
+    const wchar_t* shortName;
     NodeDescriptor nodeDescCache;
+    UINT_PTR _serviceID;
 };
 
-class EXEService : public EasyService
+/*class EXEService : public EasyService
 {
 public:
     EXEService(const wchar_t* exeName);
 
     virtual void InitService(const wchar_t* pluginDir, UINT_PTR serviceID);
-    virtual NodeDescriptor GetNodeDesc();
-    virtual std::vector<ItemInfo> InvokeService(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl);
+    virtual NodeDescriptor& GetNodeDesc();
+    virtual std::vector<ItemInfo>& InvokeService(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl);
     virtual const wchar_t* GetFileName(const wchar_t* fileID);
     virtual HWND GetCustomDialog(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl);
     virtual void DestroyingCustomDialog();
@@ -68,4 +75,12 @@ private:
     wchar_t* _exeName;
     NodeDescriptor nodeDescCache;
     DWORD customDialogPID = -1;
-};
+};*/
+
+extern std::map<UINT_PTR, EasyService*> serviceMap;
+extern std::map<HWND, UINT_PTR> serviceHwndMap;
+extern std::map<UINT_PTR, std::vector<ItemInfo>> serviceListItemMap;
+extern std::mutex serviceListItemMapMutex;
+
+extern wchar_t configFileName[MAX_PATH];
+extern wchar_t pluginDir[MAX_PATH];

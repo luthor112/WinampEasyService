@@ -1,79 +1,57 @@
 #include "easysrv_internal.h"
 
 #include <Windows.h>
+#include "Winamp/wa_ipc.h"
 
-DLLService::DLLService(const wchar_t* dllName, int _playerType)
+DLLService::DLLService(const wchar_t* dllFullPath, const wchar_t* _shortName)
 {
-    playerType = _playerType;
-
-    HMODULE dllModule = LoadLibraryW(dllName);
-    _getNodeName = reinterpret_cast<GetNodeNameFunc>(GetProcAddress(dllModule, "GetNodeName"));
+    HMODULE dllModule = LoadLibraryW(dllFullPath);
+    _initService = reinterpret_cast<InitServiceFunc>(GetProcAddress(dllModule, "InitService"));
+    _getNodeDesc = reinterpret_cast<GetNodeDescFunc>(GetProcAddress(dllModule, "GetNodeDesc"));
     _invokeService = reinterpret_cast<InvokeServiceFunc>(GetProcAddress(dllModule, "InvokeService"));
-    _invokeNext = reinterpret_cast<InvokeNextFunc>(GetProcAddress(dllModule, "InvokeNext"));
     _getFileName = reinterpret_cast<GetFileNameFunc>(GetProcAddress(dllModule, "GetFileName"));
     _getCustomDialog = reinterpret_cast<GetCustomDialogFunc>(GetProcAddress(dllModule, "GetCustomDialog"));
-    _getColumnNames = reinterpret_cast<GetColumnNamesFunc>(GetProcAddress(dllModule, "GetColumnNames"));
-    _invokeServiceCustom = reinterpret_cast<InvokeServiceCustomFunc>(GetProcAddress(dllModule, "InvokeServiceCustom"));
-    _invokeNextCustom = reinterpret_cast<InvokeNextCustomFunc>(GetProcAddress(dllModule, "InvokeNextCustom"));
 
-    if (_getColumnNames != NULL)
-        customColumnsSupported = TRUE;
+    nodeDescCache = _getNodeDesc();
+    if (nodeDescCache.ColumnNames == NULL)
+        nodeDescCache.ColumnNames = L"Author\tTitle\tInformation";
+
+    shortName = _wcsdup(_shortName);
 }
 
-const wchar_t* DLLService::GetNodeName()
+void DLLService::InitService(UINT_PTR serviceID)
 {
-    if (nodeNameCache == NULL)
-    {
-        nodeNameCache = _getNodeName();
-    }
-
-    return nodeNameCache;
+    _serviceID = serviceID;
+    _initService(
+        [](const wchar_t* displayInfo, const wchar_t* playlistInfo, const wchar_t* filename, UINT_PTR serviceID) -> void {
+            ItemInfo currentItem = { displayInfo, playlistInfo, filename };
+            serviceListItemMap[serviceID].push_back(currentItem);
+        },
+        [](UINT_PTR serviceID, const wchar_t* optionName, const wchar_t* defaultValue, wchar_t* output, DWORD outputSize) -> void {
+            GetPrivateProfileString(serviceMap[serviceID]->GetShortName(), optionName, defaultValue, output, outputSize, configFileName);
+        },
+        [](UINT_PTR serviceID, const wchar_t* optionName, const wchar_t* optionValue) -> void {
+            WritePrivateProfileString(serviceMap[serviceID]->GetShortName(), optionName, optionValue, configFileName);
+        },
+        pluginDir,
+        serviceID
+        );
 }
 
-const wchar_t* DLLService::GetColumnNames()
+NodeDescriptor& DLLService::GetNodeDesc()
 {
-    if (columnNameCache == NULL)
-    {
-        if (customColumnsSupported)
-        {
-            columnNameCache = _getColumnNames();
-        }
-        else
-        {
-            columnNameCache = L"Author\tTitle\tInformation";
-        }
-    }
-
-    return columnNameCache;
+    return nodeDescCache;
 }
 
-std::vector<CustomItemInfo> DLLService::InvokeService()
+void DLLService::InvokeService(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl)
 {
-    std::vector<CustomItemInfo> retItems;
-    
-    if (customColumnsSupported)
-    {
-        CustomItemInfo currItem = _invokeServiceCustom(playerType);
-        while (currItem.filename != NULL) {
-            retItems.push_back(currItem);
-            currItem = _invokeNextCustom(playerType);
-        }
-    }
-    else
-    {
-        ItemInfo currItem = _invokeService(playerType);
-        while (currItem.filename != NULL) {
-            wchar_t ciiInfo[1024];
-            wsprintf(ciiInfo, L"%s\t%s\t%s", currItem.author, currItem.title, currItem.info);
-            wchar_t plTitle[1024];
-            wsprintf(plTitle, L"%s - %s", currItem.author, currItem.title);
-            CustomItemInfo cii = { _wcsdup(ciiInfo), _wcsdup(plTitle), currItem.filename};
-            retItems.push_back(cii);
-            currItem = _invokeNext(playerType);
-        }
-    }
+    std::lock_guard<std::mutex> guard(serviceListItemMapMutex);
+    serviceListItemMap[_serviceID].clear();
 
-    return retItems;
+    wchar_t skinPath[MAX_PATH];
+    SendMessage(hwndWinampParent, WM_WA_IPC, (WPARAM)skinPath, IPC_GETSKINW);
+
+    _invokeService(hwndWinampParent, hwndLibraryParent, hwndParentControl, skinPath);
 }
 
 const wchar_t* DLLService::GetFileName(const wchar_t* fileID)
@@ -83,10 +61,15 @@ const wchar_t* DLLService::GetFileName(const wchar_t* fileID)
 
 HWND DLLService::GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl)
 {
-    if (_getCustomDialog != NULL)
-        return _getCustomDialog(_hwndWinampParent, _hwndLibraryParent, hwndParentControl);
-    else
-        return NULL;
+    wchar_t skinPath[MAX_PATH];
+    SendMessage(_hwndWinampParent, WM_WA_IPC, (WPARAM)skinPath, IPC_GETSKINW);
+
+    return _getCustomDialog(_hwndWinampParent, _hwndLibraryParent, hwndParentControl, skinPath);
 }
 
 void DLLService::DestroyingCustomDialog() {}
+
+const wchar_t* DLLService::GetShortName()
+{
+    return shortName;
+}

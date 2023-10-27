@@ -9,13 +9,13 @@
 #endif
 
 // Functions passed to InitService()
-typedef void (*AddItemFunc)(wchar_t* displayInfo, wchar_t* playlistInfo, wchar_t* filename);
-typedef wchar_t* (*GetOptionFunc)(wchar_t* optionName, wchar_t* defaultValue);
-typedef void (*SetOptionFunc)(wchar_t* optionName, wchar_t* optionValue);
+typedef void (*AddItemFunc)(const wchar_t* displayInfo, const wchar_t* playlistInfo, const wchar_t* filename, UINT_PTR serviceID);
+typedef void (*GetOptionFunc)(UINT_PTR serviceID, const wchar_t* optionName, const wchar_t* defaultValue, wchar_t* output, DWORD outputSize);
+typedef void (*SetOptionFunc)(UINT_PTR serviceID, const wchar_t* optionName, const wchar_t* optionValue);
 
 // Values for NodeDescriptor.Capabilities
-#define CAP_DEFAULT 0;
-#define CAP_CUSTOMDIALOG 1;
+#define CAP_DEFAULT 0u
+#define CAP_CUSTOMDIALOG 1u
 
 struct NodeDescriptor
 {
