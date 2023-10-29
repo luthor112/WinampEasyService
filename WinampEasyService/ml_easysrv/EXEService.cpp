@@ -1,4 +1,4 @@
-/*#include "easysrv_internal.h"
+#include "easysrv_internal.h"
 
 #include "Winamp/wa_ipc.h"
 
@@ -87,155 +87,91 @@ std::string ReadProcessOutput(const wchar_t* cmdLine)
     return outSS.str();
 }
 
-std::wstring ReadProcessOutputW(const wchar_t* cmdLine)
+EXEService::EXEService(const wchar_t* exeName, const wchar_t* _shortName)
 {
-    DWORD dwRead;
-    wchar_t chBuf[BUFSIZE];
-    BOOL bSuccess = FALSE;
-
-    HANDLE g_hChildStd_OUT_Rd = GetProcessOutputPipe(cmdLine);
-
-    std::wostringstream outSS;
-    for (;;)
-    {
-        bSuccess = ReadFile(g_hChildStd_OUT_Rd, chBuf, BUFSIZE * sizeof(wchar_t), &dwRead, NULL);
-        if (!bSuccess || dwRead == 0) break;
-
-        outSS.write(chBuf, dwRead);
-    }
-
-    return outSS.str();
-}
-
-EXEService::EXEService(const wchar_t* exeName, int _playerType)
-{
-    playerType = _playerType;
     _exeName = _wcsdup(exeName);
-}
+    shortName = _wcsdup(_shortName);
 
-const wchar_t* EXEService::GetNodeName()
-{
-    if (nodeNameCache == NULL)
-    {
-        wchar_t cmdLine[1024];
-        wsprintf(cmdLine, L"%s GetNodeName", _exeName);
-        std::string s1 = ReadProcessOutput(cmdLine);
-        std::wstring ws1 = std::wstring(s1.begin(), s1.end());
-        std::wistringstream inSS(ws1);
-
-        std::wstring line;
-        std::getline(inSS, line);
-        nodeNameCache = _wcsdup(line.c_str());
-    }
-
-    return nodeNameCache;
-}
-
-const wchar_t* EXEService::GetColumnNames()
-{
-    if (columnNameCache == NULL)
-    {
-        wchar_t cmdLine[1024];
-        wsprintf(cmdLine, L"%s GetColumnNames", _exeName);
-        std::string s1 = ReadProcessOutput(cmdLine);
-        std::wstring ws1 = std::wstring(s1.begin(), s1.end());
-        std::wistringstream inSS(ws1);
-
-        std::wstring line;
-        std::getline(inSS, line);
-        if (!line.empty())
-        {
-            columnNameCache = _wcsdup(line.c_str());
-            customColumnsSupported = TRUE;
-        }
-        else
-        {
-            columnNameCache = L"Author\tTitle\tInformation";
-            customColumnsSupported = FALSE;
-        }
-    }
-
-    return columnNameCache;
-}
-
-std::vector<CustomItemInfo> EXEService::InvokeService()
-{
+    // Get and cache Node Description
     wchar_t cmdLine[1024];
-    if (customColumnsSupported)
-        wsprintf(cmdLine, L"%s InvokeServiceCustom %s", _exeName, playerType == PLAYERTYPE_WACUP ? L"PLAYERTYPE_WACUP" : L"PLAYERTYPE_WINAMP");
-    else
-        wsprintf(cmdLine, L"%s InvokeService %s", _exeName, playerType == PLAYERTYPE_WACUP ? L"PLAYERTYPE_WACUP" : L"PLAYERTYPE_WINAMP");
-    // Bugfixing
+    wsprintf(cmdLine, L"%s GetNodeDesc", _exeName);
     std::string s1 = ReadProcessOutput(cmdLine);
     std::wstring ws1 = std::wstring(s1.begin(), s1.end());
     std::wistringstream inSS(ws1);
 
-    std::vector<CustomItemInfo> retItems;
-    if (customColumnsSupported)
-    {
-        std::wstring infoLine;
-        std::wstring plTitleLine;
-        std::wstring fileNameLine;
+    std::wstring line;
+    std::getline(inSS, line);
+    if (line[line.length() - 1] == '\r' || line[line.length() - 1] == '\n')
+        line[line.length() - 1] = '\0';
+    if (!line.empty())
+        nodeDescCache.Category = _wcsdup(line.c_str());
+    else
+        nodeDescCache.Category = NULL;
+    
+    std::getline(inSS, line);
+    nodeDescCache.NodeName = _wcsdup(line.c_str());
+    
+    std::getline(inSS, line);
+    if (!line.empty())
+        nodeDescCache.ColumnNames = _wcsdup(line.c_str());
+    else
+        nodeDescCache.ColumnNames = L"Author\tTitle\tInformation";
 
+    std::getline(inSS, line);
+    nodeDescCache.Capabilities = std::stoul(line);
+}
+
+void EXEService::InitService(UINT_PTR serviceID)
+{
+    _serviceID = serviceID;
+}
+
+NodeDescriptor& EXEService::GetNodeDesc()
+{
+    return nodeDescCache;
+}
+
+void EXEService::InvokeService(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl)
+{
+    std::lock_guard<std::mutex> guard(serviceListItemMapMutex);
+    serviceListItemMap[_serviceID].clear();
+
+    wchar_t skinPath[MAX_PATH];
+    SendMessage(hwndWinampParent, WM_WA_IPC, (WPARAM)skinPath, IPC_GETSKINW);
+
+    wchar_t cmdLine[1024];
+    wsprintf(cmdLine, L"%s InvokeService %d %d %d \"%s\" \"%s\" %d", _exeName, hwndWinampParent, hwndLibraryParent, hwndParentControl, pluginDir, skinPath, _serviceID);
+    std::string s1 = ReadProcessOutput(cmdLine);
+    std::wstring ws1 = std::wstring(s1.begin(), s1.end());
+    std::wistringstream inSS(ws1);
+
+    std::wstring infoLine;
+    std::wstring plTitleLine;
+    std::wstring fileNameLine;
+
+    std::getline(inSS, infoLine);
+    while (!infoLine.empty()) {
+        std::getline(inSS, plTitleLine);
+        std::getline(inSS, fileNameLine);
+
+        if (fileNameLine[fileNameLine.length() - 1] == '\r' || fileNameLine[fileNameLine.length() - 1] == '\n')
+            fileNameLine[fileNameLine.length() - 1] = '\0';
+
+        ItemInfo currentItem = {
+            _wcsdup(infoLine.c_str()),
+            _wcsdup(plTitleLine.c_str()),
+            _wcsdup(fileNameLine.c_str())
+        };
+        serviceListItemMap[_serviceID].push_back(currentItem);
 
         std::getline(inSS, infoLine);
-        while (!infoLine.empty()) {
-            std::getline(inSS, plTitleLine);
-            std::getline(inSS, fileNameLine);
-
-            if (fileNameLine[fileNameLine.length() - 1] == '\r' || fileNameLine[fileNameLine.length() - 1] == '\n')
-                fileNameLine[fileNameLine.length() - 1] = '\0';
-
-            CustomItemInfo currentItem = {
-                _wcsdup(infoLine.c_str()),
-                _wcsdup(plTitleLine.c_str()),
-                _wcsdup(fileNameLine.c_str())
-            };
-            retItems.push_back(currentItem);
-
-            std::getline(inSS, infoLine);
-        }
     }
-    else
-    {
-        std::wstring authorLine;
-        std::wstring titleLine;
-        std::wstring infoLine;
-        std::wstring fileNameLine;
-
-        std::getline(inSS, authorLine);
-        while (!authorLine.empty()) {
-            std::getline(inSS, titleLine);
-            std::getline(inSS, infoLine);
-            std::getline(inSS, fileNameLine);
-
-            if (fileNameLine[fileNameLine.length() - 1] == '\r' || fileNameLine[fileNameLine.length() - 1] == '\n')
-                fileNameLine[fileNameLine.length() - 1] = '\0';
-
-            wchar_t ciiInfo[1024];
-            wsprintf(ciiInfo, L"%s\t%s\t%s", authorLine.c_str(), titleLine.c_str(), infoLine.c_str());
-            wchar_t plTitle[1024];
-            wsprintf(plTitle, L"%s - %s", authorLine.c_str(), titleLine.c_str());
-
-            CustomItemInfo currentItem = {
-                _wcsdup(ciiInfo),
-                _wcsdup(plTitle),
-                _wcsdup(fileNameLine.c_str())
-            };
-            retItems.push_back(currentItem);
-
-            std::getline(inSS, authorLine);
-        }
-    }
-
-    return retItems;
 }
 
 const wchar_t* EXEService::GetFileName(const wchar_t* fileID)
 {
     wchar_t cmdLine[1024];
     wsprintf(cmdLine, L"%s GetFileName %s", _exeName, fileID);
-    // Bugfixing
     std::string s1 = ReadProcessOutput(cmdLine);
     std::wstring ws1 = std::wstring(s1.begin(), s1.end());
     std::wistringstream inSS(ws1);
@@ -247,49 +183,23 @@ const wchar_t* EXEService::GetFileName(const wchar_t* fileID)
 
 HWND EXEService::GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl)
 {
-    if (customDialogSupported == -1)
+    STARTUPINFOW si;
+    PROCESS_INFORMATION pi;
+
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    ZeroMemory(&pi, sizeof(pi));
+
+    wchar_t skinPath[MAX_PATH];
+    SendMessage(_hwndWinampParent, WM_WA_IPC, (WPARAM)skinPath, IPC_GETSKINW);
+
+    wchar_t cmdLine[1024];
+    wsprintf(cmdLine, L"%s GetCustomDialog %d %d %d \"%s\" \"%s\" %d", _exeName, _hwndWinampParent, _hwndLibraryParent, hwndParentControl, pluginDir, skinPath, _serviceID);
+    if (CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
     {
-        wchar_t cmdLine[1024];
-        wsprintf(cmdLine, L"%s CanGetCustomDialog", _exeName);
-        std::string s1 = ReadProcessOutput(cmdLine);
-        std::wstring ws1 = std::wstring(s1.begin(), s1.end());
-        std::wistringstream inSS(ws1);
-
-        std::wstring line;
-        std::getline(inSS, line);
-        if (!line.empty())
-        {
-            if (line.c_str()[0] == '1')
-                customDialogSupported = 1;
-            else
-                customDialogSupported = 0;
-        }
-        else
-        {
-            customDialogSupported = 0;
-        }
-    }
-
-    if (customDialogSupported == 1)
-    {
-        STARTUPINFOW si;
-        PROCESS_INFORMATION pi;
-
-        ZeroMemory(&si, sizeof(si));
-        si.cb = sizeof(si);
-        ZeroMemory(&pi, sizeof(pi));
-
-        wchar_t skinPath[MAX_PATH];
-        SendMessage(_hwndWinampParent, WM_WA_IPC, (WPARAM)skinPath, IPC_GETSKINW);
-
-        wchar_t cmdLine[1024];
-        wsprintf(cmdLine, L"%s GetCustomDialog %d %d %d \"%s\"", _exeName, _hwndWinampParent, _hwndLibraryParent, hwndParentControl, skinPath);
-        if (CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
-        {
-            customDialogPID = pi.dwProcessId;
-            CloseHandle(pi.hProcess);
-            CloseHandle(pi.hThread);
-        }
+        customDialogPID = pi.dwProcessId;
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
     }
 
     // Return NULL, as the foreign process will handle everything
@@ -307,4 +217,8 @@ void EXEService::DestroyingCustomDialog()
         customDialogPID = -1;
     }
 }
-*/
+
+const wchar_t* EXEService::GetShortName()
+{
+    return shortName;
+}

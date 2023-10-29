@@ -8,18 +8,20 @@ namespace esrv_cdlexampleexe
         [STAThread]
         static void Main(string[] args)
         {
-            if (args[0] == "GetNodeName")
+            const uint CAP_DEFAULT = 0;
+            const uint CAP_CUSTOMDIALOG = 1;
+
+            if (args[0] == "GetNodeDesc")
             {
-                Console.WriteLine("Example EXE Plugin with Custom Dialog");
-            }
-            else if (args[0] == "CanGetCustomDialog")
-            {
-                Console.WriteLine("1");
+                Console.WriteLine("UI Examples");
+                Console.WriteLine("Example UI EXE Plugin");
+                Console.WriteLine("NONE");
+                Console.WriteLine(CAP_CUSTOMDIALOG);
             }
             else if (args[0] == "GetCustomDialog")
             {
                 ApplicationConfiguration.Initialize();
-                Application.Run(new Form1(IntPtr.Parse(args[1]), IntPtr.Parse(args[2]), IntPtr.Parse(args[3]), args[4]));
+                Application.Run(new Form1(IntPtr.Parse(args[1]), IntPtr.Parse(args[2]), IntPtr.Parse(args[3]), args[4], args[5], IntPtr.Parse(args[6])));
             }
         }
     }

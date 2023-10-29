@@ -59,23 +59,28 @@ private:
     UINT_PTR _serviceID;
 };
 
-/*class EXEService : public EasyService
+class EXEService : public EasyService
 {
 public:
-    EXEService(const wchar_t* exeName);
+    EXEService(const wchar_t* exeName, const wchar_t* _shortName);
 
-    virtual void InitService(const wchar_t* pluginDir, UINT_PTR serviceID);
+    virtual void InitService(UINT_PTR serviceID);
     virtual NodeDescriptor& GetNodeDesc();
-    virtual std::vector<ItemInfo>& InvokeService(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl);
+    virtual void InvokeService(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl);
     virtual const wchar_t* GetFileName(const wchar_t* fileID);
     virtual HWND GetCustomDialog(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl);
     virtual void DestroyingCustomDialog();
+    virtual const wchar_t* GetShortName();
 
 private:
     wchar_t* _exeName;
+    const wchar_t* shortName;
+    
     NodeDescriptor nodeDescCache;
+    UINT_PTR _serviceID;
+    
     DWORD customDialogPID = -1;
-};*/
+};
 
 extern std::map<UINT_PTR, EasyService*> serviceMap;
 extern std::map<HWND, UINT_PTR> serviceHwndMap;

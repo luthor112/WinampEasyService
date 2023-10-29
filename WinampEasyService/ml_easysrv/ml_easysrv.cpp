@@ -26,7 +26,7 @@
 #define DISABLE_MAIN_PAGE
 //#define DISABLE_SRV_DLL
 #define DISABLE_MSRV_DLL
-#define DISABLE_ESRV_EXE
+//#define DISABLE_ESRV_EXE
 
 //////////////////////////
 // FORWARD DECLARATIONS //
@@ -316,22 +316,41 @@ void loadServices()
 
 #ifndef DISABLE_ESRV_EXE
     // walk esrv_*.exe
-	wsprintf(searchCriteria, L"%S\\esrv_*.exe", pluginDir);
+	wsprintf(searchCriteria, L"%s\\esrv_*.exe", pluginDir);
 	searchHandle = FindFirstFile(searchCriteria, &FindFileData);
 	if (searchHandle != INVALID_HANDLE_VALUE)
 	{
 		do
 		{
-			wsprintf(absoluteName, L"\"%S\\%s\"", pluginDir, FindFileData.cFileName);
+			wsprintf(absoluteName, L"\"%s\\%s\"", pluginDir, FindFileData.cFileName);
 			if (containsToken(disabledList, absoluteName) || containsToken(disabledList, FindFileData.cFileName))
 			{
 				trace(L"Skipping service: ", absoluteName);
 			}
 			else
 			{
-				EasyService* service = new EXEService(absoluteName, playerType);
-				UINT_PTR nodeID = addTreeItem(servicesNode, service->GetNodeName(), FALSE, MLTREEIMAGE_BRANCH);
+				EasyService* service = new EXEService(absoluteName, FindFileData.cFileName);
+
+				UINT_PTR nodeID;
+				const wchar_t* catName = service->GetNodeDesc().Category;
+				if (catName == NULL)
+				{
+					nodeID = addTreeItem(servicesNode, service->GetNodeDesc().NodeName, FALSE, MLTREEIMAGE_BRANCH);
+				}
+				else
+				{
+					UINT_PTR catNodeID = getCategoryNodeID(catMap, catName);
+					if (catNodeID == 0)
+					{
+						catNodeID = addTreeItem(servicesNode, catName, TRUE, MLTREEIMAGE_BRANCH);
+						catMap[catName] = catNodeID;
+					}
+
+					nodeID = addTreeItem(catNodeID, service->GetNodeDesc().NodeName, FALSE, MLTREEIMAGE_BRANCH);
+				}
+
 				serviceMap[nodeID] = service;
+				service->InitService(nodeID);
 				trace(L"Loaded service: ", absoluteName);
 			}
 		} while (FindNextFile(searchHandle, &FindFileData));

@@ -54,18 +54,22 @@ namespace esrv_cdlexampleexe
         IntPtr hwndWinampParent;
         IntPtr hwndLibraryParent;
         IntPtr hwndParentControl;
+        string pluginDir;
         string skinPath;
+        IntPtr serviceID;
 
         IntPtr locationHook;
         IntPtr minimizeHook;
         IntPtr focusHook;
 
-        public Form1(IntPtr _hwndWinampParent, IntPtr _hwndLibraryParent, IntPtr _hwndParentControl, string _skinPath)
+        public Form1(IntPtr _hwndWinampParent, IntPtr _hwndLibraryParent, IntPtr _hwndParentControl, string _pluginDir, string _skinPath, IntPtr _serviceID)
         {
             hwndWinampParent = _hwndWinampParent;
             hwndLibraryParent = _hwndLibraryParent;
             hwndParentControl = _hwndParentControl;
+            pluginDir = _pluginDir;
             skinPath = _skinPath;
+            serviceID = _serviceID;
 
             InitializeComponent();
         }
@@ -153,7 +157,7 @@ namespace esrv_cdlexampleexe
 
         private void button1_Click(object sender, EventArgs e)
         {
-
+            MessageBox.Show("Button Pressed!", "Example UI EXE Plugin");
         }
     }
 }
