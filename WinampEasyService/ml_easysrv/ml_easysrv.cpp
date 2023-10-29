@@ -25,7 +25,7 @@
 //#define DISABLE_REFERENCE_FEATURE
 #define DISABLE_MAIN_PAGE
 //#define DISABLE_SRV_DLL
-#define DISABLE_MSRV_DLL
+//#define DISABLE_MSRV_DLL
 //#define DISABLE_ESRV_EXE
 
 //////////////////////////
@@ -360,22 +360,41 @@ void loadServices()
 
 #ifndef DISABLE_MSRV_DLL
     // walk msrv_*.dll
-	wsprintf(searchCriteria, L"%S\\msrv_*.dll", pluginDir);
+	wsprintf(searchCriteria, L"%s\\msrv_*.dll", pluginDir);
 	searchHandle = FindFirstFile(searchCriteria, &FindFileData);
 	if (searchHandle != INVALID_HANDLE_VALUE)
 	{
 		do
 		{
-			wsprintf(absoluteName, L"\"%S\\isrv_managed.exe\" \"%S\\%s\"", pluginDir, pluginDir, FindFileData.cFileName);
+			wsprintf(absoluteName, L"\"%s\\isrv_managed.exe\" \"%s\\%s\"", pluginDir, pluginDir, FindFileData.cFileName);
 			if (containsToken(disabledList, absoluteName) || containsToken(disabledList, FindFileData.cFileName))
 			{
 				trace(L"Skipping service: ", absoluteName);
 			}
 			else
 			{
-				EasyService* service = new EXEService(absoluteName, playerType);
-				UINT_PTR nodeID = addTreeItem(servicesNode, service->GetNodeName(), FALSE, MLTREEIMAGE_BRANCH);
+				EasyService* service = new EXEService(absoluteName, FindFileData.cFileName);
+
+				UINT_PTR nodeID;
+				const wchar_t* catName = service->GetNodeDesc().Category;
+				if (catName == NULL)
+				{
+					nodeID = addTreeItem(servicesNode, service->GetNodeDesc().NodeName, FALSE, MLTREEIMAGE_BRANCH);
+				}
+				else
+				{
+					UINT_PTR catNodeID = getCategoryNodeID(catMap, catName);
+					if (catNodeID == 0)
+					{
+						catNodeID = addTreeItem(servicesNode, catName, TRUE, MLTREEIMAGE_BRANCH);
+						catMap[catName] = catNodeID;
+					}
+
+					nodeID = addTreeItem(catNodeID, service->GetNodeDesc().NodeName, FALSE, MLTREEIMAGE_BRANCH);
+				}
+
 				serviceMap[nodeID] = service;
+				service->InitService(nodeID);
 				trace(L"Loaded service: ", absoluteName);
 			}
 		} while (FindNextFile(searchHandle, &FindFileData));
@@ -541,6 +560,71 @@ static BOOL view_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 	return 0;
 }
 
+#define MENUID_PLAY			100
+#define MENUID_ENQ			101
+#define MENUID_ENQ_DEREF	102
+#define MENUID_SAVEAS		103
+
+static void view_handleFile(HWND hwnd, int itemID, int command)
+{
+	const wchar_t* playlistTitle = serviceListItemMap[serviceHwndMap[hwnd]][itemID].plTitle;
+
+	wchar_t playlistFN[1024];
+#ifndef DISABLE_REFERENCE_FEATURE
+	if (!wcsncmp(serviceListItemMap[serviceHwndMap[hwnd]][itemID].filename, L"ref_", 4)) {
+		if (command == MENUID_ENQ)
+		{
+			wsprintf(playlistFN, L"%d_%s.ref", serviceHwndMap[hwnd], serviceListItemMap[serviceHwndMap[hwnd]][itemID].filename);
+		}
+		else
+		{
+			wchar_t refFN[1024];
+			wsprintf(refFN, L"%d_%s.ref", serviceHwndMap[hwnd], serviceListItemMap[serviceHwndMap[hwnd]][itemID].filename);
+			wcscpy_s(playlistFN, 1024, GetPluginFileName(refFN));
+		}
+	}
+	else {
+#endif // !DISABLE_REFERENCE_FEATURE
+		wcscpy_s(playlistFN, 1024, serviceListItemMap[serviceHwndMap[hwnd]][itemID].filename);
+#ifndef DISABLE_REFERENCE_FEATURE
+	}
+#endif // !DISABLE_REFERENCE_FEATURE
+
+	enqueueFileWithMetaStructW newFile = {
+		playlistFN,
+		playlistTitle,
+		-1
+	};
+
+	if (command == MENUID_PLAY)
+	{
+		SendMessage(plugin.hwndWinampParent, WM_WA_IPC, 0, IPC_DELETE);
+		SendMessage(plugin.hwndWinampParent, WM_WA_IPC, (WPARAM)&newFile, IPC_ENQUEUEFILEW);
+		SendMessage(plugin.hwndWinampParent, WM_WA_IPC, 1, IPC_SETPLAYLISTPOS);
+		SendMessage(plugin.hwndWinampParent, WM_COMMAND, MAKEWPARAM(WINAMP_BUTTON2, 0), 0);
+	}
+	else if (command == MENUID_ENQ || command == MENUID_ENQ_DEREF)
+	{
+		SendMessage(plugin.hwndWinampParent, WM_WA_IPC, (WPARAM)&newFile, IPC_ENQUEUEFILEW);
+	}
+	else if (command == MENUID_SAVEAS) {
+		wchar_t saveFileName[MAX_PATH];
+		OPENFILENAME saveAsOptions;
+		ZeroMemory(&saveAsOptions, sizeof(OPENFILENAME));
+		saveAsOptions.lStructSize = sizeof(OPENFILENAME);
+		saveAsOptions.hwndOwner = hwnd;
+		saveAsOptions.lpstrFile = saveFileName;
+		saveAsOptions.nMaxFile = MAX_PATH;
+		
+		if (GetSaveFileName(&saveAsOptions))
+			CopyFile(playlistFN, saveFileName, FALSE);
+	}
+	else
+	{
+		trace(L"Unknown MENUID!");
+	}
+}
+
 static BOOL view_OnNotify(HWND hwnd, int wParam, NMHDR* lParam)
 {
 	if (lParam->code == LVN_ITEMACTIVATE)
@@ -549,40 +633,38 @@ static BOOL view_OnNotify(HWND hwnd, int wParam, NMHDR* lParam)
 		LPNMITEMACTIVATE lpnmia = (LPNMITEMACTIVATE)lParam;
 		
 		std::lock_guard<std::mutex> guard(serviceListItemMapMutex);
-		const wchar_t* playlistTitle = serviceListItemMap[serviceHwndMap[hwnd]][lpnmia->iItem].plTitle;
-
-		wchar_t playlistFN[1024];
-#ifndef DISABLE_REFERENCE_FEATURE
-		if (!wcsncmp(serviceListItemMap[serviceHwndMap[hwnd]][lpnmia->iItem].filename, L"ref_", 4)) {
-			wsprintf(playlistFN, L"%d_%s.ref", serviceHwndMap[hwnd], serviceListItemMap[serviceHwndMap[hwnd]][lpnmia->iItem].filename);
-		} else {
-#endif // !DISABLE_REFERENCE_FEATURE
-			wcscpy_s(playlistFN, 1024, serviceListItemMap[serviceHwndMap[hwnd]][lpnmia->iItem].filename);
-#ifndef DISABLE_REFERENCE_FEATURE
-		}
-#endif // !DISABLE_REFERENCE_FEATURE
-
-		enqueueFileWithMetaStructW newFile = {
-			playlistFN,
-			playlistTitle,
-			-1
-		};
-
 		if (lpnmia->uKeyFlags == LVKF_ALT)
-		{
-			SendMessage(plugin.hwndWinampParent, WM_WA_IPC, (WPARAM)&newFile, IPC_ENQUEUEFILEW);
-		} else {
-			SendMessage(plugin.hwndWinampParent, WM_WA_IPC, 0, IPC_DELETE);
-			SendMessage(plugin.hwndWinampParent, WM_WA_IPC, (WPARAM)&newFile, IPC_ENQUEUEFILEW);
-			SendMessage(plugin.hwndWinampParent, WM_WA_IPC, 1, IPC_SETPLAYLISTPOS);
-			SendMessage(plugin.hwndWinampParent, WM_COMMAND, MAKEWPARAM(WINAMP_BUTTON2, 0), 0);
-		}
+			view_handleFile(hwnd, lpnmia->iItem, MENUID_ENQ);
+		else
+			view_handleFile(hwnd, lpnmia->iItem, MENUID_PLAY);
 #else
 		trace(L"This should not happen: _WIN32_IE < 0x0400");
 #endif
 	}
 
 	return FALSE;
+}
+
+static void view_OnContext(HWND hwnd, HWND hwndContext, UINT xPos, UINT yPos)
+{
+	if (hwndContext != GetDlgItem(hwnd, IDC_LIST))
+		return;
+
+	HMENU hMenu = CreatePopupMenu();
+	AppendMenu(hMenu, MF_STRING, MENUID_PLAY, L"Play");
+	AppendMenu(hMenu, MF_STRING, MENUID_ENQ, L"Enqueue");
+	AppendMenu(hMenu, MF_STRING, MENUID_ENQ_DEREF, L"Enqueue dereferenced");
+	AppendMenu(hMenu, MF_STRING, MENUID_SAVEAS, L"Save As");
+	SetMenuDefaultItem(hMenu, MENUID_PLAY, FALSE);
+
+	int menuItem = TrackPopupMenuEx(hMenu, TPM_RETURNCMD, xPos, yPos, hwnd, NULL);
+	int itemID = ListView_GetNextItem(hwndContext, -1, LVNI_SELECTED);
+
+	std::lock_guard<std::mutex> guard(serviceListItemMapMutex);
+	if (menuItem != 0 && itemID != -1)
+		view_handleFile(hwnd, itemID, menuItem);
+
+	DestroyMenu(hMenu);
 }
 
 LRESULT CALLBACK viewDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -603,6 +685,7 @@ LRESULT CALLBACK viewDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
 		HANDLE_MSG(hwndDlg, WM_COMMAND, view_OnCommand);
 		HANDLE_MSG(hwndDlg, WM_SIZE, view_OnSize);
 		HANDLE_MSG(hwndDlg, WM_NOTIFY, view_OnNotify);
+		HANDLE_MSG(hwndDlg, WM_CONTEXTMENU, view_OnContext);
 	case WM_PAINT:
 	{
 		int tab[] = { IDC_LIST | DCW_SUNKENBORDER };
