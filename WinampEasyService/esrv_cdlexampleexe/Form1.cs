@@ -56,19 +56,23 @@ namespace esrv_cdlexampleexe
         IntPtr hwndParentControl;
         string pluginDir;
         string skinPath;
+        string configFile;
+        string shortName;
         IntPtr serviceID;
 
         IntPtr locationHook;
         IntPtr minimizeHook;
         IntPtr focusHook;
 
-        public Form1(IntPtr _hwndWinampParent, IntPtr _hwndLibraryParent, IntPtr _hwndParentControl, string _pluginDir, string _skinPath, IntPtr _serviceID)
+        public Form1(IntPtr _hwndWinampParent, IntPtr _hwndLibraryParent, IntPtr _hwndParentControl, string _pluginDir, string _skinPath, string _configFile, string _shortName, IntPtr _serviceID)
         {
             hwndWinampParent = _hwndWinampParent;
             hwndLibraryParent = _hwndLibraryParent;
             hwndParentControl = _hwndParentControl;
             pluginDir = _pluginDir;
             skinPath = _skinPath;
+            configFile = _configFile;
+            shortName = _shortName;
             serviceID = _serviceID;
 
             InitializeComponent();

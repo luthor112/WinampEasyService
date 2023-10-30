@@ -21,7 +21,7 @@ namespace esrv_cdlexampleexe
             else if (args[0] == "GetCustomDialog")
             {
                 ApplicationConfiguration.Initialize();
-                Application.Run(new Form1(IntPtr.Parse(args[1]), IntPtr.Parse(args[2]), IntPtr.Parse(args[3]), args[4], args[5], IntPtr.Parse(args[6])));
+                Application.Run(new Form1(IntPtr.Parse(args[1]), IntPtr.Parse(args[2]), IntPtr.Parse(args[3]), args[4], args[5], args[6], args[7], IntPtr.Parse(args[8])));
             }
         }
     }

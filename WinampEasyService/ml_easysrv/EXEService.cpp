@@ -140,7 +140,7 @@ void EXEService::InvokeService(HWND hwndWinampParent, HWND hwndLibraryParent, HW
     SendMessage(hwndWinampParent, WM_WA_IPC, (WPARAM)skinPath, IPC_GETSKINW);
 
     wchar_t cmdLine[1024];
-    wsprintf(cmdLine, L"%s InvokeService %d %d %d \"%s\" \"%s\" %d", _exeName, hwndWinampParent, hwndLibraryParent, hwndParentControl, pluginDir, skinPath, _serviceID);
+    wsprintf(cmdLine, L"%s InvokeService %d %d %d \"%s\" \"%s\" \"%s\" \"%s\" %d", _exeName, hwndWinampParent, hwndLibraryParent, hwndParentControl, pluginDir, skinPath, configFileName, shortName, _serviceID);
     std::string s1 = ReadProcessOutput(cmdLine);
     std::wstring ws1 = std::wstring(s1.begin(), s1.end());
     std::wistringstream inSS(ws1);
@@ -194,7 +194,7 @@ HWND EXEService::GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent
     SendMessage(_hwndWinampParent, WM_WA_IPC, (WPARAM)skinPath, IPC_GETSKINW);
 
     wchar_t cmdLine[1024];
-    wsprintf(cmdLine, L"%s GetCustomDialog %d %d %d \"%s\" \"%s\" %d", _exeName, _hwndWinampParent, _hwndLibraryParent, hwndParentControl, pluginDir, skinPath, _serviceID);
+    wsprintf(cmdLine, L"%s GetCustomDialog %d %d %d \"%s\" \"%s\" \"%s\" \"%s\" %d", _exeName, _hwndWinampParent, _hwndLibraryParent, hwndParentControl, pluginDir, skinPath, configFileName, shortName, _serviceID);
     if (CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
     {
         customDialogPID = pi.dwProcessId;

@@ -1,9 +1,88 @@
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace isrv_managed
 {
     internal static class Program
     {
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+        static extern uint GetPrivateProfileString(
+            string lpAppName,
+            string lpKeyName,
+            string lpDefault,
+            StringBuilder lpReturnedString,
+            uint nSize,
+            string lpFileName);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+        static extern uint WritePrivateProfileString(
+            string lpAppName,
+            string lpKeyName,
+            string lpString,
+            string lpFileName);
+
+        static Dictionary<string, object> buildFunctionDict(string configFile, string shortName, string skinPath)
+        {
+            Dictionary<string, object> functionDict = new Dictionary<string, object>();
+
+            functionDict.Add("GetOption", (string optionName, string defaultValue) => {
+                StringBuilder sb = new StringBuilder(1024);
+                GetPrivateProfileString(shortName, optionName, defaultValue, sb, (uint)sb.Capacity, configFile);
+                return sb.ToString();
+            });
+
+            functionDict.Add("SetOption", (string optionName, string optionValue) => {
+                WritePrivateProfileString(shortName, optionName, optionValue, configFile);
+            });
+
+            functionDict.Add("SkinForm", (Form form) => {
+                string genexFilename = System.IO.Path.Join(skinPath, "genex.bmp");
+                if (File.Exists(genexFilename))
+                {
+                    // Needs more colours
+                    Bitmap genex = new Bitmap(genexFilename);
+                    Color itemBgColor = genex.GetPixel(48, 0);
+                    Color itemFgColor = genex.GetPixel(50, 0);
+                    Color windowBackgroundColor = genex.GetPixel(52, 0);
+                    Color buttonTextColor = genex.GetPixel(54, 0);
+                    Color windowTextColor = genex.GetPixel(56, 0);
+
+                    Bitmap buttonBgImage = new Bitmap(47, 15);
+                    using (Graphics gr = Graphics.FromImage(buttonBgImage))
+                    {
+                        gr.DrawImage(genex, new Rectangle(0, 0, 47, 15), new Rectangle(0, 0, 47, 15), GraphicsUnit.Pixel);
+                    }
+
+                    form.BackColor = windowBackgroundColor;
+
+                    foreach (Control control in form.Controls)
+                    {
+                        if (control is Label)
+                        {
+                            Label label = (Label)control;
+                            label.ForeColor = itemFgColor;
+                        }
+                        else if (control is Button)
+                        {
+                            Button button = (Button)control;
+                            button.BackColor = itemBgColor;
+                            button.ForeColor = buttonTextColor;
+                            button.BackgroundImage = buttonBgImage;
+                            button.BackgroundImageLayout = ImageLayout.Stretch;
+                        }
+                        else
+                        {
+                            control.BackColor = itemBgColor;
+                            control.ForeColor = itemFgColor;
+                        }
+                    }
+                }
+            });
+
+            return functionDict;
+        }
+
         [STAThread]
         static void Main(string[] args)
         {
@@ -27,9 +106,11 @@ namespace isrv_managed
                 IntPtr hwndParentControl = IntPtr.Parse(args[4]);
                 string pluginDir = args[5];
                 string skinPath = args[6];
-                uint serviceID = uint.Parse(args[7]);
+                string configFile = args[7];
+                string shortName = args[8];
+                uint serviceID = uint.Parse(args[9]);
 
-                Dictionary<string, object> functionDict = new Dictionary<string, object>();
+                Dictionary<string, object> functionDict = buildFunctionDict(configFile, shortName, skinPath);
 
                 var initMethod = theType.GetMethod("InitService");
                 var method = theType.GetMethod("InvokeService");
@@ -57,9 +138,11 @@ namespace isrv_managed
                 IntPtr hwndParentControl = IntPtr.Parse(args[4]);
                 string pluginDir = args[5];
                 string skinPath = args[6];
-                uint serviceID = uint.Parse(args[7]);
+                string configFile = args[7];
+                string shortName = args[8];
+                uint serviceID = uint.Parse(args[9]);
 
-                Dictionary<string, object> functionDict = new Dictionary<string, object>();
+                Dictionary<string, object> functionDict = buildFunctionDict(configFile, shortName, skinPath);
 
                 var initMethod = theType.GetMethod("InitService");
                 var method = theType.GetMethod("GetCustomDialog");
