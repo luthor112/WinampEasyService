@@ -22,7 +22,52 @@ namespace isrv_managed
             string lpString,
             string lpFileName);
 
-        static Dictionary<string, object> buildFunctionDict(string configFile, string shortName, string skinPath)
+        public static void SkinControl(Control ctrl, string skinPath)
+        {
+            string genexFilename = System.IO.Path.Join(skinPath, "genex.bmp");
+            if (File.Exists(genexFilename))
+            {
+                // Needs more colours
+                Bitmap genex = new Bitmap(genexFilename);
+                Color itemBgColor = genex.GetPixel(48, 0);
+                Color itemFgColor = genex.GetPixel(50, 0);
+                Color windowBackgroundColor = genex.GetPixel(52, 0);
+                Color buttonTextColor = genex.GetPixel(54, 0);
+                Color windowTextColor = genex.GetPixel(56, 0);
+
+                Bitmap buttonBgImage = new Bitmap(47, 15);
+                using (Graphics gr = Graphics.FromImage(buttonBgImage))
+                {
+                    gr.DrawImage(genex, new Rectangle(0, 0, 47, 15), new Rectangle(0, 0, 47, 15), GraphicsUnit.Pixel);
+                }
+
+                ctrl.BackColor = windowBackgroundColor;
+
+                foreach (Control control in ctrl.Controls)
+                {
+                    if (control is Label)
+                    {
+                        Label label = (Label)control;
+                        label.ForeColor = itemFgColor;
+                    }
+                    else if (control is Button)
+                    {
+                        Button button = (Button)control;
+                        button.BackColor = itemBgColor;
+                        button.ForeColor = buttonTextColor;
+                        button.BackgroundImage = buttonBgImage;
+                        button.BackgroundImageLayout = ImageLayout.Stretch;
+                    }
+                    else
+                    {
+                        control.BackColor = itemBgColor;
+                        control.ForeColor = itemFgColor;
+                    }
+                }
+            }
+        }
+
+        static Dictionary<string, object> BuildFunctionDict(string configFile, string shortName, string skinPath)
         {
             Dictionary<string, object> functionDict = new Dictionary<string, object>();
 
@@ -37,47 +82,7 @@ namespace isrv_managed
             });
 
             functionDict.Add("SkinForm", (Form form) => {
-                string genexFilename = System.IO.Path.Join(skinPath, "genex.bmp");
-                if (File.Exists(genexFilename))
-                {
-                    // Needs more colours
-                    Bitmap genex = new Bitmap(genexFilename);
-                    Color itemBgColor = genex.GetPixel(48, 0);
-                    Color itemFgColor = genex.GetPixel(50, 0);
-                    Color windowBackgroundColor = genex.GetPixel(52, 0);
-                    Color buttonTextColor = genex.GetPixel(54, 0);
-                    Color windowTextColor = genex.GetPixel(56, 0);
-
-                    Bitmap buttonBgImage = new Bitmap(47, 15);
-                    using (Graphics gr = Graphics.FromImage(buttonBgImage))
-                    {
-                        gr.DrawImage(genex, new Rectangle(0, 0, 47, 15), new Rectangle(0, 0, 47, 15), GraphicsUnit.Pixel);
-                    }
-
-                    form.BackColor = windowBackgroundColor;
-
-                    foreach (Control control in form.Controls)
-                    {
-                        if (control is Label)
-                        {
-                            Label label = (Label)control;
-                            label.ForeColor = itemFgColor;
-                        }
-                        else if (control is Button)
-                        {
-                            Button button = (Button)control;
-                            button.BackColor = itemBgColor;
-                            button.ForeColor = buttonTextColor;
-                            button.BackgroundImage = buttonBgImage;
-                            button.BackgroundImageLayout = ImageLayout.Stretch;
-                        }
-                        else
-                        {
-                            control.BackColor = itemBgColor;
-                            control.ForeColor = itemFgColor;
-                        }
-                    }
-                }
+                SkinControl(form, skinPath);
             });
 
             return functionDict;
@@ -110,7 +115,7 @@ namespace isrv_managed
                 string shortName = args[8];
                 uint serviceID = uint.Parse(args[9]);
 
-                Dictionary<string, object> functionDict = buildFunctionDict(configFile, shortName, skinPath);
+                Dictionary<string, object> functionDict = BuildFunctionDict(configFile, shortName, skinPath);
 
                 var initMethod = theType.GetMethod("InitService");
                 var method = theType.GetMethod("InvokeService");
@@ -142,7 +147,7 @@ namespace isrv_managed
                 string shortName = args[8];
                 uint serviceID = uint.Parse(args[9]);
 
-                Dictionary<string, object> functionDict = buildFunctionDict(configFile, shortName, skinPath);
+                Dictionary<string, object> functionDict = BuildFunctionDict(configFile, shortName, skinPath);
 
                 var initMethod = theType.GetMethod("InitService");
                 var method = theType.GetMethod("GetCustomDialog");

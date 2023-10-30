@@ -87,48 +87,7 @@ namespace isrv_managed
             minimizeHook = SetWinEventHook(EVENT_SYSTEM_MINIMIZESTART, EVENT_SYSTEM_MINIMIZEEND, IntPtr.Zero, WindowChangeHook, winampProcessID, libraryThreadID, WINEVENT_OUTOFCONTEXT);
             focusHook = SetWinEventHook(EVENT_OBJECT_FOCUS, EVENT_OBJECT_FOCUS, IntPtr.Zero, WindowChangeHook, winampProcessID, libraryThreadID, WINEVENT_OUTOFCONTEXT);
 
-            string genexFilename = System.IO.Path.Join(skinPath, "genex.bmp");
-            if (File.Exists(genexFilename))
-            {
-                // Needs more colours
-                Bitmap genex = new Bitmap(genexFilename);
-                Color itemBgColor = genex.GetPixel(48, 0);
-                Color itemFgColor = genex.GetPixel(50, 0);
-                Color windowBackgroundColor = genex.GetPixel(52, 0);
-                Color buttonTextColor = genex.GetPixel(54, 0);
-                Color windowTextColor = genex.GetPixel(56, 0);
-
-                Bitmap buttonBgImage = new Bitmap(47, 15);
-                using (Graphics gr = Graphics.FromImage(buttonBgImage))
-                {
-                    gr.DrawImage(genex, new Rectangle(0, 0, 47, 15), new Rectangle(0, 0, 47, 15), GraphicsUnit.Pixel);
-                }
-
-                BackColor = windowBackgroundColor;
-                customUI.BackColor = windowBackgroundColor;
-
-                foreach (Control control in customUI.Controls)
-                {
-                    if (control is Label)
-                    {
-                        Label label = (Label)control;
-                        label.ForeColor = itemFgColor;
-                    }
-                    else if (control is Button)
-                    {
-                        Button button = (Button)control;
-                        button.BackColor = itemBgColor;
-                        button.ForeColor = buttonTextColor;
-                        button.BackgroundImage = buttonBgImage;
-                        button.BackgroundImageLayout = ImageLayout.Stretch;
-                    }
-                    else
-                    {
-                        control.BackColor = itemBgColor;
-                        control.ForeColor = itemFgColor;
-                    }
-                }
-            }
+            Program.SkinControl(customUI, skinPath);
         }
 
         private void WindowChangeHook(IntPtr hWinEventHook, uint eventType,
