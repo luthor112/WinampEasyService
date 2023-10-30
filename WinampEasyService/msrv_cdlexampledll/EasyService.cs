@@ -2,12 +2,26 @@
 {
     public class EasyService
     {
-        public string GetNodeName()
+        const uint CAP_DEFAULT = 0;
+        const uint CAP_CUSTOMDIALOG = 1;
+
+        Dictionary<string, object> functions = new Dictionary<string, object>();
+        string myDirectory;
+        uint myServiceID;
+
+        public void InitService(Dictionary<string, object> functionDict, string pluginDir, uint serviceID)
         {
-            return "Example CS DLL with Custom UI";
+            functions = functionDict;
+            myDirectory = pluginDir;
+            myServiceID = serviceID;
         }
 
-        public UserControl GetCustomDialog(IntPtr WinampHWND)
+        public Tuple<string, string, string, uint> GetNodeDesc()
+        {
+            return new Tuple<string, string, string, uint>("UI Examples", "Example UI CS DLL Plugin", "NONE", CAP_CUSTOMDIALOG);
+        }
+
+        public UserControl GetCustomDialog(IntPtr hwndWinampParent, IntPtr hwndLibraryParent, IntPtr hwndParentControl, string skinPath)
         {
             return new msrv_cdlexampledll.ExampleUserControl();
         }

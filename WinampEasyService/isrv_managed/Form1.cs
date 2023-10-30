@@ -52,7 +52,9 @@ namespace isrv_managed
         IntPtr hwndWinampParent;
         IntPtr hwndLibraryParent;
         IntPtr hwndParentControl;
+        string pluginDir;
         string skinPath;
+        uint serviceID;
 
         IntPtr locationHook;
         IntPtr minimizeHook;
@@ -60,12 +62,14 @@ namespace isrv_managed
 
         UserControl customUI;
 
-        public Form1(IntPtr _hwndWinampParent, IntPtr _hwndLibraryParent, IntPtr _hwndParentControl, string _skinPath, UserControl _customUI)
+        public Form1(IntPtr _hwndWinampParent, IntPtr _hwndLibraryParent, IntPtr _hwndParentControl, string _pluginDir, string _skinPath, uint _serviceID, UserControl _customUI)
         {
             hwndWinampParent = _hwndWinampParent;
             hwndLibraryParent = _hwndLibraryParent;
             hwndParentControl = _hwndParentControl;
+            pluginDir = _pluginDir;
             skinPath = _skinPath;
+            serviceID = _serviceID;
             customUI = _customUI;
             InitializeComponent();
         }

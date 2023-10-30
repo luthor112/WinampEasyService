@@ -21,5 +21,10 @@ namespace msrv_cdlexampledll
         {
 
         }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Button Pressed!", "Example UI CS DLL Plugin");
+        }
     }
 }
