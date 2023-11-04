@@ -48,15 +48,19 @@ namespace isrv_managed
                     if (control is Label)
                     {
                         Label label = (Label)control;
-                        label.ForeColor = itemFgColor;
+                        label.ForeColor = windowTextColor;
                     }
                     else if (control is Button)
                     {
                         Button button = (Button)control;
-                        button.BackColor = itemBgColor;
-                        button.ForeColor = buttonTextColor;
+                        button.BackColor = Color.Transparent;
                         button.BackgroundImage = buttonBgImage;
                         button.BackgroundImageLayout = ImageLayout.Stretch;
+                        button.FlatAppearance.BorderSize = 0;
+                        button.FlatAppearance.MouseOverBackColor = Color.Transparent;
+                        button.FlatStyle = FlatStyle.Flat;
+                        button.ForeColor = buttonTextColor;
+                        button.UseVisualStyleBackColor = false;
                     }
                     else
                     {

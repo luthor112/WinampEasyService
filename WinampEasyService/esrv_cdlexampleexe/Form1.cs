@@ -99,17 +99,23 @@ namespace esrv_cdlexampleexe
                 Color buttonTextColor = genex.GetPixel(54, 0);
                 Color windowTextColor = genex.GetPixel(56, 0);
 
-                Bitmap buttonBgImage = new Bitmap(47, 15);
+                // 47x15 in genex, but 1px has been removed from the border
+                Bitmap buttonBgImage = new Bitmap(45, 13);
                 using (Graphics gr = Graphics.FromImage(buttonBgImage))
                 {
-                    gr.DrawImage(genex, new Rectangle(0, 0, 47, 15), new Rectangle(0, 0, 47, 15), GraphicsUnit.Pixel);
+                    gr.DrawImage(genex, new Rectangle(0, 0, 45, 13), new Rectangle(1, 1, 45, 13), GraphicsUnit.Pixel);
                 }
 
                 BackColor = windowBackgroundColor;
-                label1.ForeColor = itemFgColor;
-                button1.BackColor = itemBgColor;
-                button1.ForeColor = buttonTextColor;
+                label1.ForeColor = windowTextColor;
+                button1.BackColor = Color.Transparent;
                 button1.BackgroundImage = buttonBgImage;
+                button1.BackgroundImageLayout = ImageLayout.Stretch;
+                button1.FlatAppearance.BorderSize = 0;
+                button1.FlatAppearance.MouseOverBackColor = Color.Transparent;
+                button1.FlatStyle = FlatStyle.Flat;
+                button1.ForeColor = buttonTextColor;
+                button1.UseVisualStyleBackColor = false;
             }
         }
 
