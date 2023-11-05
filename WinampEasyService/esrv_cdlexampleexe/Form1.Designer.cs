@@ -52,6 +52,8 @@
             button1.Text = "Button time!";
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
+            button1.MouseDown += button1_MouseDown;
+            button1.MouseUp += button1_MouseUp;
             // 
             // Form1
             // 

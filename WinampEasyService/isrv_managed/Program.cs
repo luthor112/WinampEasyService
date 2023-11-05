@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Windows.Forms;
 
 namespace isrv_managed
 {
@@ -22,6 +23,9 @@ namespace isrv_managed
             string lpString,
             string lpFileName);
 
+        static Bitmap? buttonBgImage = null;
+        static Bitmap? buttonDownImage = null;
+
         public static void SkinControl(Control ctrl, string skinPath)
         {
             string genexFilename = System.IO.Path.Join(skinPath, "genex.bmp");
@@ -35,11 +39,20 @@ namespace isrv_managed
                 Color buttonTextColor = genex.GetPixel(54, 0);
                 Color windowTextColor = genex.GetPixel(56, 0);
 
-                // 47x15 in genex, but 1px has been removed from the border
-                Bitmap buttonBgImage = new Bitmap(45, 13);
-                using (Graphics gr = Graphics.FromImage(buttonBgImage))
+                if (buttonBgImage == null)
                 {
-                    gr.DrawImage(genex, new Rectangle(0, 0, 45, 13), new Rectangle(1, 1, 45, 13), GraphicsUnit.Pixel);
+                    // 47x15 in genex, but 1px has been removed from the border
+                    buttonBgImage = new Bitmap(45, 13);
+                    using (Graphics gr = Graphics.FromImage(buttonBgImage))
+                    {
+                        gr.DrawImage(genex, new Rectangle(0, 0, 45, 13), new Rectangle(1, 1, 45, 13), GraphicsUnit.Pixel);
+                    }
+
+                    buttonDownImage = new Bitmap(45, 13);
+                    using (Graphics gr = Graphics.FromImage(buttonDownImage))
+                    {
+                        gr.DrawImage(genex, new Rectangle(0, 0, 45, 13), new Rectangle(1, 16, 45, 13), GraphicsUnit.Pixel);
+                    }
                 }
 
                 ctrl.BackColor = windowBackgroundColor;
@@ -62,6 +75,9 @@ namespace isrv_managed
                         button.FlatStyle = FlatStyle.Flat;
                         button.ForeColor = buttonTextColor;
                         button.UseVisualStyleBackColor = false;
+
+                        button.MouseDown += ButtonMouseDown;
+                        button.MouseUp += ButtonMouseUp;
                     }
                     else
                     {
@@ -70,6 +86,18 @@ namespace isrv_managed
                     }
                 }
             }
+        }
+
+        static void ButtonMouseDown(object sender, MouseEventArgs e)
+        {
+            Button button = (Button)sender;
+            button.BackgroundImage = buttonDownImage;
+        }
+
+        static void ButtonMouseUp(object sender, MouseEventArgs e)
+        {
+            Button button = (Button)sender;
+            button.BackgroundImage = buttonBgImage;
         }
 
         static Dictionary<string, object> BuildFunctionDict(string configFile, string shortName, string skinPath)

@@ -64,6 +64,9 @@ namespace esrv_cdlexampleexe
         IntPtr minimizeHook;
         IntPtr focusHook;
 
+        Bitmap buttonBgImage;
+        Bitmap buttonDownImage;
+
         public Form1(IntPtr _hwndWinampParent, IntPtr _hwndLibraryParent, IntPtr _hwndParentControl, string _pluginDir, string _skinPath, string _configFile, string _shortName, IntPtr _serviceID)
         {
             hwndWinampParent = _hwndWinampParent;
@@ -100,10 +103,16 @@ namespace esrv_cdlexampleexe
                 Color windowTextColor = genex.GetPixel(56, 0);
 
                 // 47x15 in genex, but 1px has been removed from the border
-                Bitmap buttonBgImage = new Bitmap(45, 13);
+                buttonBgImage = new Bitmap(45, 13);
                 using (Graphics gr = Graphics.FromImage(buttonBgImage))
                 {
                     gr.DrawImage(genex, new Rectangle(0, 0, 45, 13), new Rectangle(1, 1, 45, 13), GraphicsUnit.Pixel);
+                }
+
+                buttonDownImage = new Bitmap(45, 13);
+                using (Graphics gr = Graphics.FromImage(buttonDownImage))
+                {
+                    gr.DrawImage(genex, new Rectangle(0, 0, 45, 13), new Rectangle(1, 16, 45, 13), GraphicsUnit.Pixel);
                 }
 
                 BackColor = windowBackgroundColor;
@@ -168,6 +177,16 @@ namespace esrv_cdlexampleexe
         private void button1_Click(object sender, EventArgs e)
         {
             MessageBox.Show("Button Pressed!", "Example UI EXE Plugin");
+        }
+
+        private void button1_MouseDown(object sender, MouseEventArgs e)
+        {
+            button1.BackgroundImage = buttonDownImage;
+        }
+
+        private void button1_MouseUp(object sender, MouseEventArgs e)
+        {
+            button1.BackgroundImage = buttonBgImage;
         }
     }
 }
