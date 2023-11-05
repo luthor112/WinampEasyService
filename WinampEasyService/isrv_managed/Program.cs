@@ -35,10 +35,11 @@ namespace isrv_managed
                 Color buttonTextColor = genex.GetPixel(54, 0);
                 Color windowTextColor = genex.GetPixel(56, 0);
 
-                Bitmap buttonBgImage = new Bitmap(47, 15);
+                // 47x15 in genex, but 1px has been removed from the border
+                Bitmap buttonBgImage = new Bitmap(45, 13);
                 using (Graphics gr = Graphics.FromImage(buttonBgImage))
                 {
-                    gr.DrawImage(genex, new Rectangle(0, 0, 47, 15), new Rectangle(0, 0, 47, 15), GraphicsUnit.Pixel);
+                    gr.DrawImage(genex, new Rectangle(0, 0, 45, 13), new Rectangle(1, 1, 45, 13), GraphicsUnit.Pixel);
                 }
 
                 ctrl.BackColor = windowBackgroundColor;
