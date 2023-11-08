@@ -15,10 +15,16 @@
 
 #include "resource.h"
 
+GetOptionFunc GetOption;
+SetOptionFunc SetOption;
+const wchar_t* myDirectory;
+UINT_PTR myServiceID;
+
 HINSTANCE myself = NULL;
 HWND hwndWinampParent = NULL;
 HWND hwndLibraryParent = NULL;
-wchar_t configFileName[MAX_PATH];
+
+wchar_t configFileName[MAX_PATH] = L"";
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
@@ -26,8 +32,18 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 	return TRUE;
 }
 
-const wchar_t* GetNodeName() {
-	return L"Services";
+void InitService(AddItemFunc addItemFunc, GetOptionFunc getOptionFunc, SetOptionFunc setOptionFunc, const wchar_t* pluginDir, UINT_PTR serviceID)
+{
+	GetOption = getOptionFunc;
+	SetOption = setOptionFunc;
+	myDirectory = pluginDir;
+	myServiceID = serviceID;
+}
+
+NodeDescriptor GetNodeDesc()
+{
+	NodeDescriptor desc = { NULL, L"Services", NULL, CAP_CUSTOMDIALOG };
+	return desc;
 }
 
 typedef int (*HookDialogFunc)(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -123,22 +139,26 @@ LRESULT CALLBACK customDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 	return FALSE;
 }
 
-HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl)
+HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl, wchar_t* skinPath)
 {
 	hwndWinampParent = _hwndWinampParent;
 	hwndLibraryParent = _hwndLibraryParent;
 
 	HWND dialogWnd = CreateDialog(myself, MAKEINTRESOURCE(IDD_VIEW_CUSTOM), hwndParentControl, (DLGPROC)customDialogProc);
 
-	char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
-	wsprintf(configFileName, L"%S\\easysrv.ini", pluginDir);
 	wchar_t tracePath[MAX_PATH];
-	GetPrivateProfileString(L"easysrv", L"trace", L"", tracePath, MAX_PATH, configFileName);
-	
+	GetOption(myServiceID, L"trace", L"", tracePath, MAX_PATH);
+
+	if (wcslen(configFileName) == 0)
+	{
+		char* iniDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETINIDIRECTORY);
+		wsprintf(configFileName, L"%S\\easysrv.ini", iniDir);
+	}
+
 	wchar_t infoText[1024];
 	wsprintf(infoText, L"Hi! Thanks for checking out WinampEasyService!\r\nIf you need help, I usually lurk in the WACUP Discord.\r\n\r\n");
 	wsprintf(infoText + wcslen(infoText), L"Current config file: %s\r\nCurrent trace file: %s\r\n\r\n", configFileName, tracePath);
-	wsprintf(infoText + wcslen(infoText), L"After editing the config file, restart the application.\r\nThe trace file is flushed by the OS.");
+	wsprintf(infoText + wcslen(infoText), L"After editing the config file, restart the application.");
 	HWND infoWnd = GetDlgItem(dialogWnd, IDC_INFOTEXT);
 	SetWindowText(infoWnd, infoText);
 	RedrawWindow(infoWnd, NULL, NULL, RDW_INVALIDATE);

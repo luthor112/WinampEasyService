@@ -23,7 +23,7 @@
 
 // Uncomment to disable features
 //#define DISABLE_REFERENCE_FEATURE
-#define DISABLE_MAIN_PAGE
+//#define DISABLE_MAIN_PAGE
 //#define DISABLE_SRV_DLL
 //#define DISABLE_MSRV_DLL
 //#define DISABLE_ESRV_EXE
@@ -262,8 +262,7 @@ void loadServices()
 	wsprintf(absoluteName, L"%s\\isrv_mainpage.dll", pluginDir);
 	if (PathFileExists(absoluteName))
 	{
-		wsprintf(absoluteName, L"\"%s\\isrv_managed.exe\" \"%s\\isrv_mainpage.dll\"", pluginDir, pluginDir);
-		EasyService* service = new EXEService(absoluteName);
+		EasyService* service = new DLLService(absoluteName, L"easysrv");
 		serviceMap[servicesNode] = service;
 		service->InitService(servicesNode);
 		trace(L"Loaded service: ", absoluteName);
