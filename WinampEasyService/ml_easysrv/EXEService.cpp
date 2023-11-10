@@ -99,26 +99,37 @@ EXEService::EXEService(const wchar_t* exeName, const wchar_t* _shortName)
     std::wstring ws1 = std::wstring(s1.begin(), s1.end());
     std::wistringstream inSS(ws1);
 
-    std::wstring line;
-    std::getline(inSS, line);
-    if (line[line.length() - 1] == '\r' || line[line.length() - 1] == '\n')
-        line[line.length() - 1] = '\0';
-    if (!line.empty())
-        nodeDescCache.Category = _wcsdup(line.c_str());
-    else
-        nodeDescCache.Category = NULL;
-    
-    std::getline(inSS, line);
-    nodeDescCache.NodeName = _wcsdup(line.c_str());
-    
-    std::getline(inSS, line);
-    if (!line.empty())
-        nodeDescCache.ColumnNames = _wcsdup(line.c_str());
-    else
-        nodeDescCache.ColumnNames = L"Author\tTitle\tInformation";
+    try
+    {
+        std::wstring line;
+        std::getline(inSS, line);
+        if (line[line.length() - 1] == '\r' || line[line.length() - 1] == '\n')
+            line[line.length() - 1] = '\0';
+        if (line == L"INVALID_SERVICE")
+            throw std::runtime_error("INVALID_SERVICE");
+        if (!line.empty())
+            nodeDescCache.Category = _wcsdup(line.c_str());
+        else
+            nodeDescCache.Category = NULL;
 
-    std::getline(inSS, line);
-    nodeDescCache.Capabilities = std::stoul(line);
+        std::getline(inSS, line);
+        nodeDescCache.NodeName = _wcsdup(line.c_str());
+
+        std::getline(inSS, line);
+        if (!line.empty())
+            nodeDescCache.ColumnNames = _wcsdup(line.c_str());
+        else
+            nodeDescCache.ColumnNames = L"Author\tTitle\tInformation";
+
+        std::getline(inSS, line);
+        nodeDescCache.Capabilities = std::stoul(line);
+
+        isValid = true;
+    }
+    catch (const std::exception& e)
+    {
+        isValid = false;
+    }
 }
 
 void EXEService::InitService(UINT_PTR serviceID)
@@ -216,6 +227,11 @@ void EXEService::DestroyingCustomDialog()
 
         customDialogPID = -1;
     }
+}
+
+bool EXEService::IsValid()
+{
+    return isValid;
 }
 
 const wchar_t* EXEService::GetShortName()

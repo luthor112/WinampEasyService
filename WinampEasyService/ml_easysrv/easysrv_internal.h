@@ -29,6 +29,8 @@ public:
     virtual const wchar_t* GetFileName(const wchar_t* fileID) = 0;
     virtual HWND GetCustomDialog(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl) = 0;
     virtual void DestroyingCustomDialog() = 0;
+
+    virtual bool IsValid() = 0;
     virtual const wchar_t* GetShortName() = 0;
 
     virtual ~EasyService() {}
@@ -45,6 +47,8 @@ public:
     virtual const wchar_t* GetFileName(const wchar_t* fileID);
     virtual HWND GetCustomDialog(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl);
     virtual void DestroyingCustomDialog();
+
+    virtual bool IsValid();
     virtual const wchar_t* GetShortName();
 
 private:
@@ -57,6 +61,7 @@ private:
     const wchar_t* shortName;
     NodeDescriptor nodeDescCache;
     UINT_PTR _serviceID;
+    bool isValid;
 };
 
 class EXEService : public EasyService
@@ -70,11 +75,14 @@ public:
     virtual const wchar_t* GetFileName(const wchar_t* fileID);
     virtual HWND GetCustomDialog(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl);
     virtual void DestroyingCustomDialog();
+
+    virtual bool IsValid();
     virtual const wchar_t* GetShortName();
 
 private:
     wchar_t* _exeName;
     const wchar_t* shortName;
+    bool isValid;
     
     NodeDescriptor nodeDescCache;
     UINT_PTR _serviceID;

@@ -12,9 +12,18 @@ DLLService::DLLService(const wchar_t* dllFullPath, const wchar_t* _shortName)
     _getFileName = reinterpret_cast<GetFileNameFunc>(GetProcAddress(dllModule, "GetFileName"));
     _getCustomDialog = reinterpret_cast<GetCustomDialogFunc>(GetProcAddress(dllModule, "GetCustomDialog"));
 
-    nodeDescCache = _getNodeDesc();
-    if (nodeDescCache.ColumnNames == NULL)
-        nodeDescCache.ColumnNames = L"Author\tTitle\tInformation";
+    if (_initService && _getNodeDesc)
+    {
+        isValid = true;
+
+        nodeDescCache = _getNodeDesc();
+        if (nodeDescCache.ColumnNames == NULL)
+            nodeDescCache.ColumnNames = L"Author\tTitle\tInformation";
+    }
+    else
+    {
+        isValid = false;
+    }
 
     shortName = _wcsdup(_shortName);
 }
@@ -68,6 +77,11 @@ HWND DLLService::GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent
 }
 
 void DLLService::DestroyingCustomDialog() {}
+
+bool DLLService::IsValid()
+{
+    return isValid;
+}
 
 const wchar_t* DLLService::GetShortName()
 {

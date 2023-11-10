@@ -263,9 +263,16 @@ void loadServices()
 	if (PathFileExists(absoluteName))
 	{
 		EasyService* service = new DLLService(absoluteName, L"easysrv");
-		serviceMap[servicesNode] = service;
-		service->InitService(servicesNode);
-		trace(L"Loaded service: ", absoluteName);
+		if (service->IsValid())
+		{
+			serviceMap[servicesNode] = service;
+			service->InitService(servicesNode);
+			trace(L"Loaded service: ", absoluteName);
+		}
+		else
+		{
+			trace(L"Invalid service: ", absoluteName);
+		}
 	}
 #endif
 
@@ -285,6 +292,11 @@ void loadServices()
 			else
 			{
 				EasyService* service = new DLLService(absoluteName, FindFileData.cFileName);
+				if (!service->IsValid())
+				{
+					trace(L"Invalid service: ", absoluteName);
+					continue;
+				}
 
 				UINT_PTR nodeID;
 				const wchar_t* catName = service->GetNodeDesc().Category;
@@ -329,6 +341,11 @@ void loadServices()
 			else
 			{
 				EasyService* service = new EXEService(absoluteName, FindFileData.cFileName);
+				if (!service->IsValid())
+				{
+					trace(L"Invalid service: ", absoluteName);
+					continue;
+				}
 
 				UINT_PTR nodeID;
 				const wchar_t* catName = service->GetNodeDesc().Category;
@@ -373,6 +390,11 @@ void loadServices()
 			else
 			{
 				EasyService* service = new EXEService(absoluteName, FindFileData.cFileName);
+				if (!service->IsValid())
+				{
+					trace(L"Invalid service: ", absoluteName);
+					continue;
+				}
 
 				UINT_PTR nodeID;
 				const wchar_t* catName = service->GetNodeDesc().Category;
