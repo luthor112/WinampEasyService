@@ -39,9 +39,12 @@ namespace esrv_soundcloud
                 {
                     case TrackSearchResult track:
                         {
-                            Console.WriteLine(track?.User?.FullName ?? "");
-                            Console.WriteLine(track.Title);
-                            Console.WriteLine(track.Url);
+                            string author = track?.User?.FullName;
+                            if (string.IsNullOrEmpty(author))
+                                author = "Unknown";
+
+                            Console.WriteLine($"{author}\t{track.Title}\t{track.Url}");
+                            Console.WriteLine($"{author} - {track.Title}");
                             if (_directLink)
                             {
                                 var downloadURL = await soundcloud.Tracks.GetDownloadUrlAsync(track);

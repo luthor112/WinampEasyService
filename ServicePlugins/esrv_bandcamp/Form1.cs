@@ -76,9 +76,8 @@ namespace esrv_bandcamp
 
                 for (int i = 0; i < titles.Count; i++)
                 {
-                    Console.WriteLine(artists[i]);
-                    Console.WriteLine(titles[i]);
-                    Console.WriteLine("Purchased by " + usernameBox.Text);
+                    Console.WriteLine($"{artists[i]}\t{titles[i]}\tPurchased by {usernameBox.Text}");
+                    Console.WriteLine($"{artists[i]} - {titles[i]}");
                     Console.WriteLine($"ref_{i}_{usernameBox.Text}_{identityBox.Text}");
                 }
 

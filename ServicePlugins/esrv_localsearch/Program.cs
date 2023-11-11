@@ -8,23 +8,20 @@ namespace esrv_localsearch
         [STAThread]
         static void Main(string[] args)
         {
-            if (args[0] == "GetNodeName")
+            const uint CAP_DEFAULT = 0;
+            const uint CAP_CUSTOMDIALOG = 1;
+
+            if (args[0] == "GetNodeDesc")
             {
+                Console.WriteLine("Media");
                 Console.WriteLine("Local Search");
-            }
-            else if (args[0] == "GetColumnNames")
-            {
                 Console.WriteLine("Filename\tFull path");
+                Console.WriteLine(CAP_DEFAULT);
             }
             else if (args[0] == "InvokeService")
             {
                 ApplicationConfiguration.Initialize();
-                Application.Run(new Form1(false));
-            }
-            else if (args[0] == "InvokeServiceCustom")
-            {
-                ApplicationConfiguration.Initialize();
-                Application.Run(new Form1(true));
+                Application.Run(new Form1());
             }
         }
     }

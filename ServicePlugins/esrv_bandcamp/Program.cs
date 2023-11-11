@@ -1,47 +1,30 @@
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 
 namespace esrv_bandcamp
 {
     internal static class Program
     {
-        [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
-        static extern uint GetPrivateProfileString(
-            string lpAppName,
-            string lpKeyName,
-            string lpDefault,
-            StringBuilder lpReturnedString,
-            uint nSize,
-            string lpFileName);
-
-        static string GetConfigString(string configKey, string defaultValue)
-        {
-            string configFileName = System.IO.Path.Join(System.IO.Path.GetDirectoryName(Application.ExecutablePath), "easysrv.ini");
-
-            StringBuilder configSBGlobal = new StringBuilder(256);
-            GetPrivateProfileString("global", configKey, defaultValue, configSBGlobal, (uint)configSBGlobal.Capacity, configFileName);
-
-            StringBuilder configSB = new StringBuilder(256);
-            GetPrivateProfileString("bandcamp", configKey, configSBGlobal.ToString(), configSB, (uint)configSB.Capacity, configFileName);
-
-            return configSB.ToString();
-        }
-
         /// <summary>
         ///  The main entry point for the application.
         /// </summary>
         [STAThread]
         static async Task Main(string[] args)
         {
-            if (args[0] == "GetNodeName")
+            const uint CAP_DEFAULT = 0;
+            const uint CAP_CUSTOMDIALOG = 1;
+
+            if (args[0] == "GetNodeDesc")
             {
+                Console.WriteLine("Media");
                 Console.WriteLine("Bandcamp");
+                Console.WriteLine("Author\tTitle\tPurchase status");
+                Console.WriteLine(CAP_DEFAULT);
             }
             else if (args[0] == "InvokeService")
             {
-                string cachePath = GetConfigString("cachedir", System.IO.Path.GetTempPath());
+                string cachePath = System.IO.Path.GetTempPath();
                 string saveFileName = System.IO.Path.Join(cachePath, "spotify_saved_login");
 
                 ApplicationConfiguration.Initialize();
@@ -55,7 +38,7 @@ namespace esrv_bandcamp
                 int index = int.Parse(parts[1]);
                 string username = parts[2];
                 string identity = parts[3];
-                string cachePath = GetConfigString("cachedir", System.IO.Path.GetTempPath());
+                string cachePath = System.IO.Path.GetTempPath();
 
                 using (var client = new HttpClient())
                 {

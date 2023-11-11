@@ -9,51 +9,28 @@ namespace esrv_youtube
 {
     internal static class Program
     {
-        [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
-        static extern uint GetPrivateProfileString(
-            string lpAppName,
-            string lpKeyName,
-            string lpDefault,
-            StringBuilder lpReturnedString,
-            uint nSize,
-            string lpFileName);
-
-        static string GetConfigString(string configKey, string defaultValue)
-        {
-            string configFileName = System.IO.Path.Join(System.IO.Path.GetDirectoryName(Application.ExecutablePath), "easysrv.ini");
-
-            StringBuilder configSBGlobal = new StringBuilder(256);
-            GetPrivateProfileString("global", configKey, defaultValue, configSBGlobal, (uint)configSBGlobal.Capacity, configFileName);
-
-            StringBuilder configSB = new StringBuilder(256);
-            GetPrivateProfileString("youtube", configKey, configSBGlobal.ToString(), configSB, (uint)configSB.Capacity, configFileName);
-
-            return configSB.ToString();
-        }
-
         /// <summary>
         ///  The main entry point for the application.
         /// </summary>
         [STAThread]
         static async Task Main(string[] args)
         {
-            if (args[0] == "GetNodeName")
+            const uint CAP_DEFAULT = 0;
+            const uint CAP_CUSTOMDIALOG = 1;
+
+            if (args[0] == "GetNodeDesc")
             {
+                Console.WriteLine("Media");
                 Console.WriteLine("YouTube");
+                Console.WriteLine("Author\tTitle\tPage URL");
+                Console.WriteLine(CAP_DEFAULT);
             }
             else if (args[0] == "InvokeService")
             {
-                bool directLink = (args[1] == "PLAYERTYPE_WACUP");
-                string directLinkConfig = GetConfigString("directlink", "default");
-                if (directLinkConfig == "true")
-                    directLink = true;
-                else if (directLinkConfig == "false" || directLinkConfig == "onplay")
-                    directLink = false;
-
                 ApplicationConfiguration.Initialize();
-                Application.Run(new Form1(directLink));
+                Application.Run(new Form1());
             }
-            else if (args[0] == "GetFileName")
+            /*else if (args[0] == "GetFileName")
             {
                 string directLinkConfig = GetConfigString("directlink", "false");
                 string videoID = args[1].Substring(4);
@@ -91,7 +68,7 @@ namespace esrv_youtube
                     var streamInfo = streamManifest.GetAudioOnlyStreams().GetWithHighestBitrate();
                     Console.WriteLine(streamInfo.Url);
                 }
-            }
+            }*/
         }
     }
 }

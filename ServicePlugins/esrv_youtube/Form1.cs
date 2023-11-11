@@ -12,11 +12,8 @@ namespace esrv_youtube
         const int SW_HIDE = 0;
         const int SW_SHOW = 5;
 
-        bool _directLink;
-
-        public Form1(bool directLink)
+        public Form1()
         {
-            _directLink = directLink;
             InitializeComponent();
         }
 
@@ -36,13 +33,9 @@ namespace esrv_youtube
 
             foreach (var item in videos)
             {
-                Console.WriteLine(item.Author);
-                Console.WriteLine(item.Title);
+                Console.WriteLine($"{item.Author}\t{item.Title}\t{item.Url}");
+                Console.WriteLine($"{item.Author} - {item.Title}");
                 Console.WriteLine(item.Url);
-                if (_directLink)
-                    Console.WriteLine(item.Url);
-                else
-                    Console.WriteLine("ref_" + item.Id);
             }
 
             Application.Exit();

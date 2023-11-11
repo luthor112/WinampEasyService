@@ -10,12 +10,8 @@ namespace esrv_localsearch
         const int SW_HIDE = 0;
         const int SW_SHOW = 5;
 
-        bool useCustomColumns;
-
-        public Form1(bool _useCustomColumns)
+        public Form1()
         {
-            useCustomColumns = _useCustomColumns;
-
             InitializeComponent();
         }
 
@@ -41,19 +37,9 @@ namespace esrv_localsearch
 
             foreach (string fileName in Directory.EnumerateFiles(directoryBox.Text, patternBox.Text, recursiveBox.Checked ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly))
             {
-                if (useCustomColumns)
-                {
-                    Console.WriteLine(System.IO.Path.GetFileName(fileName) + "\t" + fileName);
-                    Console.WriteLine(System.IO.Path.GetFileName(fileName));
-                    Console.WriteLine(fileName);
-                }
-                else
-                {
-                    Console.WriteLine(System.IO.Path.GetFileName(fileName));
-                    Console.WriteLine(System.IO.Path.GetFileName(fileName));
-                    Console.WriteLine(fileName);
-                    Console.WriteLine(fileName);
-                }
+                Console.WriteLine(System.IO.Path.GetFileName(fileName) + "\t" + fileName);
+                Console.WriteLine(System.IO.Path.GetFileName(fileName));
+                Console.WriteLine(fileName);
             }
 
             Application.Exit();

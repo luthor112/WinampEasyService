@@ -16,12 +16,10 @@ namespace esrv_spotify
         const int SW_HIDE = 0;
         const int SW_SHOW = 5;
 
-        bool useCustomColumns;
         bool _directLink;
 
-        public Form1(bool _useCustomColumns, bool directLink)
+        public Form1(bool directLink)
         {
-            useCustomColumns = _useCustomColumns;
             _directLink = directLink;
 
             InitializeComponent();
@@ -47,17 +45,8 @@ namespace esrv_spotify
                 {
                     case TrackSearchResult track:
                         {
-                            if (useCustomColumns)
-                            {
-                                Console.WriteLine(track.Title + "\t" + track.Url);
-                                Console.WriteLine(track.Title);
-                            }
-                            else
-                            {
-                                Console.WriteLine(track.Title);
-                                Console.WriteLine(track.Title);
-                                Console.WriteLine(track.Url);
-                            }
+                            Console.WriteLine(track.Title + "\t" + track.Url);
+                            Console.WriteLine(track.Title);
 
                             if (_directLink)
                             {
