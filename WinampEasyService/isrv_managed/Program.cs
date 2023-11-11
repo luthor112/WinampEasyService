@@ -131,11 +131,21 @@ namespace isrv_managed
             if (args[1] == "GetNodeDesc")
             {
                 var method = theType.GetMethod("GetNodeDesc");
-                Tuple<string, string, string, uint> nodeDesc = (Tuple<string, string, string, uint>)method.Invoke(c, null);
-                Console.WriteLine(nodeDesc.Item1);
-                Console.WriteLine(nodeDesc.Item2);
-                Console.WriteLine(nodeDesc.Item3);
-                Console.WriteLine(nodeDesc.Item4);
+                if (method != null)
+                {
+                    Tuple<string, string, string, uint> nodeDesc = (Tuple<string, string, string, uint>)method.Invoke(c, null);
+                    Console.WriteLine(nodeDesc.Item1);
+                    Console.WriteLine(nodeDesc.Item2);
+                    Console.WriteLine(nodeDesc.Item3);
+                    Console.WriteLine(nodeDesc.Item4);
+                }
+                else
+                {
+                    Console.WriteLine("INVALID_SERVICE");
+                    Console.WriteLine("INVALID_SERVICE");
+                    Console.WriteLine("INVALID_SERVICE");
+                    Console.WriteLine(0);
+                }
             }
             else if (args[1] == "InvokeService")
             {
