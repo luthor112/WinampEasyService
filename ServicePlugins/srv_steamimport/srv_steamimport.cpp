@@ -22,10 +22,14 @@
 
 #pragma comment(lib, "Shlwapi.lib")
 
+GetOptionFunc GetOption;
+SetOptionFunc SetOption;
+const wchar_t* myDirectory;
+UINT_PTR myServiceID;
+
 HINSTANCE myself = NULL;
 HWND hwndWinampParent = NULL;
 HWND hwndLibraryParent = NULL;
-wchar_t configFileName[MAX_PATH];
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
@@ -33,8 +37,18 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 	return TRUE;
 }
 
-const wchar_t* GetNodeName() {
-	return L"Steam Music Importer";
+void InitService(AddItemFunc addItemFunc, GetOptionFunc getOptionFunc, SetOptionFunc setOptionFunc, const wchar_t* pluginDir, UINT_PTR serviceID)
+{
+	GetOption = getOptionFunc;
+	SetOption = setOptionFunc;
+	myDirectory = pluginDir;
+	myServiceID = serviceID;
+}
+
+NodeDescriptor GetNodeDesc()
+{
+	NodeDescriptor desc = { L"Media", L"Steam Music Importer", NULL, CAP_CUSTOMDIALOG };
+	return desc;
 }
 
 // std::codecvt_utf8 is deprecated in C++17
@@ -95,11 +109,7 @@ void scanFiles(UpdateTarget updateTarget)
 		wsprintf(musicDir, L"%s\\steamapps\\music", libraryPath.c_str());
 
 		wchar_t tempPath[MAX_PATH];
-		GetPrivateProfileString(L"steam", L"cachedir", L"", tempPath, MAX_PATH, configFileName);
-		if (wcslen(tempPath) == 0)
-			GetPrivateProfileString(L"global", L"cachedir", L"", tempPath, MAX_PATH, configFileName);
-		if (wcslen(tempPath) == 0)
-			GetTempPath(MAX_PATH, tempPath);
+		GetTempPath(MAX_PATH, tempPath);
 
 		using recursive_directory_iterator = std::filesystem::recursive_directory_iterator;
 		if (PathFileExists(musicDir))
@@ -252,15 +262,11 @@ LRESULT CALLBACK customDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 	return FALSE;
 }
 
-HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl)
+HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl, wchar_t* skinPath)
 {
 	hwndWinampParent = _hwndWinampParent;
 	hwndLibraryParent = _hwndLibraryParent;
 
 	HWND dialogWnd = CreateDialog(myself, MAKEINTRESOURCE(IDD_VIEW_CUSTOM), hwndParentControl, (DLGPROC)customDialogProc);
-
-	char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
-	wsprintf(configFileName, L"%S\\easysrv.ini", pluginDir);
-
 	return dialogWnd;
 }

@@ -22,10 +22,15 @@
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(lib, "Shlwapi.lib")
 
+GetOptionFunc GetOption;
+SetOptionFunc SetOption;
+const wchar_t* myDirectory;
+UINT_PTR myServiceID;
+
 HINSTANCE myself = NULL;
 HWND hwndWinampParent = NULL;
 HWND hwndLibraryParent = NULL;
-wchar_t configFileName[MAX_PATH];
+
 wchar_t scrPath[MAX_PATH];
 DWORD currentPid = -1;
 std::vector<const wchar_t*> scrFiles;
@@ -36,8 +41,18 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 	return TRUE;
 }
 
-const wchar_t* GetNodeName() {
-	return L"Screensavers";
+void InitService(AddItemFunc addItemFunc, GetOptionFunc getOptionFunc, SetOptionFunc setOptionFunc, const wchar_t* pluginDir, UINT_PTR serviceID)
+{
+	GetOption = getOptionFunc;
+	SetOption = setOptionFunc;
+	myDirectory = pluginDir;
+	myServiceID = serviceID;
+}
+
+NodeDescriptor GetNodeDesc()
+{
+	NodeDescriptor desc = { L"Misc", L"Screensavers", NULL, CAP_CUSTOMDIALOG };
+	return desc;
 }
 
 void runProcessInBackground(wchar_t* cmdLine)
@@ -191,7 +206,7 @@ LRESULT CALLBACK customDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 	return FALSE;
 }
 
-HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl)
+HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl, wchar_t* skinPath)
 {
 	// Save HWNDs
 	hwndWinampParent = _hwndWinampParent;
@@ -200,25 +215,24 @@ HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndP
 	// Create dialog
 	HWND dialogWnd = CreateDialog(myself, MAKEINTRESOURCE(IDD_VIEW_CUSTOM), hwndParentControl, (DLGPROC)customDialogProc);
 
-	char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
-	wsprintf(configFileName, L"%S\\easysrv.ini", pluginDir);
-
 	// Get SCR files
-	GetPrivateProfileString(L"screensavers", L"scrdir", L"c:\\Windows\\System32\\", scrPath, MAX_PATH, configFileName);
+	GetOption(myServiceID, L"scrdir", L"c:\\Windows\\System32\\", scrPath, MAX_PATH);
 	getScrFiles();
-
-	// Get default SCR
-	int defaultScr = GetPrivateProfileInt(L"screensavers", L"default", 0, configFileName);
 
 	// Fill SCR combobox
 	HWND comboWnd = GetDlgItem(dialogWnd, IDC_FILECOMBO);
 	for (const wchar_t* scrName : scrFiles)
 		SendMessage(comboWnd, (UINT)CB_ADDSTRING, (WPARAM)0, (LPARAM)scrName);
 
-	// Switch to default SCR
-	SendMessage(comboWnd, CB_SETCURSEL, (WPARAM)defaultScr, (LPARAM)0);
+	// Read default SCR
+	int defaultScr = 0;
+	wchar_t defaultScrOpt[MAX_PATH];
+	GetOption(myServiceID, L"default", L"", defaultScrOpt, MAX_PATH);
+	if (wcslen(defaultScrOpt) > 0)
+		defaultScr = _wtoi(defaultScrOpt);
 	
 	// Run SCR
+	SendMessage(comboWnd, CB_SETCURSEL, (WPARAM)defaultScr, (LPARAM)0);
 	runScr(dialogWnd, defaultScr);
 
 	return dialogWnd;
