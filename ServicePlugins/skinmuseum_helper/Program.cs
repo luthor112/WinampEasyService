@@ -10,28 +10,25 @@ namespace skinmuseum_helper
 {
     internal class Program
     {
-        [DllImport("kernel32.dll")]
-        static extern uint GetPrivateProfileInt(string lpAppName, string lpKeyName, int nDefault, string lpFileName);
-
         static async Task Main(string[] args)
         {
-            if (args.Length != 3)
+            if (args[0] == "page")
             {
-                Console.WriteLine("Oops...");
-            }
-            else if (args[0] == "page")
-            {
-                // page <PageNum> <CacheDir>
-                await CreatePageCache(int.Parse(args[1]), args[2]);
+                // page <PageNum> <PageLength> <CacheDir>
+                await CreatePageCache(int.Parse(args[1]), int.Parse(args[2]), args[3]);
             }
             else if (args[0] == "download")
             {
                 // download <MD5> <FileName>
                 await DownloadFileAsync(args[1], args[2]);
             }
+            else
+            {
+                Console.WriteLine("Oops...");
+            }
         }
 
-        static async Task CreatePageCache(int pageNum, string cacheDir)
+        static async Task CreatePageCache(int pageNum, int pageLength, string cacheDir)
         {
             Directory.CreateDirectory(cacheDir);
 
@@ -39,9 +36,6 @@ namespace skinmuseum_helper
             {
                 string pageURL = "https://api.webampskins.org/graphql";
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
-
-                string configFileName = System.IO.Path.Join(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "easysrv.ini");
-                int pageLength = (int)GetPrivateProfileInt("skinmuseum", "pagelength", 50, configFileName);
 
                 StringContent jsonContent = new StringContent("{\"query\":\"\\n        query MuseumPage($offset: Int, $first: Int) {\\n          skins(offset: $offset, first: $first, sort: MUSEUM) {\\n            count\\n            nodes {\\n              md5\\n              filename\\n              nsfw\\n            }\\n          }\\n        }\\n      \",\"variables\":{\"offset\":" + ((pageNum - 1) * pageLength).ToString() + ",\"first\":" + pageLength.ToString() + "}}",
                                                               System.Text.Encoding.UTF8,

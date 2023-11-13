@@ -27,6 +27,11 @@
 
 const int pageLength = 50;
 
+GetOptionFunc GetOption;
+SetOptionFunc SetOption;
+const wchar_t* myDirectory;
+UINT_PTR myServiceID;
+
 HINSTANCE myself = NULL;
 HWND hwndWinampParent = NULL;
 HWND hwndLibraryParent = NULL;
@@ -34,7 +39,6 @@ bool keepAll = FALSE;
 int currentCat = 0;
 int currentPage = 0;
 int currentSkin = -1;
-wchar_t configFileName[MAX_PATH];
 wchar_t tempPath[MAX_PATH];
 
 std::vector<const wchar_t*> catNames { L"Featured", L"Stylish", L"Entertainment", L"Cool Devices", L"Computer/OS", L"Animated", L"Consumption", L"Games", L"Retro",
@@ -55,8 +59,18 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 	return TRUE;
 }
 
-const wchar_t* GetNodeName() {
-	return L"Winamp Heritage Skins";
+void InitService(AddItemFunc addItemFunc, GetOptionFunc getOptionFunc, SetOptionFunc setOptionFunc, const wchar_t* pluginDir, UINT_PTR serviceID)
+{
+	GetOption = getOptionFunc;
+	SetOption = setOptionFunc;
+	myDirectory = pluginDir;
+	myServiceID = serviceID;
+}
+
+NodeDescriptor GetNodeDesc()
+{
+	NodeDescriptor desc = { L"Skins", L"Winamp Heritage Skins", NULL, CAP_CUSTOMDIALOG };
+	return desc;
 }
 
 void runProcessInBackground(wchar_t* cmdLine)
@@ -129,14 +143,11 @@ void setToPage(HWND hwnd, int cat, int page)
 	SetWindowText(pageNumWnd, pageText);
 	RedrawWindow(pageNumWnd, NULL, NULL, RDW_INVALIDATE);
 
-
-	char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
-
 	wchar_t cacheDirName[1024];
 	wsprintf(cacheDirName, L"%swmp_heritage_cache", tempPath);
 
 	wchar_t helperCmd[1024];
-	wsprintf(helperCmd, L"\"%S\\heritageskins_helper.exe\" page %s %d \"%s\"", pluginDir, catLinks[currentCat], currentPage, cacheDirName);
+	wsprintf(helperCmd, L"\"%s\\heritageskins_helper.exe\" page %s %d \"%s\"", myDirectory, catLinks[currentCat], currentPage, cacheDirName);
 	runProcessInBackground(helperCmd);
 
 	wchar_t cacheFileName[1024];
@@ -274,9 +285,8 @@ static BOOL view_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 		{
 			std::lock_guard<std::mutex> guard(fileListMutex);
 
-			char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
 			wchar_t keptFileName[1024];
-			wsprintf(keptFileName, L"%S\\..\\Skins\\%s", pluginDir, fileList[currentSkin].filename);
+			wsprintf(keptFileName, L"%s\\..\\Skins\\%s", myDirectory, fileList[currentSkin].filename);
 
 			if (!PathFileExists(keptFileName))
 			{
@@ -330,9 +340,8 @@ static BOOL list_OnNotify(HWND hwnd, int wParam, NMHDR* lParam)
 
 		fileListMutex.lock();
 
-		char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
 		wchar_t skinFile[1024];
-		wsprintf(skinFile, L"%S\\..\\Skins\\%s", pluginDir, fileList[lpnmia->iItem].filename);
+		wsprintf(skinFile, L"%s\\..\\Skins\\%s", myDirectory, fileList[lpnmia->iItem].filename);
 
 		if (!PathFileExists(skinFile))
 		{
@@ -341,7 +350,7 @@ static BOOL list_OnNotify(HWND hwnd, int wParam, NMHDR* lParam)
 			wsprintf(cacheFileName, L"%swmp_heritage_cache\\%s", tempPath, fileList[lpnmia->iItem].filename);
 
 			wchar_t helperCmd[1024];
-			wsprintf(helperCmd, L"\"%S\\heritageskins_helper.exe\" download %s \"%s\"", pluginDir, fileList[lpnmia->iItem].link, cacheFileName);
+			wsprintf(helperCmd, L"\"%s\\heritageskins_helper.exe\" download %s \"%s\"", myDirectory, fileList[lpnmia->iItem].link, cacheFileName);
 			runProcessInBackground(helperCmd);
 
 			// Set from temp
@@ -360,7 +369,7 @@ static BOOL list_OnNotify(HWND hwnd, int wParam, NMHDR* lParam)
 			fileListMutex.unlock();
 		}
 #else
-		MessageBox(0, L"This should not happen...", L"", MB_OK);
+		MessageBox(0, L"This should not happen: _WIN32_IE < 0x0400", L"", MB_OK);
 #endif
 	}
 
@@ -397,7 +406,7 @@ LRESULT CALLBACK customDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 	return FALSE;
 }
 
-HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl)
+HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl, wchar_t* skinPath)
 {
 	// Save HWNDs
 	hwndWinampParent = _hwndWinampParent;
@@ -413,18 +422,12 @@ HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndP
 	else
 		SendMessage(checkWnd, BM_SETCHECK, BST_UNCHECKED, 0);
 
-	char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
-	wsprintf(configFileName, L"%S\\easysrv.ini", pluginDir);
-
-	// Get cache directory
-	GetPrivateProfileString(L"heritageskins", L"cachedir", L"", tempPath, MAX_PATH, configFileName);
-	if (wcslen(tempPath) == 0)
-		GetPrivateProfileString(L"global", L"cachedir", L"", tempPath, MAX_PATH, configFileName);
-	if (wcslen(tempPath) == 0)
-		GetTempPath(MAX_PATH, tempPath);
+	GetTempPath(MAX_PATH, tempPath);
 
 	// Get default category
-	int defaultCat = GetPrivateProfileInt(L"heritageskins", L"default", 0, configFileName);
+	wchar_t defaultCatOpt[MAX_PATH];
+	GetOption(myServiceID, L"default", L"0", defaultCatOpt, MAX_PATH);
+	int defaultCat = _wtoi(defaultCatOpt);
 
 	// Fill category combobox
 	HWND comboWnd = GetDlgItem(dialogWnd, IDC_CATCOMBO);

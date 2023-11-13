@@ -25,11 +25,13 @@
 
 #define RESCAN_TIMER_ID 111
 
+const wchar_t* myDirectory;
+UINT_PTR myServiceID;
+
 HINSTANCE myself = NULL;
 HWND hwndWinampParent = NULL;
 HWND hwndLibraryParent = NULL;
 bool autoApply = FALSE;
-wchar_t configFileName[MAX_PATH];
 wchar_t tempPath[MAX_PATH];
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
@@ -38,8 +40,16 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 	return TRUE;
 }
 
-const wchar_t* GetNodeName() {
-	return L"Skin Browser v2";
+void InitService(AddItemFunc addItemFunc, GetOptionFunc getOptionFunc, SetOptionFunc setOptionFunc, const wchar_t* pluginDir, UINT_PTR serviceID)
+{
+	myDirectory = pluginDir;
+	myServiceID = serviceID;
+}
+
+NodeDescriptor GetNodeDesc()
+{
+	NodeDescriptor desc = { L"Skins", L"Skin Browser v2", NULL, CAP_CUSTOMDIALOG };
+	return desc;
 }
 
 void runProcessInBackground(wchar_t* cmdLine)
@@ -93,9 +103,8 @@ bool addItemToList(HWND hwnd, const wchar_t* filename)
 
 	if (!PathFileExists(thumbFile))
 	{
-		char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
 		wchar_t helperCmd[1024];
-		wsprintf(helperCmd, L"\"%S\\skinbrowser2_helper.exe\" single \"%S\\..\\Skins\\filename\" \"%swmp_skin_thm\"", pluginDir, pluginDir, tempPath);
+		wsprintf(helperCmd, L"\"%s\\skinbrowser2_helper.exe\" single \"%s\\..\\Skins\\%s\" \"%swmp_skin_thm\"", myDirectory, myDirectory, filename, tempPath);
 		runProcessInBackground(helperCmd);
 	}
 	
@@ -120,11 +129,10 @@ bool addItemToList(HWND hwnd, const wchar_t* filename)
 const wchar_t* fillFileList(HWND hwnd)
 {
 	std::lock_guard<std::mutex> guard(fileListMutex);
-	char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
 	const wchar_t* newFile = NULL;
 
 	wchar_t searchCriteria[1024];
-	wsprintf(searchCriteria, L"%S\\..\\Skins\\*", pluginDir);
+	wsprintf(searchCriteria, L"%s\\..\\Skins\\*", myDirectory);
 
 	WIN32_FIND_DATA FindFileData;
 	HANDLE searchHandle = FindFirstFile(searchCriteria, &FindFileData);
@@ -252,7 +260,7 @@ static BOOL list_OnNotify(HWND hwnd, int wParam, NMHDR* lParam)
 		std::lock_guard<std::mutex> guard(fileListMutex);
 		SendMessage(hwndWinampParent, WM_WA_IPC, (WPARAM)(fileList[lpnmia->iItem]), IPC_SETSKINW);
 #else
-		MessageBox(0, L"This should not happen...", L"", MB_OK);
+		MessageBox(0, L"This should not happen: _WIN32_IE < 0x0400", L"", MB_OK);
 #endif
 	}
 
@@ -305,9 +313,8 @@ LRESULT CALLBACK customDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 static void precacheThumbnails(HWND dialogWnd)
 {
 	// Precache thumbnails
-	char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
 	wchar_t helperCmd[1024];
-	wsprintf(helperCmd, L"\"%S\\skinbrowser2_helper.exe\" all \"%S\\..\\Skins\" \"%swmp_skin_thm\"", pluginDir, pluginDir, tempPath);
+	wsprintf(helperCmd, L"\"%s\\skinbrowser2_helper.exe\" all \"%s\\..\\Skins\" \"%swmp_skin_thm\"", myDirectory, myDirectory, tempPath);
 	runProcessInBackground(helperCmd);
 
 	// Clear and fill up skin list
@@ -318,7 +325,7 @@ static void precacheThumbnails(HWND dialogWnd)
 	SetTimer(dialogWnd, RESCAN_TIMER_ID, 1000, NULL);
 }
 
-HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl)
+HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl, wchar_t* skinPath)
 {
 	// Save HWNDs
 	hwndWinampParent = _hwndWinampParent;
@@ -334,14 +341,7 @@ HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndP
 	else
 		SendMessage(checkWnd, BM_SETCHECK, BST_UNCHECKED, 0);
 
-	char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
-	wsprintf(configFileName, L"%S\\easysrv.ini", pluginDir);
-
-	GetPrivateProfileString(L"skinbrowser", L"cachedir", L"", tempPath, MAX_PATH, configFileName);
-	if (wcslen(tempPath) == 0)
-		GetPrivateProfileString(L"global", L"cachedir", L"", tempPath, MAX_PATH, configFileName);
-	if (wcslen(tempPath) == 0)
-		GetTempPath(MAX_PATH, tempPath);
+	GetTempPath(MAX_PATH, tempPath);
 
 	std::thread bgThread(precacheThumbnails, dialogWnd);
 	bgThread.detach();

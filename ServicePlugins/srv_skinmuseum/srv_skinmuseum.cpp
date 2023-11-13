@@ -25,13 +25,18 @@
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(lib, "Shlwapi.lib")
 
+GetOptionFunc GetOption;
+SetOptionFunc SetOption;
+const wchar_t* myDirectory;
+UINT_PTR myServiceID;
+
 HINSTANCE myself = NULL;
 HWND hwndWinampParent = NULL;
 HWND hwndLibraryParent = NULL;
+
 bool keepAll = FALSE;
 int currentPage = 1;
 int currentSkin = -1;
-wchar_t configFileName[MAX_PATH];
 wchar_t tempPath[MAX_PATH];
 int pageLength = 50;
 int pageSkip = 5;
@@ -48,8 +53,18 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 	return TRUE;
 }
 
-const wchar_t* GetNodeName() {
-	return L"Winamp Skin Museum";
+void InitService(AddItemFunc addItemFunc, GetOptionFunc getOptionFunc, SetOptionFunc setOptionFunc, const wchar_t* pluginDir, UINT_PTR serviceID)
+{
+	GetOption = getOptionFunc;
+	SetOption = setOptionFunc;
+	myDirectory = pluginDir;
+	myServiceID = serviceID;
+}
+
+NodeDescriptor GetNodeDesc()
+{
+	NodeDescriptor desc = { L"Skins", L"Winamp Skin Museum", NULL, CAP_CUSTOMDIALOG };
+	return desc;
 }
 
 void runProcessInBackground(wchar_t* cmdLine)
@@ -122,13 +137,11 @@ void setToPage(HWND hwnd, int page)
 	RedrawWindow(pageNumWnd, NULL, NULL, RDW_INVALIDATE);
 
 
-	char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
-
 	wchar_t cacheDirName[1024];
 	wsprintf(cacheDirName, L"%swmp_museum_cache", tempPath);
 
 	wchar_t helperCmd[1024];
-	wsprintf(helperCmd, L"\"%S\\skinmuseum_helper.exe\" page %d \"%s\"", pluginDir, currentPage, cacheDirName);
+	wsprintf(helperCmd, L"\"%s\\skinmuseum_helper.exe\" page %d %d \"%s\"", myDirectory, currentPage, pageLength, cacheDirName);
 	runProcessInBackground(helperCmd);
 
 	wchar_t cacheFileName[1024];
@@ -259,9 +272,8 @@ static BOOL view_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 		{
 			std::lock_guard<std::mutex> guard(fileListMutex);
 
-			char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
 			wchar_t keptFileName[1024];
-			wsprintf(keptFileName, L"%S\\..\\Skins\\%s", pluginDir, fileList[currentSkin].filename);
+			wsprintf(keptFileName, L"%s\\..\\Skins\\%s", myDirectory, fileList[currentSkin].filename);
 
 			if (!PathFileExists(keptFileName))
 			{
@@ -318,9 +330,8 @@ static BOOL list_OnNotify(HWND hwnd, int wParam, NMHDR* lParam)
 
 		fileListMutex.lock();
 
-		char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
 		wchar_t skinFile[1024];
-		wsprintf(skinFile, L"%S\\..\\Skins\\%s", pluginDir, fileList[lpnmia->iItem].filename);
+		wsprintf(skinFile, L"%s\\..\\Skins\\%s", myDirectory, fileList[lpnmia->iItem].filename);
 
 		if (!PathFileExists(skinFile))
 		{
@@ -329,7 +340,7 @@ static BOOL list_OnNotify(HWND hwnd, int wParam, NMHDR* lParam)
 			wsprintf(cacheFileName, L"%swmp_museum_cache\\%s", tempPath, fileList[lpnmia->iItem].filename);
 
 			wchar_t helperCmd[1024];
-			wsprintf(helperCmd, L"\"%S\\skinmuseum_helper.exe\" download %s \"%s\"", pluginDir, fileList[lpnmia->iItem].md5, cacheFileName);
+			wsprintf(helperCmd, L"\"%s\\skinmuseum_helper.exe\" download %s \"%s\"", myDirectory, fileList[lpnmia->iItem].md5, cacheFileName);
 			runProcessInBackground(helperCmd);
 
 			// Set from temp
@@ -348,7 +359,7 @@ static BOOL list_OnNotify(HWND hwnd, int wParam, NMHDR* lParam)
 			fileListMutex.unlock();
 		}
 #else
-		MessageBox(0, L"This should not happen...", L"", MB_OK);
+		MessageBox(0, L"This should not happen: _WIN32_IE < 0x0400", L"", MB_OK);
 #endif
 	}
 
@@ -385,7 +396,7 @@ LRESULT CALLBACK customDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 	return FALSE;
 }
 
-HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl)
+HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl, wchar_t* skinPath)
 {
 	// Save HWNDs
 	hwndWinampParent = _hwndWinampParent;
@@ -401,18 +412,15 @@ HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndP
 	else
 		SendMessage(checkWnd, BM_SETCHECK, BST_UNCHECKED, 0);
 
-	char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
-	wsprintf(configFileName, L"%S\\easysrv.ini", pluginDir);
+	GetTempPath(MAX_PATH, tempPath);
 
-	GetPrivateProfileString(L"skinmuseum", L"cachedir", L"", tempPath, MAX_PATH, configFileName);
-	if (wcslen(tempPath) == 0)
-		GetPrivateProfileString(L"global", L"cachedir", L"", tempPath, MAX_PATH, configFileName);
-	if (wcslen(tempPath) == 0)
-		GetTempPath(MAX_PATH, tempPath);
+	wchar_t pageLengthOpt[MAX_PATH];
+	GetOption(myServiceID, L"pagelength", L"50", pageLengthOpt, MAX_PATH);
+	pageLength = _wtoi(pageLengthOpt);
 
-	pageLength = GetPrivateProfileInt(L"skinmuseum", L"pagelength", 50, configFileName);
-
-	pageSkip = GetPrivateProfileInt(L"skinmuseum", L"pageskip", 5, configFileName);
+	wchar_t pageSkipOpt[MAX_PATH];
+	GetOption(myServiceID, L"pageskip", L"5", pageSkipOpt, MAX_PATH);
+	pageSkip = _wtoi(pageSkipOpt);
 
 	// Switch to Page 1
 	std::thread bgThread(setToPage, dialogWnd, 1); //setToPage(dialogWnd, 1);

@@ -18,6 +18,9 @@
 
 #define RESCAN_TIMER_ID 111
 
+const wchar_t* myDirectory;
+UINT_PTR myServiceID;
+
 HINSTANCE myself = NULL;
 HWND hwndWinampParent = NULL;
 HWND hwndLibraryParent = NULL;
@@ -29,8 +32,16 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 	return TRUE;
 }
 
-const wchar_t* GetNodeName() {
-	return L"Skin Browser";
+void InitService(AddItemFunc addItemFunc, GetOptionFunc getOptionFunc, SetOptionFunc setOptionFunc, const wchar_t* pluginDir, UINT_PTR serviceID)
+{
+	myDirectory = pluginDir;
+	myServiceID = serviceID;
+}
+
+NodeDescriptor GetNodeDesc()
+{
+	NodeDescriptor desc = { L"Skins", L"Skin Browser", NULL, CAP_CUSTOMDIALOG };
+	return desc;
 }
 
 std::vector<const wchar_t*> fileList;
@@ -69,11 +80,10 @@ bool addLineToList(HWND hwnd, const wchar_t* filename)
 // Returns the first entry that's being newly added to the list
 const wchar_t* fillFileList(HWND hwnd)
 {
-	char* pluginDir = (char*)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
 	const wchar_t* newFile = NULL;
 	
 	wchar_t searchCriteria[1024];
-	wsprintf(searchCriteria, L"%S\\..\\Skins\\*", pluginDir);
+	wsprintf(searchCriteria, L"%s\\..\\Skins\\*", myDirectory);
 
 	WIN32_FIND_DATA FindFileData;
 	HANDLE searchHandle = FindFirstFile(searchCriteria, &FindFileData);
@@ -256,7 +266,7 @@ LRESULT CALLBACK customDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 	return FALSE;
 }
 
-HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl)
+HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl, wchar_t* skinPath)
 {
 	hwndWinampParent = _hwndWinampParent;
 	hwndLibraryParent = _hwndLibraryParent;
