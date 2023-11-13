@@ -32,26 +32,6 @@ namespace esrv_soundcloud
                 string trackID = args[1].Substring(4);
                 string cachePath = System.IO.Path.GetTempPath();
 
-                /*string outputFile = System.IO.Path.Join(cachePath, $"sc_{trackID}.mp3");
-                if (File.Exists(outputFile))
-                {
-                    Console.WriteLine(outputFile);
-                }
-                else
-                {
-                    var soundcloud = new SoundCloudClient();
-                    var track = await soundcloud.Tracks.GetByIdAsync(long.Parse(trackID));
-                    await soundcloud.DownloadAsync(track, outputFile);
-
-                    // Update tags
-                    var tfile = TagLib.File.Create(outputFile);
-                    tfile.Tag.Performers = new string[] { track?.User?.FullName ?? "" };
-                    tfile.Tag.Title = track.Title;
-                    tfile.Save();
-
-                    Console.WriteLine(outputFile);
-                }*/
-
                 var soundcloud = new SoundCloudClient();
                 var track = await soundcloud.Tracks.GetByIdAsync(long.Parse(trackID));
                 var downloadURL = await soundcloud.Tracks.GetDownloadUrlAsync(track);
