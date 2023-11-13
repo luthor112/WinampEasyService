@@ -5,8 +5,8 @@ Goal:
 * Make it easier to write plugins and integrate services into WinAmp and WACUP
 
 Installing plugins:
-* Put the ml_easysrv and in_easyfngetter plugins in the WinAmp or WACUP `Plugins` folder
-* Also put isrv_managed in the WinAmp or WACUP `Plugins` folder
+* Put the ml_easysrv and in_easyfngetter plugins in the WACUP `Plugins` folder
+* Also put isrv_managed in the WACUP `Plugins` folder
 * Put any service plugins (`esrv_\*.exe, msrv_\*.dll, srv_\*.dll`) in the same folder
 * The services will be accessible in the `Services` tree of the Media Library
 
@@ -14,78 +14,104 @@ Using plugins (Instead of this, plugins can now provide their own custom UI):
 * Press the `Invoke plugin` button to interact with the selected service
 * Double click an entry in the list to play it
 * Alt + double click an entry in the list to enqueue it
+* Right click an entry for more options
 
 Service plugin development:
 * Managed (.NET based) DLLs have to be named `msrv_\*.dll` and contain the `msrv.EasyService` class implementing the following:
-    * `public string GetNodeName()` should return the name you wish to show in the Media Library
-    * `public List<List<string>> InvokeService(int PlayerType)` should return the entries to populate the Media Library ListView with
-        * The inner lists should always contain four strings in this order: Artist, Title, Info, Filename
-        * The Filename can be a direct filename (e.g. `e:\\example.mp3`) or a reference (e.g. `ref_examplefile`)
-        * PlayerType is 0 for WinAmp, 1 for WACUP
+    * `public void InitService(Dictionary<string, object> functionDict, string pluginDir, uint serviceID)`
+        * `functionDict` contains the following functions:
+            * `string GetOption(string optionName, string defaultValue)`
+            * `void SetOption(string optionName, string optionValue)`
+            * `void SkinForm(Form form)`
+    * `public Tuple<string, string, string, uint> GetNodeDesc()` should return a tuple with the following information:
+        * Category
+        * Node name you wish to show in the Media Library
+        * The column names you wish to show in the Media Library, delimited by `\t`
+        * Capabilities (0):
+            * `const uint CAP_DEFAULT = 0;` for no additional capabilities
+            * `const uint CAP_CUSTOMDIALOG = 1;` for custom UI support
+    * `public List<List<string>> InvokeService(IntPtr hwndWinampParent, IntPtr hwndLibraryParent, IntPtr hwndParentControl, string skinPath)` should return the entries to populate the Media Library ListView with
+        * The inner lists should always contain three strings in this order: Column contents delimited by `\t`, Title to show in the playlist, Filename
+        * The filename can be a direct filename (e.g. `e:\\example.mp3`) or a reference (e.g. `ref_examplefile`)
     * Optional: `public string GetFileName(string fileID)` should return the direct filename when called with a reference
     * Important: If you wish to show a window, call `ShowWindow(form.Handle, SW_SHOW);` on your Form after creation
         * ShowWindow resides in `user32.dll`, `SW_SHOW` equals 5
     * Full example: `WinampEasyService\\msrv_exampledll`
 * Managed (.NET based) DLLs with custom UIs have to be named `msrv_\*.dll` and contain the `msrv.EasyService` class implementing the following:
-	* `public string GetNodeName()` should return the name you wish to show in the Media Library
-	* `public CustomControl GetCustomDialog(IntPtr WinampHWND)` should return the `System.Windows.Forms.CustomControl` you'd like to show
+    * `public void InitService(Dictionary<string, object> functionDict, string pluginDir, uint serviceID)`
+        * `functionDict` contains the following functions:
+            * `string GetOption(string optionName, string defaultValue)`
+            * `void SetOption(string optionName, string optionValue)`
+            * `void SkinForm(Form form)`
+    * `public Tuple<string, string, string, uint> GetNodeDesc()` should return a tuple with the following information:
+        * Category
+        * Node name you wish to show in the Media Library
+        * The column names you wish to show in the Media Library, delimited by `\t`
+        * Capabilities (1):
+            * `const uint CAP_DEFAULT = 0;` for no additional capabilities
+            * `const uint CAP_CUSTOMDIALOG = 1;` for custom UI support
+	* `public UserControl GetCustomDialog(IntPtr hwndWinampParent, IntPtr hwndLibraryParent, IntPtr hwndParentControl, string skinPath)` should return the `System.Windows.Forms.UserControl` you'd like to show
 * Unmanaged DLLs have to be named `srv_\*.dll` and implement the functions in `WinampEasyService\\ml_easysrv\\easysrv.h`:
-    * `const wchar_t\* GetNodeName()` should return the name you wish to show in the Media Library
-    * `ItemInfo InvokeService(int PlayerType)` should return the first entry to populate the Media Library ListView with
-        * `ItemInfo` contains the following: Artist, Title, Info, Filename
-        * The Filename can be a direct filename (e.g. `e:\\example.mp3`) or a reference (e.g. `ref_examplefile`)
-        * PlayerTypes are defined in `easysrv.h`
-    * `ItemInfo InvokeNext(int PleyerType)` should return the next entry to populate the Media Library ListView with
-        * Return and empty `ItemInfo()` to denote the end of the list
+    * `void InitService(AddItemFunc addItemFunc, GetOptionFunc getOptionFunc, SetOptionFunc setOptionFunc, const wchar_t\* pluginDir, UINT_PTR serviceID)`:
+        * The function pointers are described in `easysrv.h`:
+            * `typedef void (\*AddItemFunc)(const wchar_t\* displayInfo, const wchar_t\* playlistInfo, const wchar_t\* filename, UINT_PTR serviceID);`
+            * `typedef void (\*GetOptionFunc)(UINT_PTR serviceID, const wchar_t\* optionName, const wchar_t\* defaultValue, wchar_t\* output, DWORD outputSize);`
+            * `typedef void (\*SetOptionFunc)(UINT_PTR serviceID, const wchar_t\* optionName, const wchar_t\* optionValue);`
+    * `NodeDescriptor GetNodeDesc()` should return a NodeDescriptor struct with the following information:
+        * Category
+        * Node name you wish to show in the Media Library
+        * The column names you wish to show in the Media Library, delimited by `\t`
+        * Capabilities (0):
+            * `#define CAP_DEFAULT 0u` for no additional capabilities
+            * `#define CAP_CUSTOMDIALOG 1u` for custom UI support
+    * `void InvokeService(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl, wchar_t\* skinPath)` should call AddItemFunc as many times as needed
+        * Filenames can be direct filenames (e.g. `e:\\example.mp3`) or references (e.g. `ref_examplefile`)
     * Optional: `const wchar_t\* GetFileName(const wchar_t\* fileID)` should return the direct filename when called with a reference
     * Full example: `WinampEasyService\\srv_exampledll`
 * Unmanaged DLLs with custom UIs have to be named `srv_\*.dll` and implement the functions in `WinampEasyService\\ml_easysrv\\easysrv.h`:
-    * `const wchar_t\* GetNodeName()` should return the name you wish to show in the Media Library
-    * `HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl)` should return the HWND of the newly created child dialog
+    * `void InitService(AddItemFunc addItemFunc, GetOptionFunc getOptionFunc, SetOptionFunc setOptionFunc, const wchar_t\* pluginDir, UINT_PTR serviceID)`:
+        * The function pointers are described in `easysrv.h`:
+            * `typedef void (\*AddItemFunc)(const wchar_t\* displayInfo, const wchar_t\* playlistInfo, const wchar_t\* filename, UINT_PTR serviceID);`
+            * `typedef void (\*GetOptionFunc)(UINT_PTR serviceID, const wchar_t\* optionName, const wchar_t\* defaultValue, wchar_t\* output, DWORD outputSize);`
+            * `typedef void (\*SetOptionFunc)(UINT_PTR serviceID, const wchar_t\* optionName, const wchar_t\* optionValue);`
+    * `NodeDescriptor GetNodeDesc()` should return a NodeDescriptor struct with the following information:
+        * Category
+        * Node name you wish to show in the Media Library
+        * The column names you wish to show in the Media Library, delimited by `\t`
+        * Capabilities (1):
+            * `#define CAP_DEFAULT 0u` for no additional capabilities
+            * `#define CAP_CUSTOMDIALOG 1u` for custom UI support
+    * `HWND GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent, HWND hwndParentControl, wchar_t\* skinPath)` should return the HWND of the newly created child dialog
     * Full example: `WinampEasyService\\srv_cdlexampledll`
 * EXE files (doesn't matter if managed or unmanaged) have to be named `esrv_\*.exe` and respond to the following command line arguments:
-    * `GetNodeName`: Print the name you wish to show in the Media Library to STDOUT
-    * `InvokeService PlayerType`: Print the entries to populate the Media Library ListView with to STDOUT in the following way:
-        * `Artist\\nTitle\\nInfo\\nFilename\\n`
-        * Quit when done
-        * `PlayerType` can be `PLAYERTYPE_WINAMP` or `PLAYERTYPE_WACUP`
+    * `GetNodeDesc`: Print the following information to STDOUT:
+        * Category
+        * Node name you wish to show in the Media Library
+        * The column names you wish to show in the Media Library, delimited by `\t`
+        * Capabilities (0):
+            * `const uint CAP_DEFAULT = 0;` for no additional capabilities
+            * `const uint CAP_CUSTOMDIALOG = 1;` for custom UI support
+    * `InvokeService hwndWinampParent hwndLibraryParent hwndParentControl pluginDir skinPath configFileName shortName serviceID`: Print the entries to populate the Media Library ListView with to STDOUT in the following way:
+        * Column contents delimited by `\t`
+        * Title to show in the playlist
+        * Filename
+            * Filenames can be direct filenames (e.g. `e:\\example.mp3`) or references (e.g. `ref_examplefile`)
     * Optional: `GetFileName FileID`: Print the direct filename corresponding to the reference `FileID` to STDOUT
     * Important: If you wish to show a window, you might have to call `ShowWindow(form.Handle, SW_SHOW);` on your Form after creation
         * ShowWindow resides in `user32.dll`, `SW_SHOW` equals 5
     * Full example: `WinampEasyService\\esrv_exampleexe`
 * EXE files (doesn't matter if managed or unmanaged) with custom UIs have to be named `esrv_\*.exe` and respond to the following command line arguments:
-	* `GetNodeName`: Print the name you wish to show in the Media Library to STDOUT
-	* `CanGetCustomDialog`: Print `1` to STDOUT if you support full custom UI
-	* `GetCustomDialog WinampHWND MediaLibraryHWND ParentControlHWND CurrentSkinPath`: Show a correctly set up window
+	* `GetNodeDesc`: Print the following information to STDOUT:
+        * Category
+        * Node name you wish to show in the Media Library
+        * The column names you wish to show in the Media Library, delimited by `\t`
+        * Capabilities (1):
+            * `const uint CAP_DEFAULT = 0;` for no additional capabilities
+            * `const uint CAP_CUSTOMDIALOG = 1;` for custom UI support
+	* `GetCustomDialog hwndWinampParent hwndLibraryParent hwndParentControl pluginDir skinPath configFileName shortName serviceID`: Show a correctly set up window
 	* Important: If you wish to show a window, you might have to call `ShowWindow(form.Handle, SW_SHOW);` on your Form after creation
         * ShowWindow resides in `user32.dll`, `SW_SHOW` equals 5
     * Full example: `WinampEasyService\\esrv_cldexampleexe`
-
-Service plugin development - using custom columns:
-* Managed (.NET based) DLLs:
-    * `public string GetColumnNames()` should return the column names you wish to show in the Media Library, delimited by `\t`
-    * `public List<List<string>> InvokeServiceCustom(int PlayerType)` should return the entries to populate the Media Library ListView with:
-        * The inner lists should always contain four strings in this order: Column contents delimited by `\t`, Title to show in the playlist, Filename
-    * Full example: `WinampEasyService\\msrv_exampledll2`
-* Unmanaged DLLs:
-    * `const wchar_t\* GetColumnNames()` should return the column names you wish to show in the Media Library, delimited by `\t`
-    * `CustomItemInfo InvokeServiceCustom(int PlayerType)` should return the first entry to populate the Media Library ListView with
-        * `CustomItemInfo` contains the following: Column contents delimited by `\t`, Title to show in the playlist, Filename
-    * `CustomItemInfo InvokeNextCustom(int PlayerType)` should return the next entry to populate the Media Library ListView with
-        * Return and empty `CustomItemInfo()` to denote the end of the list
-    * Full example: `WinampEasyService\\srv_exampledll2`
-* EXE files:
-    * `GetColumnNames`: Print the column names you wish to show in the Media Library, delimited by `\t`, to STDOUT
-    * `InvokeServiceCustom PlayerType`: Print the entries to populate the Media Library ListView with to STDOUT in the following way:
-        * `Column_names_delimited_by_\\t\\nTitle_in_playlist\\nFilename\\n`
-        * Quit when done
-        * `PlayerType` can be `PLAYERTYPE_WINAMP` or `PLAYERTYPE_WACUP`
-    * Full example: `WinampEasyService\\esrv_exampleexe2`
-
-Bugs:
-* WinAmp crashes in list_OnNotify in ml_easysrv
-    * WACUP works correctly
-* WinAmp/WACUP doesn't display metadata for `webm` files
 
 # ServicePlugins
 
@@ -127,11 +153,9 @@ The following plugins have been developed using this framework:
 * srv_screensavers: Watch screensavers in the Media Library
 
 Common operation:
-* Most plguins, including the main ml_easysrv plugin, can be configured by editing the `easysrv.ini` in the `Plugins` folder
+* Most plguins, including the main ml_easysrv plugin, can be configured by editing the `easysrv.ini` file
 * Downloaded files and saved credentials are stored in `System.IO.Path.GetTempPath()`, unless specified otherwise
 
-# Screenshots
+# Screenshot
 
 ![Screenshot](screenshot.png)
-
-![Skin Browser 2 Screenshot](screenshot2.png)
