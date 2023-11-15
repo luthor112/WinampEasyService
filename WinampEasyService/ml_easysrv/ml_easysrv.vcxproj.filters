@@ -24,6 +24,9 @@
     <ClCompile Include="EXEService.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="img_util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="easysrv.h">
@@ -33,6 +36,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="easysrv_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="img_util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

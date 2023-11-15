@@ -1,4 +1,5 @@
 #include "easysrv_internal.h"
+#include "img_util.h"
 
 #include "Winamp/wa_ipc.h"
 
@@ -6,6 +7,9 @@
 #include <string>
 #include <sstream>
 #include <codecvt>
+
+#include <Shlwapi.h>
+#pragma comment(lib, "Shlwapi.lib")
 
 #define BUFSIZE 4096
 
@@ -150,6 +154,17 @@ void EXEService::InvokeService(HWND hwndWinampParent, HWND hwndLibraryParent, HW
     wchar_t skinPath[MAX_PATH];
     SendMessage(hwndWinampParent, WM_WA_IPC, (WPARAM)skinPath, IPC_GETSKINW);
 
+    wchar_t genexPath[MAX_PATH];
+    wsprintf(genexPath, L"%s\\genex.bmp", skinPath);
+    if (!PathFileExists(genexPath))
+    {
+        HBITMAP skinBitmap = (HBITMAP)SendMessage(hwndWinampParent, WM_WA_IPC, 0, IPC_GET_GENSKINBITMAP);
+        if (skinBitmap)
+        {
+            WriteBitmap(skinBitmap, genexPath);
+        }
+    }
+
     wchar_t cmdLine[1024];
     wsprintf(cmdLine, L"%s InvokeService %d %d %d \"%s\" \"%s\" \"%s\" \"%s\" %d", _exeName, hwndWinampParent, hwndLibraryParent, hwndParentControl, pluginDir, skinPath, configFileName, shortName, _serviceID);
     std::string s1 = ReadProcessOutput(cmdLine);
@@ -203,6 +218,17 @@ HWND EXEService::GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent
 
     wchar_t skinPath[MAX_PATH];
     SendMessage(_hwndWinampParent, WM_WA_IPC, (WPARAM)skinPath, IPC_GETSKINW);
+
+    wchar_t genexPath[MAX_PATH];
+    wsprintf(genexPath, L"%s\\genex.bmp", skinPath);
+    if (!PathFileExists(genexPath))
+    {
+        HBITMAP skinBitmap = (HBITMAP)SendMessage(_hwndWinampParent, WM_WA_IPC, 0, IPC_GET_GENSKINBITMAP);
+        if (skinBitmap)
+        {
+            WriteBitmap(skinBitmap, genexPath);
+        }
+    }
 
     wchar_t cmdLine[1024];
     wsprintf(cmdLine, L"%s GetCustomDialog %d %d %d \"%s\" \"%s\" \"%s\" \"%s\" %d", _exeName, _hwndWinampParent, _hwndLibraryParent, hwndParentControl, pluginDir, skinPath, configFileName, shortName, _serviceID);

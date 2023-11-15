@@ -21,11 +21,13 @@
   <ItemGroup>
     <ClCompile Include="DLLService.cpp" />
     <ClCompile Include="EXEService.cpp" />
+    <ClCompile Include="img_util.cpp" />
     <ClCompile Include="ml_easysrv.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="easysrv_internal.h" />
     <ClInclude Include="easysrv.h" />
+    <ClInclude Include="img_util.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
