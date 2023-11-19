@@ -26,6 +26,10 @@ namespace isrv_managed
         static Bitmap? buttonBgImage = null;
         static Bitmap? buttonDownImage = null;
 
+        static Color listviewHeaderBgColor = Color.Transparent;
+        static Color listviewHeaderTextColor = Color.Transparent;
+        static Color listviewHeaderFrameMiddleColor = Color.Transparent;
+
         public static void SkinControl(Control ctrl, string skinPath)
         {
             string genexFilename = System.IO.Path.Join(skinPath, "genex.bmp");
@@ -38,6 +42,25 @@ namespace isrv_managed
                 Color windowBackgroundColor = genex.GetPixel(52, 0);
                 Color buttonTextColor = genex.GetPixel(54, 0);
                 Color windowTextColor = genex.GetPixel(56, 0);
+                Color dividerBorderColor = genex.GetPixel(58, 0);
+                Color playlistSelectionColor = genex.GetPixel(60, 0);
+                listviewHeaderBgColor = genex.GetPixel(62, 0);
+                listviewHeaderTextColor = genex.GetPixel(64, 0);
+                Color listviewHeaderFrameTopColor = genex.GetPixel(66, 0);
+                listviewHeaderFrameMiddleColor = genex.GetPixel(68, 0);
+                Color listviewHeaderFrameBottomColor = genex.GetPixel(70, 0);
+                Color listviewHeaderEmptyColor = genex.GetPixel(72, 0);
+                Color scrollbarFgColor = genex.GetPixel(74, 0);
+                Color scrollbarBgColor = genex.GetPixel(76, 0);
+                Color scrollbarInvFgColor = genex.GetPixel(78, 0);
+                Color scrollbarInvBgColor = genex.GetPixel(80, 0);
+                Color scrollbarDeadAreaColor = genex.GetPixel(82, 0);
+                Color listviewActiveSelectionTextColor = genex.GetPixel(84, 0);
+                Color listviewActiveSelectionBgColor = genex.GetPixel(86, 0);
+                Color listviewInactiveSelectionTextColor = genex.GetPixel(88, 0);
+                Color listviewInactiveSelectionBgColor = genex.GetPixel(90, 0);
+                Color itemBgColorAlter = genex.GetPixel(92, 0);
+                Color itemFgColorAlter = genex.GetPixel(94, 0);
 
                 if (buttonBgImage == null)
                 {
@@ -79,6 +102,15 @@ namespace isrv_managed
                         button.MouseDown += ButtonMouseDown;
                         button.MouseUp += ButtonMouseUp;
                     }
+                    else if (control is ListView)
+                    {
+                        ListView list = (ListView)control;
+                        list.BackColor = itemBgColor;
+                        list.ForeColor = itemFgColor;
+
+                        list.OwnerDraw = true;
+                        list.DrawColumnHeader += ListView_DrawColumnHeader;
+                    }
                     else
                     {
                         control.BackColor = itemBgColor;
@@ -98,6 +130,56 @@ namespace isrv_managed
         {
             Button button = (Button)sender;
             button.BackgroundImage = buttonBgImage;
+        }
+
+        // https://stackoverflow.com/a/75716080
+        static void ListView_DrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)
+        {
+            //Fills one solid background for each cell.
+            using (SolidBrush backBrush = new SolidBrush(listviewHeaderBgColor))
+            {
+                e.Graphics.FillRectangle(backBrush, e.Bounds);
+            }
+            //Draw the borders for the header around each cell.
+            using (Pen backBrush = new Pen(listviewHeaderFrameMiddleColor))
+            {
+                e.Graphics.DrawRectangle(backBrush, e.Bounds);
+            }
+            using (SolidBrush foreBrush = new SolidBrush(listviewHeaderTextColor))
+            {
+                //Since e.Header.TextAlign returns 'HorizontalAlignment' with values of (Right, Center, Left).  
+                //DrawString uses 'StringAlignment' with values of (Near, Center, Far). 
+                //We must translate these and setup a vertical alignment that doesn't exist in DrawListViewColumnHeaderEventArgs.
+                StringFormat stringFormat = GetStringFormat(e.Header.TextAlign);
+
+                //Do some padding, since these draws right up next to the border for Left/Near.  Will need to change this if you use Right/Far
+                Rectangle rect = e.Bounds; rect.X += 2;
+                e.Graphics.DrawString(e.Header.Text, e.Font, foreBrush, rect, stringFormat);
+            }
+        }
+
+        static StringFormat GetStringFormat(HorizontalAlignment ha)
+        {
+            StringAlignment align;
+
+            switch (ha)
+            {
+                case HorizontalAlignment.Right:
+                    align = StringAlignment.Far;
+                    break;
+                case HorizontalAlignment.Center:
+                    align = StringAlignment.Center;
+                    break;
+                default:
+                    align = StringAlignment.Near;
+                    break;
+            }
+
+            return new StringFormat()
+            {
+                Alignment = align,
+                LineAlignment = StringAlignment.Center
+            };
         }
 
         static Dictionary<string, object> BuildFunctionDict(string configFile, string shortName, string skinPath)
