@@ -135,5 +135,16 @@ namespace isrv_managed
             UnhookWinEvent(locationHook);
             UnhookWinEvent(minimizeHook);
         }
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams cparam = base.CreateParams;
+                // turn on WS_EX_TOOLWINDOW style bit
+                cparam.ExStyle |= 0x80;
+                return cparam;
+            }
+        }
     }
 }

@@ -188,5 +188,16 @@ namespace esrv_cdlexampleexe
         {
             button1.BackgroundImage = buttonBgImage;
         }
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams cparam = base.CreateParams;
+                // turn on WS_EX_TOOLWINDOW style bit
+                cparam.ExStyle |= 0x80;
+                return cparam;
+            }
+        }
     }
 }
