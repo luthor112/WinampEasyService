@@ -108,8 +108,8 @@ namespace isrv_managed
                         list.BackColor = itemBgColor;
                         list.ForeColor = itemFgColor;
 
-                        list.OwnerDraw = true;
-                        list.DrawColumnHeader += ListView_DrawColumnHeader;
+                        //list.OwnerDraw = true;
+                        //list.DrawColumnHeader += ListView_DrawColumnHeader;
                     }
                     else
                     {
