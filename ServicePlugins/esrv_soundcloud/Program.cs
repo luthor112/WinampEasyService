@@ -73,7 +73,7 @@ namespace esrv_soundcloud
                                             if (string.IsNullOrEmpty(creator))
                                                 creator = "Unknown";
 
-                                            writer.WriteLine($"{creator}\t{playlist.Title}\t{playlist.Url}");
+                                            writer.WriteLine($"{creator}\t{playlist.Title}\t{playlist.Url}\t{playlist.Url}");
                                         }
                                         break;
                                     }
