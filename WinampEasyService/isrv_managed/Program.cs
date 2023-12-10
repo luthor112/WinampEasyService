@@ -23,6 +23,31 @@ namespace isrv_managed
             string lpString,
             string lpFileName);
 
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        static extern IntPtr SendMessage(
+            IntPtr hWnd,
+            uint Msg,
+            IntPtr wParam,
+            IntPtr lParam);
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct COPYDATASTRUCT
+        {
+            public IntPtr dwData;
+            public int cbData;
+            public IntPtr lpData;
+        }
+
+        const uint WM_COMMAND = 0x0111;
+        const uint WM_USER = 0x0400;
+        const uint WM_WA_IPC = WM_USER;
+        const uint WM_COPYDATA = 0x004A;
+        const uint WINAMP_BUTTON2 = 40045;
+        const uint IPC_DELETE = 101;
+        const uint IPC_SETPLAYLISTPOS = 121;
+        const uint IPC_ENQUEUEFILE = 100;
+        const uint IPC_ENQUEUEFILEW = 1100;
+
         static Bitmap? buttonBgImage = null;
         static Bitmap? buttonDownImage = null;
 
@@ -182,7 +207,7 @@ namespace isrv_managed
             };
         }
 
-        static Dictionary<string, object> BuildFunctionDict(string configFile, string shortName, string skinPath)
+        static Dictionary<string, object> BuildFunctionDict(string configFile, string shortName, string skinPath, IntPtr hwndWinampParent)
         {
             Dictionary<string, object> functionDict = new Dictionary<string, object>();
 
@@ -198,6 +223,30 @@ namespace isrv_managed
 
             functionDict.Add("SkinForm", (Form form) => {
                 SkinControl(form, skinPath);
+            });
+
+            functionDict.Add("AddItem", (string filename, bool enqueue) => {
+                COPYDATASTRUCT copyData = new COPYDATASTRUCT();
+                copyData.dwData = new IntPtr(IPC_ENQUEUEFILEW);
+                copyData.cbData = (filename.Length + 1) * 2;
+                copyData.lpData = Marshal.StringToHGlobalUni(filename);
+
+                IntPtr ptrCopyData = Marshal.AllocCoTaskMem(Marshal.SizeOf(copyData));
+                Marshal.StructureToPtr(copyData, ptrCopyData, false);
+
+                if (enqueue)
+                {
+                    SendMessage(hwndWinampParent, WM_COPYDATA, new IntPtr(0), ptrCopyData);
+                }
+                else
+                {
+                    SendMessage(hwndWinampParent, WM_WA_IPC, new IntPtr(0), new IntPtr(IPC_DELETE));
+                    SendMessage(hwndWinampParent, WM_COPYDATA, new IntPtr(0), ptrCopyData);
+                    SendMessage(hwndWinampParent, WM_WA_IPC, new IntPtr(1), new IntPtr(IPC_SETPLAYLISTPOS));
+                    SendMessage(hwndWinampParent, WM_COMMAND, new IntPtr(WINAMP_BUTTON2), new IntPtr(0));
+                }
+
+                Marshal.FreeCoTaskMem(ptrCopyData);
             });
 
             return functionDict;
@@ -240,7 +289,7 @@ namespace isrv_managed
                 string shortName = args[8];
                 uint serviceID = uint.Parse(args[9]);
 
-                Dictionary<string, object> functionDict = BuildFunctionDict(configFile, shortName, skinPath);
+                Dictionary<string, object> functionDict = BuildFunctionDict(configFile, shortName, skinPath, hwndWinampParent);
 
                 var initMethod = theType.GetMethod("InitService");
                 var method = theType.GetMethod("InvokeService");
@@ -272,7 +321,7 @@ namespace isrv_managed
                 string shortName = args[8];
                 uint serviceID = uint.Parse(args[9]);
 
-                Dictionary<string, object> functionDict = BuildFunctionDict(configFile, shortName, skinPath);
+                Dictionary<string, object> functionDict = BuildFunctionDict(configFile, shortName, skinPath, hwndWinampParent);
 
                 var initMethod = theType.GetMethod("InitService");
                 var method = theType.GetMethod("GetCustomDialog");
