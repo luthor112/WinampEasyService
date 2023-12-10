@@ -61,7 +61,7 @@ namespace esrv_soundcloud
                                                 author = "Unknown";
 
                                             var downloadURL = await soundcloud.Tracks.GetDownloadUrlAsync(track);
-                                            writer.WriteLine($"{author}\t{track.Title}\t{track.Url}\t{downloadURL}");
+                                            writer.WriteLine($"{author}\t{track.Title}\tMedia\t{track.Url}\t{downloadURL}");
                                         }
                                         break;
                                     }
@@ -73,7 +73,7 @@ namespace esrv_soundcloud
                                             if (string.IsNullOrEmpty(creator))
                                                 creator = "Unknown";
 
-                                            writer.WriteLine($"{creator}\t{playlist.Title}\t{playlist.Url}\t{playlist.Url}");
+                                            writer.WriteLine($"{creator}\t{playlist.Title}\tList\t{playlist.Url}\t{playlist.Url}");
                                         }
                                         break;
                                     }
@@ -92,7 +92,7 @@ namespace esrv_soundcloud
                                 author = "Unknown";
 
                             var downloadURL = await soundcloud.Tracks.GetDownloadUrlAsync(track);
-                            writer.WriteLine($"{author}\t{track.Title}\t{track.Uri}\t{downloadURL}");
+                            writer.WriteLine($"{author}\t{track.Title}\tMedia\t{track.Uri}\t{downloadURL}");
                         }
                     }
                 }

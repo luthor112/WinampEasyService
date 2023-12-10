@@ -46,6 +46,7 @@
             searchBox.PlaceholderText = "Search...";
             searchBox.Size = new Size(368, 23);
             searchBox.TabIndex = 0;
+            searchBox.KeyPress += searchBox_KeyPress;
             // 
             // searchMediaBtn
             // 
@@ -56,6 +57,7 @@
             searchMediaBtn.TabIndex = 1;
             searchMediaBtn.Text = "Search Media";
             searchMediaBtn.UseVisualStyleBackColor = true;
+            searchMediaBtn.Click += searchMediaBtn_Click;
             // 
             // searchListsBtn
             // 
@@ -66,6 +68,7 @@
             searchListsBtn.TabIndex = 2;
             searchListsBtn.Text = "Search Lists";
             searchListsBtn.UseVisualStyleBackColor = true;
+            searchListsBtn.Click += searchListsBtn_Click;
             // 
             // resultListView
             // 
@@ -80,6 +83,7 @@
             resultListView.TabIndex = 3;
             resultListView.UseCompatibleStateImageBehavior = false;
             resultListView.View = View.Details;
+            resultListView.ItemActivate += resultListView_ItemActivate;
             // 
             // authorHeader
             // 

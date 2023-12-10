@@ -23,7 +23,7 @@
 
         public UserControl GetCustomDialog(IntPtr hwndWinampParent, IntPtr hwndLibraryParent, IntPtr hwndParentControl, string skinPath)
         {
-            return new msrv_soundcloud_plus.SoundCloudControl(hwndWinampParent);
+            return new msrv_soundcloud_plus.SoundCloudControl(hwndWinampParent, functions, myDirectory);
         }
     }
 }
