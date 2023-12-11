@@ -1,12 +1,18 @@
+using System.Drawing.Drawing2D;
+using System.Globalization;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using Button = System.Windows.Forms.Button;
+using ListView = System.Windows.Forms.ListView;
 
 namespace isrv_managed
 {
     internal static class Program
     {
+        #region P/Invoke
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
         static extern uint GetPrivateProfileString(
             string lpAppName,
@@ -47,7 +53,9 @@ namespace isrv_managed
         const uint IPC_SETPLAYLISTPOS = 121;
         const uint IPC_ENQUEUEFILE = 100;
         const uint IPC_ENQUEUEFILEW = 1100;
+        #endregion
 
+        #region Skinning
         static Bitmap? buttonBgImage = null;
         static Bitmap? buttonDownImage = null;
 
@@ -133,8 +141,23 @@ namespace isrv_managed
                         list.BackColor = itemBgColor;
                         list.ForeColor = itemFgColor;
 
-                        //list.OwnerDraw = true;
-                        //list.DrawColumnHeader += ListView_DrawColumnHeader;
+                        // Configure the ListView control for owner-draw and add 
+                        // handlers for the owner-draw events.
+                        list.OwnerDraw = true;
+                        list.DrawColumnHeader += ListView_DrawColumnHeader;
+                        list.DrawItem += ListView_DrawItem;
+                        list.DrawSubItem += ListView_DrawSubItem;
+
+                        // Add a handler for the MouseUp event so an item can be 
+                        // selected by clicking anywhere along its width.
+                        list.MouseUp += ListView_MouseUp;
+
+                        // Add handlers for various events to compensate for an 
+                        // extra DrawItem event that occurs the first time the mouse 
+                        // moves over each row. 
+                        list.MouseMove += ListView_MouseMove;
+                        list.ColumnWidthChanged += ListView_ColumnWidthChanged;
+                        list.Invalidated += ListView_Invalidated;
                     }
                     else
                     {
@@ -144,7 +167,9 @@ namespace isrv_managed
                 }
             }
         }
+        #endregion
 
+        #region Button Events
         static void ButtonMouseDown(object sender, MouseEventArgs e)
         {
             Button button = (Button)sender;
@@ -156,7 +181,9 @@ namespace isrv_managed
             Button button = (Button)sender;
             button.BackgroundImage = buttonBgImage;
         }
+        #endregion
 
+        #region ListView Events
         // https://stackoverflow.com/a/75716080
         static void ListView_DrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)
         {
@@ -206,6 +233,130 @@ namespace isrv_managed
                 LineAlignment = StringAlignment.Center
             };
         }
+
+        // https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.drawlistviewsubitemeventargs?view=windowsdesktop-8.0
+        // Selects and focuses an item when it is clicked anywhere along 
+        // its width. The click must normally be on the parent item text.
+        static void ListView_MouseUp(object sender, MouseEventArgs e)
+        {
+            ListView listView = (ListView)sender;
+            ListViewItem clickedItem = listView.GetItemAt(5, e.Y);
+            if (clickedItem != null)
+            {
+                clickedItem.Selected = true;
+                clickedItem.Focused = true;
+            }
+        }
+
+        // Draws the backgrounds for entire ListView items.
+        static void ListView_DrawItem(object sender, DrawListViewItemEventArgs e)
+        {
+            ListView listView = (ListView)sender;
+
+            if ((e.State & ListViewItemStates.Selected) != 0)
+            {
+                // Draw the background and focus rectangle for a selected item.
+                e.Graphics.FillRectangle(Brushes.Maroon, e.Bounds);
+                e.DrawFocusRectangle();
+            }
+            else
+            {
+                // Draw the background for an unselected item.
+                using (LinearGradientBrush brush = new LinearGradientBrush(e.Bounds, Color.Orange, Color.Maroon, LinearGradientMode.Horizontal))
+                {
+                    e.Graphics.FillRectangle(brush, e.Bounds);
+                }
+            }
+
+            // Draw the item text for views other than the Details view.
+            if (listView.View != View.Details)
+            {
+                e.DrawText();
+            }
+        }
+
+        // Draws subitem text and applies content-based formatting.
+        static void ListView_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
+        {
+            ListView listView = (ListView)sender;
+            TextFormatFlags flags = TextFormatFlags.Left;
+
+            using (StringFormat sf = new StringFormat())
+            {
+                // Store the column text alignment, letting it default
+                // to Left if it has not been set to Center or Right.
+                switch (e.Header.TextAlign)
+                {
+                    case HorizontalAlignment.Center:
+                        sf.Alignment = StringAlignment.Center;
+                        flags = TextFormatFlags.HorizontalCenter;
+                        break;
+                    case HorizontalAlignment.Right:
+                        sf.Alignment = StringAlignment.Far;
+                        flags = TextFormatFlags.Right;
+                        break;
+                }
+
+                // Draw the text and background for a subitem with a 
+                // negative value. 
+                double subItemValue;
+                if (e.ColumnIndex > 0 && Double.TryParse(
+                    e.SubItem.Text, NumberStyles.Currency,
+                    NumberFormatInfo.CurrentInfo, out subItemValue) &&
+                    subItemValue < 0)
+                {
+                    // Unless the item is selected, draw the standard 
+                    // background to make it stand out from the gradient.
+                    if ((e.ItemState & ListViewItemStates.Selected) == 0)
+                    {
+                        e.DrawBackground();
+                    }
+
+                    // Draw the subitem text in red to highlight it. 
+                    e.Graphics.DrawString(e.SubItem.Text,
+                        listView.Font, Brushes.Red, e.Bounds, sf);
+
+                    return;
+                }
+
+                // Draw normal text for a subitem with a nonnegative 
+                // or nonnumerical value.
+                e.DrawText(flags);
+            }
+        }
+
+        // Forces each row to repaint itself the first time the mouse moves over 
+        // it, compensating for an extra DrawItem event sent by the wrapped 
+        // Win32 control. This issue occurs each time the ListView is invalidated.
+        static void ListView_MouseMove(object sender, MouseEventArgs e)
+        {
+            ListView listView = (ListView)sender;
+            ListViewItem item = listView.GetItemAt(e.X, e.Y);
+            if (item != null && item.Tag == null)
+            {
+                listView.Invalidate(item.Bounds);
+                item.Tag = "tagged";
+            }
+        }
+
+        // Resets the item tags. 
+        static void ListView_Invalidated(object sender, InvalidateEventArgs e)
+        {
+            ListView listView = (ListView)sender;
+            foreach (ListViewItem item in listView.Items)
+            {
+                if (item == null) return;
+                item.Tag = null;
+            }
+        }
+
+        // Forces the entire control to repaint if a column width is changed.
+        static void ListView_ColumnWidthChanged(object sender, ColumnWidthChangedEventArgs e)
+        {
+            ListView listView = (ListView)sender;
+            listView.Invalidate();
+        }
+        #endregion
 
         static Dictionary<string, object> BuildFunctionDict(string configFile, string shortName, string skinPath, IntPtr hwndWinampParent)
         {
