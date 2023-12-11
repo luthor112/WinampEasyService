@@ -62,7 +62,7 @@
             // searchListsBtn
             // 
             searchListsBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            searchListsBtn.Location = new Point(497, 12);
+            searchListsBtn.Location = new Point(497, 11);
             searchListsBtn.Name = "searchListsBtn";
             searchListsBtn.Size = new Size(104, 23);
             searchListsBtn.TabIndex = 2;
