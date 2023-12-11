@@ -62,6 +62,7 @@ namespace isrv_managed
         static Color listviewHeaderBgColor = Color.Transparent;
         static Color listviewHeaderTextColor = Color.Transparent;
         static Color listviewHeaderFrameMiddleColor = Color.Transparent;
+        static Color listviewActiveSelectionBgColor = Color.Transparent;
 
         public static void SkinControl(Control ctrl, string skinPath)
         {
@@ -89,7 +90,7 @@ namespace isrv_managed
                 Color scrollbarInvBgColor = genex.GetPixel(80, 0);
                 Color scrollbarDeadAreaColor = genex.GetPixel(82, 0);
                 Color listviewActiveSelectionTextColor = genex.GetPixel(84, 0);
-                Color listviewActiveSelectionBgColor = genex.GetPixel(86, 0);
+                listviewActiveSelectionBgColor = genex.GetPixel(86, 0);
                 Color listviewInactiveSelectionTextColor = genex.GetPixel(88, 0);
                 Color listviewInactiveSelectionBgColor = genex.GetPixel(90, 0);
                 Color itemBgColorAlter = genex.GetPixel(92, 0);
@@ -253,19 +254,20 @@ namespace isrv_managed
         {
             ListView listView = (ListView)sender;
 
-            if ((e.State & ListViewItemStates.Selected) != 0)
+            if ((e.State & ListViewItemStates.Focused) != 0)
             {
                 // Draw the background and focus rectangle for a selected item.
-                e.Graphics.FillRectangle(Brushes.Maroon, e.Bounds);
+                using (SolidBrush backBrush = new SolidBrush(listviewActiveSelectionBgColor))
+                {
+                    Rectangle rect = e.Bounds; rect.X += 4;
+                    e.Graphics.FillRectangle(backBrush, rect);
+                }
                 e.DrawFocusRectangle();
             }
             else
             {
                 // Draw the background for an unselected item.
-                using (LinearGradientBrush brush = new LinearGradientBrush(e.Bounds, Color.Orange, Color.Maroon, LinearGradientMode.Horizontal))
-                {
-                    e.Graphics.FillRectangle(brush, e.Bounds);
-                }
+                e.DrawBackground();
             }
 
             // Draw the item text for views other than the Details view.
@@ -275,54 +277,25 @@ namespace isrv_managed
             }
         }
 
-        // Draws subitem text and applies content-based formatting.
+        // Draws subitem text and applies formatting.
         static void ListView_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
         {
             ListView listView = (ListView)sender;
             TextFormatFlags flags = TextFormatFlags.Left;
 
-            using (StringFormat sf = new StringFormat())
+            // Store the column text alignment, letting it default
+            // to Left if it has not been set to Center or Right.
+            switch (e.Header.TextAlign)
             {
-                // Store the column text alignment, letting it default
-                // to Left if it has not been set to Center or Right.
-                switch (e.Header.TextAlign)
-                {
-                    case HorizontalAlignment.Center:
-                        sf.Alignment = StringAlignment.Center;
-                        flags = TextFormatFlags.HorizontalCenter;
-                        break;
-                    case HorizontalAlignment.Right:
-                        sf.Alignment = StringAlignment.Far;
-                        flags = TextFormatFlags.Right;
-                        break;
-                }
-
-                // Draw the text and background for a subitem with a 
-                // negative value. 
-                double subItemValue;
-                if (e.ColumnIndex > 0 && Double.TryParse(
-                    e.SubItem.Text, NumberStyles.Currency,
-                    NumberFormatInfo.CurrentInfo, out subItemValue) &&
-                    subItemValue < 0)
-                {
-                    // Unless the item is selected, draw the standard 
-                    // background to make it stand out from the gradient.
-                    if ((e.ItemState & ListViewItemStates.Selected) == 0)
-                    {
-                        e.DrawBackground();
-                    }
-
-                    // Draw the subitem text in red to highlight it. 
-                    e.Graphics.DrawString(e.SubItem.Text,
-                        listView.Font, Brushes.Red, e.Bounds, sf);
-
-                    return;
-                }
-
-                // Draw normal text for a subitem with a nonnegative 
-                // or nonnumerical value.
-                e.DrawText(flags);
+                case HorizontalAlignment.Center:
+                    flags = TextFormatFlags.HorizontalCenter;
+                    break;
+                case HorizontalAlignment.Right:
+                    flags = TextFormatFlags.Right;
+                    break;
             }
+
+            e.DrawText(flags);
         }
 
         // Forces each row to repaint itself the first time the mouse moves over 
