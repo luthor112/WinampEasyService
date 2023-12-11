@@ -126,6 +126,7 @@ The following plugins have been developed using this framework:
     * Has recursive search option
 * esrv_soundcloud: SoundCloud integration
     * Uses SoundCloudExplode under the hood
+* msrv_soundcloud_plus: SoundCloud integration with better UI
 * esrv_spotify: Spotify integration
     * Falls back to YouTube if a track is unavailable and its YouTube ID is set
     * Uses SpotifyExplode and YouTubeExplode under the hood
