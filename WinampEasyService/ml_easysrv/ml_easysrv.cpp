@@ -27,6 +27,7 @@
 //#define DISABLE_SRV_DLL
 //#define DISABLE_MSRV_DLL
 //#define DISABLE_ESRV_EXE
+//#define DISABLE_WSRV_HTML
 
 //////////////////////////
 // FORWARD DECLARATIONS //
@@ -383,6 +384,55 @@ void loadServices()
 		do
 		{
 			wsprintf(absoluteName, L"\"%s\\isrv_managed.exe\" \"%s\\%s\"", pluginDir, pluginDir, FindFileData.cFileName);
+			if (containsToken(disabledList, absoluteName) || containsToken(disabledList, FindFileData.cFileName))
+			{
+				trace(L"Skipping service: ", absoluteName);
+			}
+			else
+			{
+				EasyService* service = new EXEService(absoluteName, FindFileData.cFileName);
+				if (!service->IsValid())
+				{
+					trace(L"Invalid service: ", absoluteName);
+					continue;
+				}
+
+				UINT_PTR nodeID;
+				const wchar_t* catName = service->GetNodeDesc().Category;
+				if (catName == NULL)
+				{
+					nodeID = addTreeItem(servicesNode, service->GetNodeDesc().NodeName, FALSE, MLTREEIMAGE_BRANCH);
+				}
+				else
+				{
+					UINT_PTR catNodeID = getCategoryNodeID(catMap, catName);
+					if (catNodeID == 0)
+					{
+						catNodeID = addTreeItem(servicesNode, catName, TRUE, MLTREEIMAGE_BRANCH);
+						catMap[catName] = catNodeID;
+					}
+
+					nodeID = addTreeItem(catNodeID, service->GetNodeDesc().NodeName, FALSE, MLTREEIMAGE_BRANCH);
+				}
+
+				serviceMap[nodeID] = service;
+				service->InitService(nodeID);
+				trace(L"Loaded service: ", absoluteName);
+			}
+		} while (FindNextFile(searchHandle, &FindFileData));
+		FindClose(searchHandle);
+	}
+#endif
+
+#ifndef DISABLE_WSRV_HTML
+	// walk wsrv_*.html
+	wsprintf(searchCriteria, L"%s\\wsrv_*.html", pluginDir);
+	searchHandle = FindFirstFile(searchCriteria, &FindFileData);
+	if (searchHandle != INVALID_HANDLE_VALUE)
+	{
+		do
+		{
+			wsprintf(absoluteName, L"\"%s\\isrv_web.exe\" \"%s\\%s\"", pluginDir, pluginDir, FindFileData.cFileName);
 			if (containsToken(disabledList, absoluteName) || containsToken(disabledList, FindFileData.cFileName))
 			{
 				trace(L"Skipping service: ", absoluteName);
