@@ -110,8 +110,7 @@ namespace isrv_web
 
                 browser = new ChromiumWebBrowser(callArgs[0]);
                 browser.JavascriptObjectRepository.Settings.LegacyBindingEnabled = true;
-                // TODO
-                //browser.JavascriptObjectRepository.Register("yolo", new yolo());
+                browser.JavascriptObjectRepository.Register("winamp", new WinampJSObject(shortName, configFile, hwndWinampParent));
                 Controls.Add(browser);
 
                 ShowWindow(this.Handle, SW_SHOW);
