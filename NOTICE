@@ -5,6 +5,11 @@ WinampEasyService:
 - Code in this repository
   - License: The Unlicense
   - License File: LICENSE, LICENSES/UNLICENSE
+- CefSharp.WinForms.NETCore
+  - License: Custom (see file)
+  - License file: LICENSES/CEFSHARP
+  - Obtained from: https://www.nuget.org/packages/CefSharp.WinForms.NETCore/120.2.70
+  - Copyright: (c) The CefSharp Authors. All rights reserved.
 
 ServicePlugins:
 - Code in this repository

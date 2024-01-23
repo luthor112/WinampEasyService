@@ -6,8 +6,8 @@ Goal:
 
 Installing plugins:
 * Put the ml_easysrv and in_easyfngetter plugins in the WACUP `Plugins` folder
-* Also put isrv_managed in the WACUP `Plugins` folder
-* Put any service plugins (`esrv_\*.exe, msrv_\*.dll, srv_\*.dll`) in the same folder
+* Also put isrv_managed and isrv_web in the WACUP `Plugins` folder
+* Put any service plugins (`esrv_\*.exe, msrv_\*.dll, srv_\*.dll`, wsrv_\*.html) in the same folder
 * The services will be accessible in the `Services` tree of the Media Library
 
 Using plugins (Instead of this, plugins can now provide their own custom UI):
@@ -112,6 +112,12 @@ Service plugin development:
 	* Important: If you wish to show a window, you might have to call `ShowWindow(form.Handle, SW_SHOW);` on your Form after creation
         * ShowWindow resides in `user32.dll`, `SW_SHOW` equals 5
     * Full example: `WinampEasyService\\esrv_cldexampleexe`
+* HTML files have to be named `wsrv_\*.html` and implement the following:
+    * Implement the function `function getNodeName()` that returns the node name you wish to show in the Media Library
+    * Make use of the `window.winamp` object, which provides the following functions:
+        * `string getoption(string optionName, string defaultValue)`
+        * `void setoption(string optionName, string optionValue)`
+        * `void additem(string filename, bool enqueue)`
 
 # ServicePlugins
 
