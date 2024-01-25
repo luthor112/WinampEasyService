@@ -7,7 +7,7 @@ Goal:
 Installing plugins:
 * Put the ml_easysrv and in_easyfngetter plugins in the WACUP `Plugins` folder
 * Also put isrv_managed and isrv_web in the WACUP `Plugins` folder
-* Put any service plugins (`esrv_\*.exe, msrv_\*.dll, srv_\*.dll`, wsrv_\*.html) in the same folder
+* Put any service plugins (`esrv_\*.exe, msrv_\*.dll, srv_\*.dll, wsrv_\*.html`) in the same folder
 * The services will be accessible in the `Services` tree of the Media Library
 
 Using plugins (Instead of this, plugins can now provide their own custom UI):
