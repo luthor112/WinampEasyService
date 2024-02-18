@@ -44,8 +44,7 @@ namespace msrv_skinner
             string selectedTitle = processComboBox.Text;
             IntPtr selectedHWND = hwndList[processComboBox.SelectedIndex];
 
-            //Process.Start(System.IO.Path.Combine(myDirectory, "skinner_helper.exe"), $"{selectedHWND.ToString()} \"{selectedTitle}\" \"{skinPath}\"");
-            Process.Start("calc.exe");
+            Process.Start(System.IO.Path.Combine(myDirectory, "skinner_helper.exe"), $"{selectedHWND.ToString()} \"{selectedTitle}\" \"{skinPath}\"");
         }
     }
 }
