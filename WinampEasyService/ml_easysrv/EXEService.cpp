@@ -217,7 +217,7 @@ HWND EXEService::GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent
     ZeroMemory(&pi, sizeof(pi));
 
     wchar_t skinPath[MAX_PATH];
-    SendMessage(_hwndWinampParent, WM_WA_IPC, (WPARAM)skinPath, IPC_GETSKINW);
+    wchar_t* skinName = (wchar_t*)SendMessage(_hwndWinampParent, WM_WA_IPC, (WPARAM)skinPath, IPC_GETSKINW);
 
     wchar_t genexPath[MAX_PATH];
     wsprintf(genexPath, L"%s\\genex.bmp", skinPath);
