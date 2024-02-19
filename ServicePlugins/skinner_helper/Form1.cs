@@ -74,12 +74,32 @@ namespace skinner_helper
         private void Form1_Load(object sender, EventArgs e)
         {
             string titleFileName = System.IO.Path.Combine(skinPath, "mb.bmp");
+            Rectangle leftSource = new Rectangle(0, 0, 25, 20);
+            Rectangle midSource = new Rectangle(127, 0, 25, 20);
+            Rectangle rightSource = new Rectangle(153, 0, 25, 20);
             if (!File.Exists(titleFileName))
             {
                 titleFileName = System.IO.Path.Combine(skinPath, "mb.png");
+                leftSource = new Rectangle(0, 0, 25, 20);
+                midSource = new Rectangle(127, 0, 25, 20);
+                rightSource = new Rectangle(153, 0, 25, 20);
                 if (!File.Exists(titleFileName))
                 {
-                    Application.Exit();
+                    titleFileName = System.IO.Path.Combine(skinPath, "gen.bmp");
+                    leftSource = new Rectangle(0, 0, 25, 20);
+                    midSource = new Rectangle(104, 0, 25, 20);
+                    rightSource = new Rectangle(130, 0, 25, 20);
+                    if (!File.Exists(titleFileName))
+                    {
+                        titleFileName = System.IO.Path.Combine(skinPath, "gen.png");
+                        leftSource = new Rectangle(0, 0, 25, 20);
+                        midSource = new Rectangle(104, 0, 25, 20);
+                        rightSource = new Rectangle(130, 0, 25, 20);
+                        if (!File.Exists(titleFileName))
+                        {
+                            Application.Exit();
+                        }
+                    }
                 }
             }
             Image fullImage = Image.FromFile(titleFileName);
@@ -87,21 +107,21 @@ namespace skinner_helper
             Image leftImage = new Bitmap(25, 20, PixelFormat.Format24bppRgb);
             using (Graphics grp = Graphics.FromImage(leftImage))
             {
-                grp.DrawImage(fullImage, new Rectangle(0, 0, 25, 20), new Rectangle(0, 0, 25, 20), GraphicsUnit.Pixel);
+                grp.DrawImage(fullImage, new Rectangle(0, 0, 25, 20), leftSource, GraphicsUnit.Pixel);
             }
             leftPicture.Image = leftImage;
 
             Image midImage = new Bitmap(25, 20, PixelFormat.Format24bppRgb);
             using (Graphics grp = Graphics.FromImage(midImage))
             {
-                grp.DrawImage(fullImage, new Rectangle(0, 0, 25, 20), new Rectangle(127, 0, 25, 20), GraphicsUnit.Pixel);
+                grp.DrawImage(fullImage, new Rectangle(0, 0, 25, 20), midSource, GraphicsUnit.Pixel);
             }
             midPicture.BackgroundImage = midImage;
 
             Image rightImage = new Bitmap(25, 20, PixelFormat.Format24bppRgb);
             using (Graphics grp = Graphics.FromImage(rightImage))
             {
-                grp.DrawImage(fullImage, new Rectangle(0, 0, 25, 20), new Rectangle(153, 0, 25, 20), GraphicsUnit.Pixel);
+                grp.DrawImage(fullImage, new Rectangle(0, 0, 25, 20), rightSource, GraphicsUnit.Pixel);
             }
             rightPicture.Image = rightImage;
 
