@@ -1,4 +1,5 @@
 #include "easysrv_internal.h"
+#include "wa_ipc_extra.h"
 
 #include <windows.h>
 #include "Winamp/wa_ipc.h"
@@ -78,7 +79,7 @@ winampMediaLibraryPlugin plugin = {
 
 // Global variables
 wchar_t configFileName[MAX_PATH];
-wchar_t pluginDir[MAX_PATH];
+wchar_t* pluginDir;
 bool tracingEnabled = FALSE;
 std::wfstream traceStream;
 
@@ -92,8 +93,8 @@ void trace(const wchar_t* part1, const wchar_t* part2 = NULL)
 // Called by WinAmp after loading
 int init()
 {
-	char* iniDir = (char*)SendMessage(plugin.hwndWinampParent, WM_WA_IPC, 0, IPC_GETINIDIRECTORY);
-	wsprintf(configFileName, L"%S\\easysrv.ini", iniDir);
+	wchar_t* iniDir = (wchar_t*)SendMessage(plugin.hwndWinampParent, WM_WA_IPC, 0, IPC_GETINIDIRECTORYW);
+	wsprintf(configFileName, L"%s\\easysrv.ini", iniDir);
 
 	wchar_t tracePath[MAX_PATH];
 	GetPrivateProfileString(L"easysrv", L"trace", L"", tracePath, MAX_PATH, configFileName);
@@ -104,8 +105,7 @@ int init()
 		traceStream << L"init()" << std::endl;
 	}
 
-	char* pluginDirCS = (char*)SendMessage(plugin.hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORY);
-	wsprintf(pluginDir, L"%S", pluginDirCS);
+	pluginDir = (wchar_t*)SendMessage(plugin.hwndWinampParent, WM_WA_IPC, 0, IPC_GETPLUGINDIRECTORYW);
 
     loadServices();
 

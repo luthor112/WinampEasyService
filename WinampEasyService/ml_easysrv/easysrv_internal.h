@@ -96,4 +96,4 @@ extern std::map<UINT_PTR, std::vector<ItemInfo>> serviceListItemMap;
 extern std::mutex serviceListItemMapMutex;
 
 extern wchar_t configFileName[MAX_PATH];
-extern wchar_t pluginDir[MAX_PATH];
+extern wchar_t* pluginDir;

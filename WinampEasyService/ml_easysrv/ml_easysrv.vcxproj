@@ -29,6 +29,7 @@
     <ClInclude Include="easysrv.h" />
     <ClInclude Include="img_util.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="wa_ipc_extra.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ml_easysrv.rc" />
