@@ -118,6 +118,7 @@ Service plugin development:
         * `string getoption(string optionName, string defaultValue)`
         * `void setoption(string optionName, string optionValue)`
         * `void additem(string filename, bool enqueue)`
+        * `void inject(string url, string js)`
     * Full example: `WinampEasyService\\WebExamples\\wsrv_example.html`
 
 # ServicePlugins

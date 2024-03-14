@@ -7,6 +7,7 @@ namespace isrv_web
 {
     public partial class Form1 : Form
     {
+        #region P/Invoke
         [DllImport("user32.dll")]
         static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
@@ -51,6 +52,7 @@ namespace isrv_web
         const uint EVENT_OBJECT_FOCUS = 0x8005;
         const uint EVENT_OBJECT_LOCATIONCHANGE = 0x800B;
         const uint WINEVENT_OUTOFCONTEXT = 0x0000;
+        #endregion
 
         const uint CAP_DEFAULT = 0;
         const uint CAP_CUSTOMDIALOG = 1;
@@ -110,7 +112,7 @@ namespace isrv_web
 
                 browser = new ChromiumWebBrowser(callArgs[0]);
                 browser.JavascriptObjectRepository.Settings.LegacyBindingEnabled = true;
-                browser.JavascriptObjectRepository.Register("winamp", new WinampJSObject(shortName, configFile, hwndWinampParent));
+                browser.JavascriptObjectRepository.Register("winamp", new WinampJSObject(shortName, configFile, hwndWinampParent, browser));
                 Controls.Add(browser);
 
                 ShowWindow(this.Handle, SW_SHOW);

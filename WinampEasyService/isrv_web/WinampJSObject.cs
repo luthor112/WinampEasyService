@@ -1,4 +1,6 @@
-﻿using System;
+﻿using CefSharp.WinForms;
+using CefSharp;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -56,12 +58,14 @@ namespace isrv_web
         string shortName;
         string configFile;
         IntPtr hwndWinampParent;
+        ChromiumWebBrowser browser;
 
-        public WinampJSObject(string _shortName, string _configFile, IntPtr _hwndWinampParent)
+        public WinampJSObject(string _shortName, string _configFile, IntPtr _hwndWinampParent, ChromiumWebBrowser _browser)
         {
             shortName = _shortName;
             configFile = _configFile;
             hwndWinampParent = _hwndWinampParent;
+            browser = _browser;
         }
 
         public string getoption(string optionName, string defaultValue)
@@ -99,6 +103,12 @@ namespace isrv_web
             }
 
             Marshal.FreeCoTaskMem(ptrCopyData);
+        }
+
+        public void inject(string url, string js)
+        {
+            browser.LoadUrlAsync(url);
+            browser.ExecuteScriptAsyncWhenPageLoaded(js, false);
         }
     }
 }
