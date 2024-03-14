@@ -3,6 +3,7 @@
 <body>
     <b>Hello World!</b><br>
     <input type="button" onclick="addExample()" value="Add file!"></input>
+    <input type="button" onclick="injectAlert()" value="Inject!"></input>
     
     <script>
         function getNodeName() {
@@ -11,6 +12,10 @@
         
         function addExample() {
             window.winamp.additem('e:\\example.mp3', true);
+        }
+        
+        function injectAlert() {
+            window.winamp.inject('https://www.google.com/', 'alert(\'Hello!\');');
         }
     </script>
 </body>
