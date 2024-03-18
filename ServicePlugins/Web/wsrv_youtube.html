@@ -1,0 +1,14 @@
+﻿<html>
+<head></head>
+<body onload="injectOpener();">
+    <script>
+        function getNodeName() {
+            return "YouTube";
+        }
+        
+        function injectOpener() {
+            window.winamp.inject('https://www.youtube.com/', 'if (location.href.startsWith(\'https://www.youtube.com/watch?v=\')) { window.winamp.additem(location.href, false); location.href=\'https://www.youtube.com/\'; }');
+        }
+    </script>
+</body>
+</html>
