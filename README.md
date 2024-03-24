@@ -162,6 +162,10 @@ The following plugins have been developed using this framework:
     * Default category can be set in the config file
 * srv_screensavers: Watch screensavers in the Media Library
 * wsrv_youtube: Browser YouTube through the website, but open videos in the player
+* srv_archiveskins: Browse the Archive.org Winamp Skins Collection right from the Media Library
+    * Double click to download and set a skin
+    * Click "Keep current skin" to copy the last set skin from the current page to your Skins directory
+        * This only works if you have Write rights to the directory
 
 Common operation:
 * Most plguins, including the main ml_easysrv plugin, can be configured by editing the `easysrv.ini` file
