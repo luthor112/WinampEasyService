@@ -1,5 +1,7 @@
 #pragma once
 
+#define _DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR
+
 #include "easysrv.h"
 
 #include <Windows.h>
@@ -19,12 +21,15 @@ typedef NodeDescriptor (*GetNodeDescFunc)();
 typedef void (*InvokeServiceFunc)(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl, wchar_t* skinPath);
 typedef const wchar_t* (*GetFileNameFunc)(const wchar_t* fileID);
 typedef HWND (*GetCustomDialogFunc)(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl, wchar_t* skinPath);
+typedef int (*GetNodeNumFunc)();
+typedef void (*SelectServiceFunc)(int multiNum);
 
 class EasyService
 {
 public:
     virtual void InitService(UINT_PTR serviceID) = 0;
     virtual NodeDescriptor& GetNodeDesc() = 0;
+    virtual int GetNodeNum() = 0;
     virtual void InvokeService(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl) = 0;
     virtual const wchar_t* GetFileName(const wchar_t* fileID) = 0;
     virtual HWND GetCustomDialog(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl) = 0;
@@ -39,10 +44,11 @@ public:
 class DLLService : public EasyService
 {
 public:
-    DLLService(const wchar_t* dllFullPath, const wchar_t* _shortName);
+    DLLService(const wchar_t* dllFullPath, const wchar_t* _shortName, int _multiID = 0);
 
     virtual void InitService(UINT_PTR serviceID);
     virtual NodeDescriptor& GetNodeDesc();
+    virtual int GetNodeNum();
     virtual void InvokeService(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl);
     virtual const wchar_t* GetFileName(const wchar_t* fileID);
     virtual HWND GetCustomDialog(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl);
@@ -57,11 +63,14 @@ private:
     InvokeServiceFunc _invokeService;
     GetFileNameFunc _getFileName;
     GetCustomDialogFunc _getCustomDialog;
+    GetNodeNumFunc _getNodeNum;
+    SelectServiceFunc _selectService;
     
     const wchar_t* shortName;
     NodeDescriptor nodeDescCache;
     UINT_PTR _serviceID;
     bool isValid;
+    int multiID;
 };
 
 class EXEService : public EasyService
@@ -71,6 +80,7 @@ public:
 
     virtual void InitService(UINT_PTR serviceID);
     virtual NodeDescriptor& GetNodeDesc();
+    virtual int GetNodeNum();
     virtual void InvokeService(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl);
     virtual const wchar_t* GetFileName(const wchar_t* fileID);
     virtual HWND GetCustomDialog(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl);

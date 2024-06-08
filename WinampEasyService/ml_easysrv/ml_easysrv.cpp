@@ -1,3 +1,5 @@
+#define _DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR
+
 #include "easysrv_internal.h"
 #include "wa_ipc_extra.h"
 
@@ -299,26 +301,40 @@ void loadServices()
 					continue;
 				}
 
-				UINT_PTR nodeID;
-				const wchar_t* catName = service->GetNodeDesc().Category;
-				if (catName == NULL)
+				int multiNum = 1;
+				if (service->GetNodeDesc().Capabilities & CAP_MULTISERVICE)
 				{
-					nodeID = addTreeItem(servicesNode, service->GetNodeDesc().NodeName, FALSE, MLTREEIMAGE_BRANCH);
-				}
-				else
-				{
-					UINT_PTR catNodeID = getCategoryNodeID(catMap, catName);
-					if (catNodeID == 0)
-					{
-						catNodeID = addTreeItem(servicesNode, catName, TRUE, MLTREEIMAGE_BRANCH);
-						catMap[catName] = catNodeID;
-					}
-					
-					nodeID = addTreeItem(catNodeID, service->GetNodeDesc().NodeName, FALSE, MLTREEIMAGE_BRANCH);
+					multiNum = service->GetNodeNum();
 				}
 
-				serviceMap[nodeID] = service;
-				service->InitService(nodeID);
+				for (int i = 0; i < multiNum; i++)
+				{
+					UINT_PTR nodeID;
+					const wchar_t* catName = service->GetNodeDesc().Category;
+					if (catName == NULL)
+					{
+						nodeID = addTreeItem(servicesNode, service->GetNodeDesc().NodeName, FALSE, MLTREEIMAGE_BRANCH);
+					}
+					else
+					{
+						UINT_PTR catNodeID = getCategoryNodeID(catMap, catName);
+						if (catNodeID == 0)
+						{
+							catNodeID = addTreeItem(servicesNode, catName, TRUE, MLTREEIMAGE_BRANCH);
+							catMap[catName] = catNodeID;
+						}
+
+						nodeID = addTreeItem(catNodeID, service->GetNodeDesc().NodeName, FALSE, MLTREEIMAGE_BRANCH);
+					}
+
+					serviceMap[nodeID] = service;
+					service->InitService(nodeID);
+
+					if (i + 1 < multiNum)
+					{
+						service = new DLLService(absoluteName, FindFileData.cFileName, i + 1);
+					}
+				}
 				trace(L"Loaded service: ", absoluteName);
 			}
 		} while (FindNextFile(searchHandle, &FindFileData));

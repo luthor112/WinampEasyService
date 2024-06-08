@@ -146,6 +146,11 @@ NodeDescriptor& EXEService::GetNodeDesc()
     return nodeDescCache;
 }
 
+int EXEService::GetNodeNum()
+{
+    return 1;
+}
+
 void EXEService::InvokeService(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl)
 {
     std::lock_guard<std::mutex> guard(serviceListItemMapMutex);
