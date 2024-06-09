@@ -1,3 +1,5 @@
+#define _DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR
+
 #include "easysrv_internal.h"
 #include "wa_ipc_extra.h"
 

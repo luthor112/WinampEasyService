@@ -1,5 +1,7 @@
 #pragma once
 
+#define _DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR
+
 #include "easysrv.h"
 
 #include <Windows.h>
