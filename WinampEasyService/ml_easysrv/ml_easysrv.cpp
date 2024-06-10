@@ -364,26 +364,40 @@ void loadServices()
 					continue;
 				}
 
-				UINT_PTR nodeID;
-				const wchar_t* catName = service->GetNodeDesc().Category;
-				if (catName == NULL)
+				int multiNum = 1;
+				if (service->GetNodeDesc().Capabilities & CAP_MULTISERVICE)
 				{
-					nodeID = addTreeItem(servicesNode, service->GetNodeDesc().NodeName, FALSE, MLTREEIMAGE_BRANCH);
+					multiNum = service->GetNodeNum();
 				}
-				else
+
+				for (int i = 0; i < multiNum; i++)
 				{
-					UINT_PTR catNodeID = getCategoryNodeID(catMap, catName);
-					if (catNodeID == 0)
+					UINT_PTR nodeID;
+					const wchar_t* catName = service->GetNodeDesc().Category;
+					if (catName == NULL)
 					{
-						catNodeID = addTreeItem(servicesNode, catName, TRUE, MLTREEIMAGE_BRANCH);
-						catMap[catName] = catNodeID;
+						nodeID = addTreeItem(servicesNode, service->GetNodeDesc().NodeName, FALSE, MLTREEIMAGE_BRANCH);
+					}
+					else
+					{
+						UINT_PTR catNodeID = getCategoryNodeID(catMap, catName);
+						if (catNodeID == 0)
+						{
+							catNodeID = addTreeItem(servicesNode, catName, TRUE, MLTREEIMAGE_BRANCH);
+							catMap[catName] = catNodeID;
+						}
+
+						nodeID = addTreeItem(catNodeID, service->GetNodeDesc().NodeName, FALSE, MLTREEIMAGE_BRANCH);
 					}
 
-					nodeID = addTreeItem(catNodeID, service->GetNodeDesc().NodeName, FALSE, MLTREEIMAGE_BRANCH);
-				}
+					serviceMap[nodeID] = service;
+					service->InitService(nodeID);
 
-				serviceMap[nodeID] = service;
-				service->InitService(nodeID);
+					if (i + 1 < multiNum)
+					{
+						service = new EXEService(absoluteName, FindFileData.cFileName, i + 1);
+					}
+				}
 				trace(L"Loaded service: ", absoluteName);
 			}
 		} while (FindNextFile(searchHandle, &FindFileData));

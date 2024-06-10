@@ -76,7 +76,7 @@ private:
 class EXEService : public EasyService
 {
 public:
-    EXEService(const wchar_t* exeName, const wchar_t* _shortName);
+    EXEService(const wchar_t* exeName, const wchar_t* _shortName, int _multiID = 0);
 
     virtual void InitService(UINT_PTR serviceID);
     virtual NodeDescriptor& GetNodeDesc();
@@ -93,6 +93,7 @@ private:
     wchar_t* _exeName;
     const wchar_t* shortName;
     bool isValid;
+    int multiID;
     
     NodeDescriptor nodeDescCache;
     UINT_PTR _serviceID;
