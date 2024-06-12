@@ -383,8 +383,28 @@ namespace isrv_managed
             var theType = DLL.GetType("msrv.EasyService");
             var c = Activator.CreateInstance(theType);
 
-            if (args[1] == "GetNodeDesc")
+            int currentMultiID = 0;
+            int cmdIndex = 1;
+            if (args[1] == "select")
             {
+                currentMultiID = int.Parse(args[2]);
+                cmdIndex = 3;
+            }
+
+            if (args[cmdIndex] == "GetNodeNum")
+            {
+                var method = theType.GetMethod("GetNodeNum");
+                int nodeNum = (int)method.Invoke(c, null);
+                Console.WriteLine(nodeNum);
+            }
+            else if (args[cmdIndex] == "GetNodeDesc")
+            {
+                if (currentMultiID != 0)
+                {
+                    var selectMethod = theType.GetMethod("SelectService");
+                    selectMethod.Invoke(c, new object[] { currentMultiID });
+                }
+
                 var method = theType.GetMethod("GetNodeDesc");
                 if (method != null)
                 {
@@ -402,16 +422,22 @@ namespace isrv_managed
                     Console.WriteLine(0);
                 }
             }
-            else if (args[1] == "InvokeService")
+            else if (args[cmdIndex] == "InvokeService")
             {
-                IntPtr hwndWinampParent = IntPtr.Parse(args[2]);
-                IntPtr hwndLibraryParent = IntPtr.Parse(args[3]);
-                IntPtr hwndParentControl = IntPtr.Parse(args[4]);
-                string pluginDir = args[5];
-                string skinPath = args[6];
-                string configFile = args[7];
-                string shortName = args[8];
-                uint serviceID = uint.Parse(args[9]);
+                if (currentMultiID != 0)
+                {
+                    var selectMethod = theType.GetMethod("SelectService");
+                    selectMethod.Invoke(c, new object[] { currentMultiID });
+                }
+
+                IntPtr hwndWinampParent = IntPtr.Parse(args[cmdIndex+1]);
+                IntPtr hwndLibraryParent = IntPtr.Parse(args[cmdIndex+2]);
+                IntPtr hwndParentControl = IntPtr.Parse(args[cmdIndex+3]);
+                string pluginDir = args[cmdIndex+4];
+                string skinPath = args[cmdIndex+5];
+                string configFile = args[cmdIndex+6];
+                string shortName = args[cmdIndex+7];
+                uint serviceID = uint.Parse(args[cmdIndex+8]);
 
                 Dictionary<string, object> functionDict = BuildFunctionDict(configFile, shortName, skinPath, hwndWinampParent);
 
@@ -428,22 +454,34 @@ namespace isrv_managed
                     }
                 }
             }
-            else if (args[1] == "GetFileName")
+            else if (args[cmdIndex] == "GetFileName")
             {
+                if (currentMultiID != 0)
+                {
+                    var selectMethod = theType.GetMethod("SelectService");
+                    selectMethod.Invoke(c, new object[] { currentMultiID });
+                }
+
                 var method = theType.GetMethod("GetFileName");
-                string fName = (string)method.Invoke(c, new object[] { args[2] });
+                string fName = (string)method.Invoke(c, new object[] { args[cmdIndex+1] });
                 Console.WriteLine(fName);
             }
-            else if (args[1] == "GetCustomDialog")
+            else if (args[cmdIndex] == "GetCustomDialog")
             {
-                IntPtr hwndWinampParent = IntPtr.Parse(args[2]);
-                IntPtr hwndLibraryParent = IntPtr.Parse(args[3]);
-                IntPtr hwndParentControl = IntPtr.Parse(args[4]);
-                string pluginDir = args[5];
-                string skinPath = args[6];
-                string configFile = args[7];
-                string shortName = args[8];
-                uint serviceID = uint.Parse(args[9]);
+                if (currentMultiID != 0)
+                {
+                    var selectMethod = theType.GetMethod("SelectService");
+                    selectMethod.Invoke(c, new object[] { currentMultiID });
+                }
+
+                IntPtr hwndWinampParent = IntPtr.Parse(args[cmdIndex+1]);
+                IntPtr hwndLibraryParent = IntPtr.Parse(args[cmdIndex+2]);
+                IntPtr hwndParentControl = IntPtr.Parse(args[cmdIndex+3]);
+                string pluginDir = args[cmdIndex+4];
+                string skinPath = args[cmdIndex+5];
+                string configFile = args[cmdIndex+6];
+                string shortName = args[cmdIndex+7];
+                uint serviceID = uint.Parse(args[cmdIndex+8]);
 
                 Dictionary<string, object> functionDict = BuildFunctionDict(configFile, shortName, skinPath, hwndWinampParent);
 
