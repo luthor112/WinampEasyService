@@ -1,3 +1,4 @@
+#define _DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR
 #include "..\..\WinampEasyService\ml_easysrv\easysrv.h"
 
 #include <Windows.h>
