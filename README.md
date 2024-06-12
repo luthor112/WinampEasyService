@@ -121,6 +121,22 @@ Service plugin development:
         * `void inject(string url, string js)`
     * Full example: `WinampEasyService\\WebExamples\\wsrv_example.html`
 
+Multiservice plugin development:
+* Managed (.NET based) DLLs have to implement the following, in addition to those above:
+    * `public int GetNodeNum()` should return the number of services implemented by the plugin
+    * `public void SelectService(int multiID)` is called to select the currently needed subservice
+    * Important: The selected subservice ID should be taken into consideration on subsequent function calls
+    * Full example: `WinampEasyService\\msrv_examplemulti`
+* Unmanaged DLLs have to implement the following, in addition to those above:
+    * `int GetNodeNum()` should return the number of services implemented by the plugin
+    * `void SelectService(int multiID)` is called to select the currently needed subservice
+    * Important: The selected subservice ID should be taken into consideration on subsequent function calls
+    * Full example: `WinampEasyService\\srv_examplemulti`
+* EXE files (doesn't matter if managed or unmanaged) have to respond to the following, in addition to those above:
+    * `GetNodeNum`: Print the number of services implemented by the plugin to STDOUT
+    * `select MultiID Usual_Arguments` should respond to `Usual_Arguments` with MultiID being the selected subservice ID
+    * Full example: `WinampEasyService\\esrv_examplemulti`
+
 # ServicePlugins
 
 The following plugins have been developed using this framework:
