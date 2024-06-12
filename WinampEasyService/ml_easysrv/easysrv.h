@@ -16,6 +16,7 @@ typedef void (*SetOptionFunc)(UINT_PTR serviceID, const wchar_t* optionName, con
 // Values for NodeDescriptor.Capabilities
 #define CAP_DEFAULT 0u
 #define CAP_CUSTOMDIALOG 1u
+#define CAP_MULTISERVICE 2u
 
 struct NodeDescriptor
 {
@@ -34,6 +35,8 @@ extern "C" {
     EASY_API void InvokeService(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl, wchar_t* skinPath);
     EASY_API const wchar_t* GetFileName(const wchar_t* fileID);
     EASY_API HWND GetCustomDialog(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl, wchar_t* skinPath);
+    EASY_API int GetNodeNum();
+    EASY_API void SelectService(int multiID);
 
 #ifdef __cplusplus
 }

@@ -91,14 +91,18 @@ std::string ReadProcessOutput(const wchar_t* cmdLine)
     return outSS.str();
 }
 
-EXEService::EXEService(const wchar_t* exeName, const wchar_t* _shortName)
+EXEService::EXEService(const wchar_t* exeName, const wchar_t* _shortName, int _multiID)
 {
     _exeName = _wcsdup(exeName);
     shortName = _wcsdup(_shortName);
+    multiID = _multiID;
 
     // Get and cache Node Description
     wchar_t cmdLine[1024];
-    wsprintf(cmdLine, L"%s GetNodeDesc", _exeName);
+    if (multiID == 0)
+        wsprintf(cmdLine, L"%s GetNodeDesc", _exeName);
+    else
+        wsprintf(cmdLine, L"%s select %d GetNodeDesc", _exeName, multiID);
     std::string s1 = ReadProcessOutput(cmdLine);
     std::wstring ws1 = std::wstring(s1.begin(), s1.end());
     std::wistringstream inSS(ws1);
@@ -146,6 +150,19 @@ NodeDescriptor& EXEService::GetNodeDesc()
     return nodeDescCache;
 }
 
+int EXEService::GetNodeNum()
+{
+    wchar_t cmdLine[1024];
+    wsprintf(cmdLine, L"%s GetNodeNum", _exeName);
+    std::string s1 = ReadProcessOutput(cmdLine);
+    std::wstring ws1 = std::wstring(s1.begin(), s1.end());
+    std::wistringstream inSS(ws1);
+
+    std::wstring line;
+    std::getline(inSS, line);
+    return std::stoul(line);
+}
+
 void EXEService::InvokeService(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl)
 {
     std::lock_guard<std::mutex> guard(serviceListItemMapMutex);
@@ -166,7 +183,10 @@ void EXEService::InvokeService(HWND hwndWinampParent, HWND hwndLibraryParent, HW
     }
 
     wchar_t cmdLine[1024];
-    wsprintf(cmdLine, L"%s InvokeService %d %d %d \"%s\" \"%s\" \"%s\" \"%s\" %d", _exeName, hwndWinampParent, hwndLibraryParent, hwndParentControl, pluginDir, skinPath, configFileName, shortName, _serviceID);
+    if (multiID == 0)
+        wsprintf(cmdLine, L"%s InvokeService %d %d %d \"%s\" \"%s\" \"%s\" \"%s\" %d", _exeName, hwndWinampParent, hwndLibraryParent, hwndParentControl, pluginDir, skinPath, configFileName, shortName, _serviceID);
+    else
+        wsprintf(cmdLine, L"%s select %d InvokeService %d %d %d \"%s\" \"%s\" \"%s\" \"%s\" %d", _exeName, multiID, hwndWinampParent, hwndLibraryParent, hwndParentControl, pluginDir, skinPath, configFileName, shortName, _serviceID);
     std::string s1 = ReadProcessOutput(cmdLine);
     std::wstring ws1 = std::wstring(s1.begin(), s1.end());
     std::wistringstream inSS(ws1);
@@ -197,7 +217,10 @@ void EXEService::InvokeService(HWND hwndWinampParent, HWND hwndLibraryParent, HW
 const wchar_t* EXEService::GetFileName(const wchar_t* fileID)
 {
     wchar_t cmdLine[1024];
-    wsprintf(cmdLine, L"%s GetFileName %s", _exeName, fileID);
+    if (multiID == 0)
+        wsprintf(cmdLine, L"%s GetFileName %s", _exeName, fileID);
+    else
+        wsprintf(cmdLine, L"%s select %d GetFileName %s", _exeName, multiID, fileID);
     std::string s1 = ReadProcessOutput(cmdLine);
     std::wstring ws1 = std::wstring(s1.begin(), s1.end());
     std::wistringstream inSS(ws1);
@@ -231,7 +254,10 @@ HWND EXEService::GetCustomDialog(HWND _hwndWinampParent, HWND _hwndLibraryParent
     }
 
     wchar_t cmdLine[1024];
-    wsprintf(cmdLine, L"%s GetCustomDialog %d %d %d \"%s\" \"%s\" \"%s\" \"%s\" %d", _exeName, _hwndWinampParent, _hwndLibraryParent, hwndParentControl, pluginDir, skinPath, configFileName, shortName, _serviceID);
+    if (multiID == 0)
+        wsprintf(cmdLine, L"%s GetCustomDialog %d %d %d \"%s\" \"%s\" \"%s\" \"%s\" %d", _exeName, _hwndWinampParent, _hwndLibraryParent, hwndParentControl, pluginDir, skinPath, configFileName, shortName, _serviceID);
+    else
+        wsprintf(cmdLine, L"%s select %d GetCustomDialog %d %d %d \"%s\" \"%s\" \"%s\" \"%s\" %d", _exeName, multiID, _hwndWinampParent, _hwndLibraryParent, hwndParentControl, pluginDir, skinPath, configFileName, shortName, _serviceID);
     if (CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
     {
         customDialogPID = pi.dwProcessId;
