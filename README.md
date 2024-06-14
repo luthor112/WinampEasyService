@@ -137,6 +137,12 @@ Multiservice plugin development:
     * `select MultiID Usual_Arguments` should respond to `Usual_Arguments` with MultiID being the selected subservice ID
     * Full example: `WinampEasyService\\esrv_examplemulti`
 
+Custom Reference ID usage:
+* Declare `CAP_CUSTOMREFID` in your Capabilities
+* Implement `GetCustomRefId` and return your custom Reference ID
+* To declare a playlist entry using a custom Reference ID, the file name `yourcustomrefid_ref_examplefile.ref` has to be used, instead of the usual `ref_examplefile`
+* Reference handling through `GetFileName` is unchanged
+
 # ServicePlugins
 
 The following plugins have been developed using this framework:
