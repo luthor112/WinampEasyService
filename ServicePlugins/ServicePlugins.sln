@@ -39,7 +39,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "skinner_helper", "skinner_h
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "srv_archiveskins", "srv_archiveskins\srv_archiveskins.vcxproj", "{B122209B-9CBE-4918-BAFF-F37AFE020FA3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "archiveskins_helper", "archiveskins_helper\archiveskins_helper.csproj", "{168AB429-5757-47D8-9FC1-D159DAC526FA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "archiveskins_helper", "archiveskins_helper\archiveskins_helper.csproj", "{168AB429-5757-47D8-9FC1-D159DAC526FA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -284,6 +284,7 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
+		FileExplorer = ..\|Web\
 		SolutionGuid = {7E67D2FE-4B08-4BD8-9202-7457C31C0C6E}
 	EndGlobalSection
 EndGlobal
