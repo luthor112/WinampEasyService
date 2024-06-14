@@ -422,6 +422,18 @@ namespace isrv_managed
                     Console.WriteLine(0);
                 }
             }
+            else if (args[cmdIndex] == "GetCustomRefId")
+            {
+                if (currentMultiID != 0)
+                {
+                    var selectMethod = theType.GetMethod("SelectService");
+                    selectMethod.Invoke(c, new object[] { currentMultiID });
+                }
+
+                var method = theType.GetMethod("GetCustomRefId");
+                string customRefId = (string)method.Invoke(c, null);
+                Console.WriteLine(customRefId);
+            }
             else if (args[cmdIndex] == "InvokeService")
             {
                 if (currentMultiID != 0)
