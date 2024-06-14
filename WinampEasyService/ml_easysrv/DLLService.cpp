@@ -13,6 +13,7 @@ DLLService::DLLService(const wchar_t* dllFullPath, const wchar_t* _shortName, in
     _getCustomDialog = reinterpret_cast<GetCustomDialogFunc>(GetProcAddress(dllModule, "GetCustomDialog"));
     _getNodeNum = reinterpret_cast<GetNodeNumFunc>(GetProcAddress(dllModule, "GetNodeNum"));
     _selectService = reinterpret_cast<SelectServiceFunc>(GetProcAddress(dllModule, "SelectService"));
+    _getCustomRefId = reinterpret_cast<GetCustomRefIdFunc>(GetProcAddress(dllModule, "GetCustomRefId"));
 
     if (_selectService)
     {
@@ -26,6 +27,9 @@ DLLService::DLLService(const wchar_t* dllFullPath, const wchar_t* _shortName, in
         nodeDescCache = _getNodeDesc();
         if (nodeDescCache.ColumnNames == NULL)
             nodeDescCache.ColumnNames = L"Author\tTitle\tInformation";
+
+        if ((nodeDescCache.Capabilities & CAP_CUSTOMREFID) && _getCustomRefId)
+            customRefIdCache = _getCustomRefId();
     }
     else
     {
@@ -119,4 +123,9 @@ bool DLLService::IsValid()
 const wchar_t* DLLService::GetShortName()
 {
     return shortName;
+}
+
+const wchar_t* DLLService::GetCustomRefId()
+{
+    return customRefIdCache;
 }

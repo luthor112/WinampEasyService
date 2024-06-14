@@ -186,9 +186,31 @@ extern "C" __declspec(dllexport) const wchar_t* GetPluginFileName(const wchar_t*
 	int serviceIDLen;
 	wchar_t onlyRefName[1024];
 
-	swscanf_s(referenceName, L"%d%n", &serviceID, &serviceIDLen);
-	wcscpy_s(onlyRefName, 1024, referenceName + serviceIDLen + 1);
-	onlyRefName[wcslen(onlyRefName) - 4] = '\0';
+	if (isdigit(referenceName[0]))
+	{
+		swscanf_s(referenceName, L"%d%n", &serviceID, &serviceIDLen);
+		wcscpy_s(onlyRefName, 1024, referenceName + serviceIDLen + 1);
+		onlyRefName[wcslen(onlyRefName) - 4] = '\0';
+	}
+	else
+	{
+		for (const auto& serviceMapPair : serviceMap)
+		{
+			if (serviceMapPair.second->GetNodeDesc().Capabilities & CAP_CUSTOMREFID)
+			{
+				const wchar_t* customRefId = serviceMapPair.second->GetCustomRefId();
+				if (wcslen(referenceName) > wcslen(customRefId) + 1)
+				{
+					if (!wcsncmp(referenceName, customRefId, wcslen(customRefId)) && referenceName[wcslen(customRefId)] == L'_')
+					{
+						serviceID = serviceMapPair.first;
+						wcscpy_s(onlyRefName, 1024, referenceName + wcslen(customRefId) + 1);
+						onlyRefName[wcslen(onlyRefName) - 4] = '\0';
+					}
+				}
+			}
+		}
+	}
 
 	return serviceMap[serviceID]->GetFileName(onlyRefName);
 }

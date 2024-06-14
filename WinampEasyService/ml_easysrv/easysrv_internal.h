@@ -23,6 +23,7 @@ typedef const wchar_t* (*GetFileNameFunc)(const wchar_t* fileID);
 typedef HWND (*GetCustomDialogFunc)(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl, wchar_t* skinPath);
 typedef int (*GetNodeNumFunc)();
 typedef void (*SelectServiceFunc)(int multiNum);
+typedef const wchar_t* (*GetCustomRefIdFunc)();
 
 class EasyService
 {
@@ -34,6 +35,7 @@ public:
     virtual const wchar_t* GetFileName(const wchar_t* fileID) = 0;
     virtual HWND GetCustomDialog(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl) = 0;
     virtual void DestroyingCustomDialog() = 0;
+    virtual const wchar_t* GetCustomRefId() = 0;
 
     virtual bool IsValid() = 0;
     virtual const wchar_t* GetShortName() = 0;
@@ -53,6 +55,7 @@ public:
     virtual const wchar_t* GetFileName(const wchar_t* fileID);
     virtual HWND GetCustomDialog(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl);
     virtual void DestroyingCustomDialog();
+    virtual const wchar_t* GetCustomRefId();
 
     virtual bool IsValid();
     virtual const wchar_t* GetShortName();
@@ -65,9 +68,11 @@ private:
     GetCustomDialogFunc _getCustomDialog;
     GetNodeNumFunc _getNodeNum;
     SelectServiceFunc _selectService;
+    GetCustomRefIdFunc _getCustomRefId;
     
     const wchar_t* shortName;
     NodeDescriptor nodeDescCache;
+    const wchar_t* customRefIdCache;
     UINT_PTR _serviceID;
     bool isValid;
     int multiID;
@@ -85,6 +90,7 @@ public:
     virtual const wchar_t* GetFileName(const wchar_t* fileID);
     virtual HWND GetCustomDialog(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl);
     virtual void DestroyingCustomDialog();
+    virtual const wchar_t* GetCustomRefId();
 
     virtual bool IsValid();
     virtual const wchar_t* GetShortName();
@@ -96,6 +102,7 @@ private:
     int multiID;
     
     NodeDescriptor nodeDescCache;
+    const wchar_t* customRefIdCache;
     UINT_PTR _serviceID;
     
     DWORD customDialogPID = -1;
