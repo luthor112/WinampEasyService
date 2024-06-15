@@ -142,6 +142,7 @@ Custom Reference ID usage:
 * Implement `GetCustomRefId` and return your custom Reference ID
 * To declare a playlist entry using a custom Reference ID, the file name `yourcustomrefid_ref_examplefile.ref` has to be used, instead of the usual `ref_examplefile`
 * Reference handling through `GetFileName` is unchanged
+* Example: `WinampEasyService\\refidexample`
 
 # ServicePlugins
 
