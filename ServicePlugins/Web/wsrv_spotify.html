@@ -1,0 +1,15 @@
+<html>
+<head>
+</head>
+<body onload="setTimeout(injectOpener, 1000);">
+    <script>
+        function getNodeName() {
+            return "Spotify";
+        }
+
+        function injectOpener() {
+            window.winamp.inject('https://open.spotify.com/', 'if (location.href.startsWith(\'https://open.spotify.com/track/\')) { window.winamp.additem(\'spotify_ref_\'+location.href.substring(location.href.lastIndexOf(\'/\')+1)+\'.ref\', false); }');
+        }
+    </script>
+</body>
+</html>

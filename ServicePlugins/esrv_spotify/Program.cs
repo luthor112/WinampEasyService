@@ -19,13 +19,19 @@ namespace esrv_spotify
         {
             const uint CAP_DEFAULT = 0;
             const uint CAP_CUSTOMDIALOG = 1;
+            const uint CAP_MULTISERVICE = 2;
+            const uint CAP_CUSTOMREFID = 4;
 
             if (args[0] == "GetNodeDesc")
             {
                 Console.WriteLine("Media");
                 Console.WriteLine("Spotify");
                 Console.WriteLine("Title\tLink");
-                Console.WriteLine(CAP_DEFAULT);
+                Console.WriteLine(CAP_CUSTOMREFID);
+            }
+            else if (args[0] == "GetCustomRefId")
+            {
+                Console.WriteLine("spotify");
             }
             else if (args[0] == "InvokeService")
             {

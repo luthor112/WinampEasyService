@@ -157,6 +157,8 @@ EXEService::EXEService(const wchar_t* exeName, const wchar_t* _shortName, int _m
         {
             std::wstring line;
             std::getline(inSS, line);
+            if (line[line.size() - 1] == '\r')
+                line.erase(line.size() - 1);
             customRefIdCache = _wcsdup(line.c_str());
         }
         catch (const std::exception& e)
