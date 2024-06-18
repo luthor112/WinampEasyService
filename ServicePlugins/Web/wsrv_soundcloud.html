@@ -1,0 +1,15 @@
+<html>
+<head>
+</head>
+<body onload="setTimeout(injectOpener, 1000);">
+    <script>
+        function getNodeName() {
+            return "SoundCloud";
+        }
+
+        function injectOpener() {
+            window.winamp.inject('https://soundcloud.com/discover', 'if (location.href.startsWith(\'https://soundcloud.com/\') && location.href.split(\'/\').length == 5) { window.winamp.additem(location.href, false); }');
+        }
+    </script>
+</body>
+</html>
