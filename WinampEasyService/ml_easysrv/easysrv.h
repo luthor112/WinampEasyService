@@ -18,6 +18,7 @@ typedef void (*SetOptionFunc)(UINT_PTR serviceID, const wchar_t* optionName, con
 #define CAP_CUSTOMDIALOG 1u
 #define CAP_MULTISERVICE 2u
 #define CAP_CUSTOMREFID 4u
+#define CAP_URLHANDLER 8u
 
 struct NodeDescriptor
 {
@@ -39,6 +40,7 @@ extern "C" {
     EASY_API int GetNodeNum();
     EASY_API void SelectService(int multiID);
     EASY_API const wchar_t* GetCustomRefId();
+    EASY_API const wchar_t* GetUrlPrefix();
 
 #ifdef __cplusplus
 }

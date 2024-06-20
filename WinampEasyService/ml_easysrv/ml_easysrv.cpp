@@ -182,6 +182,7 @@ extern "C" __declspec(dllexport) winampMediaLibraryPlugin * winampGetMediaLibrar
 // This is an export function called by in_easyfngetter which returns the real filename.
 // We wrap the code in 'extern "C"' to ensure the export isn't mangled if used in a CPP file.
 extern "C" __declspec(dllexport) const wchar_t* GetPluginFileName(const wchar_t* referenceName) {
+	bool foundService = FALSE;
 	int serviceID;
 	int serviceIDLen;
 	wchar_t onlyRefName[1024];
@@ -191,6 +192,7 @@ extern "C" __declspec(dllexport) const wchar_t* GetPluginFileName(const wchar_t*
 		swscanf_s(referenceName, L"%d%n", &serviceID, &serviceIDLen);
 		wcscpy_s(onlyRefName, 1024, referenceName + serviceIDLen + 1);
 		onlyRefName[wcslen(onlyRefName) - 4] = '\0';
+		foundService = TRUE;
 	}
 	else
 	{
@@ -206,13 +208,32 @@ extern "C" __declspec(dllexport) const wchar_t* GetPluginFileName(const wchar_t*
 						serviceID = serviceMapPair.first;
 						wcscpy_s(onlyRefName, 1024, referenceName + wcslen(customRefId) + 1);
 						onlyRefName[wcslen(onlyRefName) - 4] = '\0';
+						foundService = TRUE;
+						break;
+					}
+				}
+			}
+			else if (serviceMapPair.second->GetNodeDesc().Capabilities & CAP_URLHANDLER)
+			{
+				const wchar_t* urlPrefix = serviceMapPair.second->GetUrlPrefix();
+				if (wcslen(referenceName) > wcslen(urlPrefix) + 1)
+				{
+					if (!wcsncmp(referenceName, urlPrefix, wcslen(urlPrefix)))
+					{
+						serviceID = serviceMapPair.first;
+						wcscpy_s(onlyRefName, 1024, referenceName);
+						foundService = TRUE;
+						break;
 					}
 				}
 			}
 		}
 	}
 
-	return serviceMap[serviceID]->GetFileName(onlyRefName);
+	if (foundService)
+		return serviceMap[serviceID]->GetFileName(onlyRefName);
+	else
+		return NULL;
 }
 
 //////////////////////

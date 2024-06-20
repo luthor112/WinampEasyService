@@ -24,6 +24,7 @@ typedef HWND (*GetCustomDialogFunc)(HWND hwndWinampParent, HWND hwndLibraryParen
 typedef int (*GetNodeNumFunc)();
 typedef void (*SelectServiceFunc)(int multiNum);
 typedef const wchar_t* (*GetCustomRefIdFunc)();
+typedef const wchar_t* (*GetUrlPrefixFunc)();
 
 class EasyService
 {
@@ -36,6 +37,7 @@ public:
     virtual HWND GetCustomDialog(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl) = 0;
     virtual void DestroyingCustomDialog() = 0;
     virtual const wchar_t* GetCustomRefId() = 0;
+    virtual const wchar_t* GetUrlPrefix() = 0;
 
     virtual bool IsValid() = 0;
     virtual const wchar_t* GetShortName() = 0;
@@ -56,6 +58,7 @@ public:
     virtual HWND GetCustomDialog(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl);
     virtual void DestroyingCustomDialog();
     virtual const wchar_t* GetCustomRefId();
+    virtual const wchar_t* GetUrlPrefix();
 
     virtual bool IsValid();
     virtual const wchar_t* GetShortName();
@@ -69,10 +72,12 @@ private:
     GetNodeNumFunc _getNodeNum;
     SelectServiceFunc _selectService;
     GetCustomRefIdFunc _getCustomRefId;
+    GetUrlPrefixFunc _getUrlPrefix;
     
     const wchar_t* shortName;
     NodeDescriptor nodeDescCache;
     const wchar_t* customRefIdCache;
+    const wchar_t* urlPrefixCache;
     UINT_PTR _serviceID;
     bool isValid;
     int multiID;
@@ -91,6 +96,7 @@ public:
     virtual HWND GetCustomDialog(HWND hwndWinampParent, HWND hwndLibraryParent, HWND hwndParentControl);
     virtual void DestroyingCustomDialog();
     virtual const wchar_t* GetCustomRefId();
+    virtual const wchar_t* GetUrlPrefix();
 
     virtual bool IsValid();
     virtual const wchar_t* GetShortName();
@@ -103,11 +109,13 @@ private:
     
     NodeDescriptor nodeDescCache;
     const wchar_t* customRefIdCache;
+    const wchar_t* urlPrefixCache;
     UINT_PTR _serviceID;
     
     DWORD customDialogPID = -1;
 };
 
+// Interoperability between code in different files
 extern std::map<UINT_PTR, EasyService*> serviceMap;
 extern std::map<HWND, UINT_PTR> serviceHwndMap;
 extern std::map<UINT_PTR, std::vector<ItemInfo>> serviceListItemMap;

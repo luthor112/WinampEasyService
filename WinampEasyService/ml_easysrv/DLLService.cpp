@@ -14,6 +14,7 @@ DLLService::DLLService(const wchar_t* dllFullPath, const wchar_t* _shortName, in
     _getNodeNum = reinterpret_cast<GetNodeNumFunc>(GetProcAddress(dllModule, "GetNodeNum"));
     _selectService = reinterpret_cast<SelectServiceFunc>(GetProcAddress(dllModule, "SelectService"));
     _getCustomRefId = reinterpret_cast<GetCustomRefIdFunc>(GetProcAddress(dllModule, "GetCustomRefId"));
+    _getUrlPrefix = reinterpret_cast<GetUrlPrefixFunc>(GetProcAddress(dllModule, "GetUrlPrefix"));
 
     if (_selectService)
     {
@@ -30,6 +31,9 @@ DLLService::DLLService(const wchar_t* dllFullPath, const wchar_t* _shortName, in
 
         if ((nodeDescCache.Capabilities & CAP_CUSTOMREFID) && _getCustomRefId)
             customRefIdCache = _getCustomRefId();
+
+        if ((nodeDescCache.Capabilities & CAP_URLHANDLER) && _getUrlPrefix)
+            urlPrefixCache = _getUrlPrefix();
     }
     else
     {
@@ -128,4 +132,9 @@ const wchar_t* DLLService::GetShortName()
 const wchar_t* DLLService::GetCustomRefId()
 {
     return customRefIdCache;
+}
+
+const wchar_t* DLLService::GetUrlPrefix()
+{
+    return urlPrefixCache;
 }

@@ -48,8 +48,11 @@ void GetFileInfo(const wchar_t* file, wchar_t* title, int* length_in_ms)
 	auto getPluginFileName = reinterpret_cast<const wchar_t* (*) (const wchar_t*)>(GetProcAddress(easysrvdll, "GetPluginFileName"));
 	const wchar_t* realFileName = getPluginFileName(refFileName);
 	
-	SendMessage(plugin.hMainWindow, WM_WA_IPC, (WPARAM)realFileName, IPC_CHANGECURRENTFILEW);
-	SendMessage(plugin.hMainWindow, WM_WA_IPC, 0, IPC_UPDTITLE);
+	if (realFileName != NULL)
+	{
+		SendMessage(plugin.hMainWindow, WM_WA_IPC, (WPARAM)realFileName, IPC_CHANGECURRENTFILEW);
+		SendMessage(plugin.hMainWindow, WM_WA_IPC, 0, IPC_UPDTITLE);
+	}
 }
 
 int InfoBox(const wchar_t* file, HWND hwndParent)

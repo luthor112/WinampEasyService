@@ -166,6 +166,32 @@ EXEService::EXEService(const wchar_t* exeName, const wchar_t* _shortName, int _m
             isValid = false;
         }
     }
+
+    // Get and cache URL Prefix if supported
+    if (isValid && (nodeDescCache.Capabilities & CAP_URLHANDLER))
+    {
+        wchar_t cmdLine[1024];
+        if (multiID == 0)
+            wsprintf(cmdLine, L"%s GetUrlPrefix", _exeName);
+        else
+            wsprintf(cmdLine, L"%s select %d GetUrlPrefix", _exeName, multiID);
+        std::string s1 = ReadProcessOutput(cmdLine);
+        std::wstring ws1 = std::wstring(s1.begin(), s1.end());
+        std::wistringstream inSS(ws1);
+
+        try
+        {
+            std::wstring line;
+            std::getline(inSS, line);
+            if (line[line.size() - 1] == '\r')
+                line.erase(line.size() - 1);
+            urlPrefixCache = _wcsdup(line.c_str());
+        }
+        catch (const std::exception& e)
+        {
+            isValid = false;
+        }
+    }
 }
 
 void EXEService::InitService(UINT_PTR serviceID)
@@ -322,4 +348,9 @@ const wchar_t* EXEService::GetShortName()
 const wchar_t* EXEService::GetCustomRefId()
 {
     return customRefIdCache;
+}
+
+const wchar_t* EXEService::GetUrlPrefix()
+{
+    return urlPrefixCache;
 }
