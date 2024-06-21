@@ -41,9 +41,6 @@
     <ClInclude Include="img_util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="wa_ipc_extra.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ml_easysrv.rc">

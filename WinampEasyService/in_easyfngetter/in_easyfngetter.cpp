@@ -36,7 +36,7 @@ void Quit()
 
 }
 
-// BUG: file is always NULL
+// Note: Use last known file if file is NULL
 void GetFileInfo(const wchar_t* file, wchar_t* title, int* length_in_ms)
 {
 	int plPos = SendMessage(plugin.hMainWindow, WM_WA_IPC, 0, IPC_GETLISTPOS);
@@ -122,7 +122,7 @@ void EQSet(int on, char data[10], int preamp)
 
 In_Module plugin =
 {
-	IN_VER,	// defined in IN2.H
+	IN_VER_OLD/*/IN_VER/**/,	// defined in IN2.H
 	const_cast<char*>("Reference Handler for WinampEasyService"),
 	0,	// hMainWindow (filled in by winamp)
 	0,  // hDllInstance (filled in by winamp)
@@ -131,7 +131,7 @@ In_Module plugin =
 	0,	// uses output plug-in system
 	Config,
 	About,
-	Init,
+	(int(__cdecl*)(void))Init,
 	Quit,
 	GetFileInfo,
 	InfoBox,

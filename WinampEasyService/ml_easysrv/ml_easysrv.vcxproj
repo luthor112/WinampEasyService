@@ -29,7 +29,6 @@
     <ClInclude Include="easysrv.h" />
     <ClInclude Include="img_util.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="wa_ipc_extra.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ml_easysrv.rc" />
@@ -112,7 +111,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\..\Winamp SDK;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\Winamp SDK;..\..\..\Winamp SDK\Wasabi;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
