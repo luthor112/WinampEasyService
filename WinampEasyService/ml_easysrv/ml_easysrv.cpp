@@ -180,7 +180,7 @@ extern "C" __declspec(dllexport) winampMediaLibraryPlugin * winampGetMediaLibrar
 
 // This is an export function called by in_easyfngetter which returns the real filename.
 // We wrap the code in 'extern "C"' to ensure the export isn't mangled if used in a CPP file.
-extern "C" __declspec(dllexport) const wchar_t* GetPluginFileName(const wchar_t* referenceName) {
+extern "C" __declspec(dllexport) const wchar_t* GetPluginFileName(const wchar_t* referenceName, bool checkOnly) {
 	bool foundService = FALSE;
 	int serviceID;
 	int serviceIDLen;
@@ -230,9 +230,16 @@ extern "C" __declspec(dllexport) const wchar_t* GetPluginFileName(const wchar_t*
 	}
 
 	if (foundService)
-		return serviceMap[serviceID]->GetFileName(onlyRefName);
+	{
+		if (checkOnly)
+			return referenceName;
+		else
+			return serviceMap[serviceID]->GetFileName(onlyRefName);
+	}
 	else
+	{
 		return NULL;
+	}
 }
 
 //////////////////////
@@ -737,7 +744,7 @@ static void view_handleFile(HWND hwnd, int itemID, int command)
 		{
 			wchar_t refFN[1024];
 			wsprintf(refFN, L"%d_%s.ref", serviceHwndMap[hwnd], serviceListItemMap[serviceHwndMap[hwnd]][itemID].filename);
-			wcscpy_s(playlistFN, 1024, GetPluginFileName(refFN));
+			wcscpy_s(playlistFN, 1024, GetPluginFileName(refFN, false));
 		}
 	}
 	else {

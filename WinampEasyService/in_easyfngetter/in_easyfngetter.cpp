@@ -45,8 +45,8 @@ void GetFileInfo(const wchar_t* file, wchar_t* title, int* length_in_ms)
 		return;
 
 	auto easysrvdll = GetModuleHandle(L"ml_easysrv.dll");
-	auto getPluginFileName = reinterpret_cast<const wchar_t* (*) (const wchar_t*)>(GetProcAddress(easysrvdll, "GetPluginFileName"));
-	const wchar_t* realFileName = getPluginFileName(refFileName);
+	auto getPluginFileName = reinterpret_cast<const wchar_t* (*) (const wchar_t*, bool)>(GetProcAddress(easysrvdll, "GetPluginFileName"));
+	const wchar_t* realFileName = getPluginFileName(refFileName, false);
 	
 	if (realFileName != NULL)
 	{
@@ -62,7 +62,15 @@ int InfoBox(const wchar_t* file, HWND hwndParent)
 
 int IsOurFile(const wchar_t* file)
 {
-	return 0;
+	auto easysrvdll = GetModuleHandle(L"ml_easysrv.dll");
+	auto getPluginFileName = reinterpret_cast<const wchar_t* (*) (const wchar_t*, bool)>(GetProcAddress(easysrvdll, "GetPluginFileName"));
+
+	if (file != NULL && !wcsncmp(file + (wcslen(file) - 4), L".ref", 4))
+		return 1;
+	else if (file != NULL && getPluginFileName(file, true) != NULL)
+		return 1;
+	else
+		return 0;
 }
 
 int Play(const wchar_t* file)
