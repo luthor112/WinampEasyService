@@ -39,13 +39,14 @@ void Quit()
 // Note: Use last known file if file is NULL
 void GetFileInfo(const wchar_t* file, wchar_t* title, int* length_in_ms)
 {
-	int plPos = SendMessage(plugin.hMainWindow, WM_WA_IPC, 0, IPC_GETLISTPOS);
-	wchar_t* refFileName = (wchar_t*)SendMessage(plugin.hMainWindow, WM_WA_IPC, plPos, IPC_GETPLAYLISTFILEW);
-	if (wcsncmp(refFileName + (wcslen(refFileName) - 4), L".ref", 4))
-		return;
-
 	auto easysrvdll = GetModuleHandle(L"ml_easysrv.dll");
 	auto getPluginFileName = reinterpret_cast<const wchar_t* (*) (const wchar_t*, bool)>(GetProcAddress(easysrvdll, "GetPluginFileName"));
+
+	int plPos = SendMessage(plugin.hMainWindow, WM_WA_IPC, 0, IPC_GETLISTPOS);
+	wchar_t* refFileName = (wchar_t*)SendMessage(plugin.hMainWindow, WM_WA_IPC, plPos, IPC_GETPLAYLISTFILEW);
+	if (wcsncmp(refFileName + (wcslen(refFileName) - 4), L".ref", 4) && getPluginFileName(refFileName, true) == NULL)
+		return;
+
 	const wchar_t* realFileName = getPluginFileName(refFileName, false);
 	
 	if (realFileName != NULL)
