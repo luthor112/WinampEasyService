@@ -21,17 +21,22 @@ namespace esrv_spotify
             const uint CAP_CUSTOMDIALOG = 1;
             const uint CAP_MULTISERVICE = 2;
             const uint CAP_CUSTOMREFID = 4;
+            const uint CAP_URLHANDLER = 8;
 
             if (args[0] == "GetNodeDesc")
             {
                 Console.WriteLine("Media");
                 Console.WriteLine("Spotify");
                 Console.WriteLine("Title\tLink");
-                Console.WriteLine(CAP_CUSTOMREFID);
+                Console.WriteLine(CAP_CUSTOMREFID | CAP_URLHANDLER);
             }
             else if (args[0] == "GetCustomRefId")
             {
                 Console.WriteLine("spotify");
+            }
+            else if (args[0] == "GetUrlPrefix")
+            {
+                Console.WriteLine("https://open.spotify.com/track/");
             }
             else if (args[0] == "InvokeService")
             {
@@ -40,11 +45,18 @@ namespace esrv_spotify
             }
             else if (args[0] == "GetFileName")
             {
-                string trackID = args[1].Substring(4);
-                string cachePath = System.IO.Path.GetTempPath();
+                string trackURL;
+                if (args[1].StartsWith("ref_"))
+                {
+                    string trackID = args[1].Substring(4);
+                    trackURL = "https://open.spotify.com/track/" + trackID;
+                }
+                else
+                {
+                    trackURL = args[1];
+                }
 
                 var spotify = new SpotifyClient();
-                string trackURL = "https://open.spotify.com/track/" + trackID;
                 var downloadUrl = await spotify.Tracks.GetDownloadUrlAsync(trackURL);
 
                 if (!string.IsNullOrEmpty(downloadUrl))
