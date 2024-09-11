@@ -91,6 +91,12 @@ void trace(const wchar_t* part1, const wchar_t* part2 = NULL)
 		traceStream << part1 << (part2 ? part2 : L"") << std::endl;
 }
 
+void traceNodeDesc(NodeDescriptor& nodeDesc)
+{
+	if (tracingEnabled)
+		traceStream << L"Category: " << (nodeDesc.Category ? nodeDesc.Category : L"") << "; NodeName: " << nodeDesc.NodeName << "; ColumnNames: " << nodeDesc.ColumnNames << "; Capabilities: " << nodeDesc.Capabilities << std::endl;
+}
+
 // Called by WinAmp after loading
 int init()
 {
@@ -212,7 +218,8 @@ extern "C" __declspec(dllexport) const wchar_t* GetPluginFileName(const wchar_t*
 					}
 				}
 			}
-			else if (serviceMapPair.second->GetNodeDesc().Capabilities & CAP_URLHANDLER)
+			
+			if (serviceMapPair.second->GetNodeDesc().Capabilities & CAP_URLHANDLER)
 			{
 				const wchar_t* urlPrefix = serviceMapPair.second->GetUrlPrefix();
 				if (wcslen(referenceName) > wcslen(urlPrefix) + 1)
@@ -319,11 +326,11 @@ void loadServices()
 		{
 			serviceMap[servicesNode] = service;
 			service->InitService(servicesNode);
-			trace(L"Loaded service: ", absoluteName);
+			trace(L"Loaded Main Page service: ", absoluteName);
 		}
 		else
 		{
-			trace(L"Invalid service: ", absoluteName);
+			trace(L"Invalid Main Page service: ", absoluteName);
 		}
 	}
 #endif
@@ -385,6 +392,7 @@ void loadServices()
 					}
 				}
 				trace(L"Loaded service: ", absoluteName);
+				traceNodeDesc(service->GetNodeDesc());
 			}
 		} while (FindNextFile(searchHandle, &FindFileData));
 		FindClose(searchHandle);
@@ -448,6 +456,7 @@ void loadServices()
 					}
 				}
 				trace(L"Loaded service: ", absoluteName);
+				traceNodeDesc(service->GetNodeDesc());
 			}
 		} while (FindNextFile(searchHandle, &FindFileData));
 		FindClose(searchHandle);
@@ -511,6 +520,7 @@ void loadServices()
 					}
 				}
 				trace(L"Loaded service: ", absoluteName);
+				traceNodeDesc(service->GetNodeDesc());
 			}
 		} while (FindNextFile(searchHandle, &FindFileData));
 		FindClose(searchHandle);
@@ -560,6 +570,7 @@ void loadServices()
 				serviceMap[nodeID] = service;
 				service->InitService(nodeID);
 				trace(L"Loaded service: ", absoluteName);
+				traceNodeDesc(service->GetNodeDesc());
 			}
 		} while (FindNextFile(searchHandle, &FindFileData));
 		FindClose(searchHandle);
