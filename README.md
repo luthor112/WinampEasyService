@@ -144,6 +144,11 @@ Custom Reference ID usage:
 * Reference handling through `GetFileName` is unchanged
 * Example: `WinampEasyService\\refidexample`
 
+Custom URL Handling:
+* Declare `CAP_URLHANDLER` in your Capabilities
+* Implement `GetUrlPrefix` and return the prefix of the URLs you want to handle
+* URLs have to be handled in `GetFileName`
+
 # ServicePlugins
 
 The following plugins have been developed using this framework:
