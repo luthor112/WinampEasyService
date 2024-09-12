@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "isrv_web": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Program Files (x86)\\WACUP\\Plugins\\wsrv_example.html\"\r\nGetNodeDesc"
+    }
+  }
+}

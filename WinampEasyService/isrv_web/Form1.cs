@@ -85,7 +85,8 @@ namespace isrv_web
             {
                 //By default CefSharp will use an in-memory cache, you need to specify a Cache Folder to persist data
                 CachePath = System.IO.Path.Join(System.IO.Path.GetTempPath(), "wmp_webcache"),
-                PersistSessionCookies = true
+                PersistSessionCookies = true,
+                LogSeverity = LogSeverity.Fatal
             };
             settings.CefCommandLineArgs.Add("enable-media-stream");
             settings.CefCommandLineArgs.Add("use-fake-ui-for-media-stream");
