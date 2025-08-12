@@ -32,8 +32,7 @@ namespace esrv_soundcloud
             button1.Text = "Please wait...";
 
             var soundcloud = new SoundCloudClient();
-            var results = await soundcloud.Search.GetResultsAsync(textBox1.Text);
-            foreach (var result in results)
+            await foreach (var result in soundcloud.Search.GetResultsAsync(textBox1.Text))
             {
                 switch (result)
                 {

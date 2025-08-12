@@ -47,8 +47,7 @@ namespace esrv_soundcloud
                     if (args[1] == "search")
                     {
                         var soundcloud = new SoundCloudClient();
-                        var results = await soundcloud.Search.GetResultsAsync(args[3]);
-                        foreach (var result in results)
+                        await foreach (var result in soundcloud.Search.GetResultsAsync(args[3]))
                         {
                             switch (result)
                             {
@@ -83,9 +82,8 @@ namespace esrv_soundcloud
                     else if (args[1] == "openlist")
                     {
                         var soundcloud = new SoundCloudClient();
-                        var tracks = await soundcloud.Playlists.GetTracksAsync(args[2]);
 
-                        foreach (var track in tracks)
+                        await foreach (var track in soundcloud.Playlists.GetTracksAsync(args[2]))
                         {
                             string author = track?.User?.FullName;
                             if (string.IsNullOrEmpty(author))

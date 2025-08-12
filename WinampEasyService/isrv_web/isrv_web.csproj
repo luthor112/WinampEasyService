@@ -11,19 +11,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CefSharp.WinForms.NETCore" Version="127.3.50" />
+    <PackageReference Include="CefSharp.WinForms.NETCore" Version="138.0.340" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="chromiumembeddedframework.runtime.win-arm64" Version="127.3.5" />
+    <PackageReference Update="chromiumembeddedframework.runtime.win-arm64" Version="138.0.34" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="chromiumembeddedframework.runtime.win-x64" Version="127.3.5" />
+    <PackageReference Update="chromiumembeddedframework.runtime.win-x64" Version="138.0.34" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="chromiumembeddedframework.runtime.win-x86" Version="127.3.5" />
+    <PackageReference Update="chromiumembeddedframework.runtime.win-x86" Version="138.0.34" />
   </ItemGroup>
 
 </Project>

@@ -199,6 +199,10 @@ Common operation:
 * Most plguins, including the main ml_easysrv plugin, can be configured by editing the `easysrv.ini` file
 * Downloaded files and saved credentials are stored in `System.IO.Path.GetTempPath()`, unless specified otherwise
 
+# Known problems
+
+`esrv_soundcloud` and `msrv_soundcloud_plus` are inoperable, though `wsrv_soundcloud` still seems to work.
+
 # Screenshot
 
 ![Screenshot](screenshot.png)
